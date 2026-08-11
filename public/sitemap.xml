@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Сайт одностраничный (index.html) — /catalog, /about, /contacts это
+       якоря (#catalog, #about, #contacts) на той же странице, а не
+       отдельные URL, поэтому отдельными записями не перечисляются.
+       /admin/* сюда намеренно не включён — см. robots.txt и noindex
+       на страницах админки. -->
+  <url>
+    <loc>https://royalfish.tj/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

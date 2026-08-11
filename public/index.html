@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Royal Fish — охлаждённая рыба и морские деликатесы в Душанбе</title>
+    <meta
+      name="description"
+      content="Royal Fish — первый магазин морепродуктов в Душанбе. Охлаждённая рыба, креветки, кальмары, икра и морские деликатесы высокого качества."
+    />
+
+    <!-- Canonical: домен ещё не подключён, ссылка готовится заранее для
+         будущей публикации на royalfish.tj -->
+    <link rel="canonical" href="https://royalfish.tj/" />
+
+    <!-- Open Graph (превью при шаринге в WhatsApp/Telegram/соцсетях) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Royal Fish" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:url" content="https://royalfish.tj/" />
+    <meta
+      property="og:title"
+      content="Royal Fish — охлаждённая рыба и морские деликатесы в Душанбе"
+    />
+    <meta
+      property="og:description"
+      content="Royal Fish — первый магазин морепродуктов в Душанбе. Охлаждённая рыба, креветки, кальмары, икра и морские деликатесы высокого качества."
+    />
+    <!-- Единственное статичное изображение бренда в проекте — логотип.
+         Для более наглядной карточки при шаринге в будущем стоит добавить
+         отдельное горизонтальное фото (рекомендуемо 1200×630). -->
+    <meta property="og:image" content="https://royalfish.tj/assets/logo-circle-480.png" />
+
+    <!-- Twitter Card: "summary" (не "summary_large_image"), т.к. реальное
+         изображение — квадратный логотип, а не широкий баннер 1200×630 -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Royal Fish — охлаждённая рыба и морские деликатесы в Душанбе"
+    />
+    <meta
+      name="twitter:description"
+      content="Royal Fish — первый магазин морепродуктов в Душанбе. Охлаждённая рыба, креветки, кальмары, икра и морские деликатесы высокого качества."
+    />
+    <meta name="twitter:image" content="https://royalfish.tj/assets/logo-circle-480.png" />
+
+    <link rel="icon" href="assets/logo-circle-480.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340;9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- JSON-LD: только данные, реально присутствующие на сайте
+         (адрес и часы работы — см. секцию #contacts ниже). Телефон
+         не добавлен — в проекте нигде не указан реальный номер магазина. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Store",
+        "name": "Royal Fish",
+        "description": "Royal Fish — первый магазин морепродуктов в Душанбе. Охлаждённая рыба, креветки, кальмары, икра и морские деликатесы высокого качества.",
+        "url": "https://royalfish.tj/",
+        "image": "https://royalfish.tj/assets/logo-circle-480.png",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Спартак, здание Пойтахт",
+          "addressLocality": "Душанбе",
+          "addressCountry": "TJ"
+        },
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "opens": "09:00",
+          "closes": "21:00"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#catalog">Перейти к каталогу</a>
+
+    <!-- ============ HEADER ============ -->
+    <header class="site-header" id="siteHeader">
+      <div class="wrap header-inner">
+        <a href="#top" class="brand">
+          <img
+            class="brand-mark"
+            src="assets/logo-circle-480.png"
+            alt="Royal Fish — логотип"
+            width="52"
+            height="52"
+          />
+          <span class="brand-text">
+            <span class="brand-name">Royal&nbsp;Fish</span>
+            <span class="brand-url">royalfish.tj</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Основная навигация">
+          <a href="#top" class="nav-link is-active">Главная</a>
+          <a href="#catalog" class="nav-link">Каталог</a>
+          <a href="#about" class="nav-link">О магазине</a>
+          <a href="#contacts" class="nav-link">Контакты</a>
+        </nav>
+
+        <button
+          class="burger"
+          id="burgerBtn"
+          aria-label="Открыть меню"
+          aria-expanded="false"
+          aria-controls="mobileNav"
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Вынесено из <header>: backdrop-filter на .site-header создаёт новый
+         containing block для position:fixed-потомков, из-за чего меню
+         растягивалось на высоту шапки, а не на весь экран. -->
+    <div class="mobile-nav" id="mobileNav">
+      <a href="#top" class="mobile-link">Главная</a>
+      <a href="#catalog" class="mobile-link">Каталог</a>
+      <a href="#about" class="mobile-link">О магазине</a>
+      <a href="#contacts" class="mobile-link">Контакты</a>
+      <div class="mobile-meta">
+        <span>09:00 – 21:00</span>
+        <span>Спартак, здание Пойтахт, Душанбе</span>
+      </div>
+    </div>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="top">
+      <canvas
+        class="hero-bubbles"
+        id="bubbleCanvas"
+        aria-hidden="true"
+      ></canvas>
+      <div class="hero-glow" aria-hidden="true"></div>
+
+      <div class="wrap promo-banner-wrap">
+        <div
+          class="promo-slider"
+          id="promoSlider"
+          hidden
+          aria-roledescription="карусель"
+          aria-label="Акции и новости"
+        >
+          <div class="promo-slider-frame">
+            <!-- клипует только сама картинка — сам .promo-slider-frame overflow не
+                 обрезает, чтобы стрелки --outside могли уйти за его границы -->
+            <div class="promo-slider-media">
+              <div class="promo-slider-track" id="promoSliderTrack"></div>
+            </div>
+
+            <!-- поверх фото: только для устройств с мышью, появляются по наведению (см. styles.css) -->
+            <button
+              type="button"
+              class="promo-arrow promo-arrow--prev promo-arrow--overlay"
+              aria-label="Предыдущий слайд"
+            >
+              &#8249;
+            </button>
+            <button
+              type="button"
+              class="promo-arrow promo-arrow--next promo-arrow--overlay"
+              aria-label="Следующий слайд"
+            >
+              &#8250;
+            </button>
+
+            <!-- снаружи фото слева/справа: для тач-устройств (нет hover) — видны всегда -->
+            <button
+              type="button"
+              class="promo-arrow promo-arrow--prev promo-arrow--outside"
+              aria-label="Предыдущий слайд"
+            >
+              &#8249;
+            </button>
+            <button
+              type="button"
+              class="promo-arrow promo-arrow--next promo-arrow--outside"
+              aria-label="Следующий слайд"
+            >
+              &#8250;
+            </button>
+          </div>
+
+          <div class="promo-slide-info" id="promoSlideInfo">
+            <p class="promo-slide-text" id="promoSlideText"></p>
+          </div>
+
+          <div class="promo-slider-dots" id="promoSliderDots"></div>
+        </div>
+      </div>
+
+      <div class="wrap hero-inner">
+        <p class="eyebrow eyebrow--light">Royal&nbsp;Fish · Душанбе</p>
+        <h1 class="hero-title">Охлаждённая рыба<br />и морские деликатесы</h1>
+        <p class="hero-sub">Первый магазин морепродуктов в Душанбе</p>
+      </div>
+
+      <svg
+        class="wave-divider"
+        viewBox="0 0 1440 110"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,40 C 240,90 480,0 720,35 C 960,70 1200,10 1440,45 L1440,110 L0,110 Z"
+          fill="var(--paper)"
+        ></path>
+      </svg>
+    </section>
+
+    <!-- ============ CATALOG ============ -->
+    <section class="catalog" id="catalog">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Меню магазина</p>
+          <h2 class="section-title">Каталог</h2>
+          <p class="section-sub">
+            Актуальный ассортимент, вес и цены. Наличие уточняется ежедневно.
+          </p>
+        </div>
+
+        <div class="catalog-controls">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              id="catalogSearch"
+              class="search-input"
+              placeholder="Найти товар, например «лосось»"
+              aria-label="Поиск товаров по названию"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="search-clear"
+              id="searchClear"
+              aria-label="Очистить поиск"
+              hidden
+            >
+              &times;
+            </button>
+          </div>
+
+          <div
+            class="filter-row"
+            id="filterRow"
+            role="tablist"
+            aria-label="Категории товаров"
+          >
+            <button
+              class="filter-pill is-active"
+              data-filter="all"
+              role="tab"
+              aria-selected="true"
+            >
+              Все
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="fish"
+              role="tab"
+              aria-selected="false"
+            >
+              Рыба
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="shrimp"
+              role="tab"
+              aria-selected="false"
+            >
+              Креветки
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="squid"
+              role="tab"
+              aria-selected="false"
+            >
+              Кальмары
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="caviar"
+              role="tab"
+              aria-selected="false"
+            >
+              Икра
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="delicacy"
+              role="tab"
+              aria-selected="false"
+            >
+              Морские деликатесы
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="lobster"
+              role="tab"
+              aria-selected="false"
+            >
+              Лобстеры
+            </button>
+            <button
+              class="filter-pill"
+              data-filter="other"
+              role="tab"
+              aria-selected="false"
+            >
+              Другие
+            </button>
+          </div>
+        </div>
+
+        <div class="product-grid" id="productGrid" aria-live="polite">
+          <p class="catalog-status" id="catalogStatus">Загружаем каталог…</p>
+        </div>
+
+        <p class="empty-state" id="emptyState" hidden>
+          Ничего не найдено. Попробуйте изменить запрос или категорию.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="about" id="about">
+      <svg
+        class="wave-divider wave-divider--top"
+        viewBox="0 0 1440 110"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,70 C 240,20 480,110 720,75 C 960,40 1200,100 1440,65 L1440,0 L0,0 Z"
+          fill="var(--ocean-dark)"
+        ></path>
+      </svg>
+
+      <div class="wrap about-inner">
+        <div class="about-media">
+          <img
+            src="https://images.unsplash.com/photo-1554071407-1fb7259a9118?auto=format&fit=crop&w=1000&q=70"
+            alt="Свежий улов на льду"
+            loading="lazy"
+            width="1000"
+            height="1150"
+          />
+        </div>
+        <div class="about-copy">
+          <p class="eyebrow eyebrow--light">О магазине</p>
+          <h2 class="about-title">Royal Fish</h2>
+          <p class="about-text">
+            Royal&nbsp;Fish — первый магазин морепродуктов в Душанбе. Мы
+            предлагаем охлаждённую рыбу и морские деликатесы высокого качества.
+          </p>
+          <ul class="about-points">
+            <li><span class="point-dot"></span>Только охлаждённая продукция</li>
+            <li><span class="point-dot"></span>Широкий выбор морепродуктов</li>
+            <li>
+              <span class="point-dot"></span>Контроль качества на каждом этапе
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INFO BAND ============ -->
+    <section class="info-band" id="contacts">
+      <div class="wrap info-grid">
+        <div class="info-card">
+          <svg
+            class="info-icon"
+            viewBox="0 0 48 48"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="24"
+              cy="24"
+              r="19"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M24 14v11l8 5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h3>Часы работы</h3>
+          <p class="info-value">09:00 — 21:00</p>
+          <p class="info-note">ежедневно</p>
+        </div>
+
+        <div class="info-card">
+          <svg
+            class="info-icon"
+            viewBox="0 0 48 48"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M24 44s14-12.7 14-23A14 14 0 1 0 10 21c0 10.3 14 23 14 23Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <circle
+              cx="24"
+              cy="21"
+              r="5"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+          <h3>Адрес</h3>
+          <p class="info-value">Спартак, здание Пойтахт</p>
+          <p class="info-note">Душанбе</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <svg
+        class="wave-divider wave-divider--top"
+        viewBox="0 0 1440 110"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,70 C 240,20 480,110 720,75 C 960,40 1200,100 1440,65 L1440,0 L0,0 Z"
+          fill="var(--ocean-deeper)"
+        ></path>
+      </svg>
+
+      <div class="wrap footer-inner">
+        <a href="#top" class="brand brand--footer">
+          <img
+            class="brand-mark"
+            src="assets/logo-circle-480.png"
+            alt="Royal Fish — логотип"
+            width="56"
+            height="56"
+          />
+          <span class="brand-text">
+            <span class="brand-name">Royal&nbsp;Fish</span>
+            <span class="brand-url">royalfish.tj</span>
+          </span>
+        </a>
+
+        <div class="footer-cols">
+          <div class="footer-col">
+            <h4>Навигация</h4>
+            <a href="#top">Главная</a>
+            <a href="#catalog">Каталог</a>
+            <a href="#about">О магазине</a>
+            <a href="#contacts">Контакты</a>
+          </div>
+          <div class="footer-col">
+            <h4>Контакты</h4>
+            <p>Спартак, здание Пойтахт, Душанбе</p>
+            <p>09:00 — 21:00, ежедневно</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap footer-bottom">
+        <p>
+          © <span id="year"></span> Royal Fish. Первый магазин морепродуктов в
+          Душанбе.
+        </p>
+      </div>
+    </footer>
+
+    <!-- ============ CART ============ -->
+    <button
+      type="button"
+      class="cart-fab"
+      id="cartFab"
+      aria-label="Открыть корзину"
+    >
+      <svg class="cart-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M3 4h2.2l.7 2.4M6.4 8.4l1.6 7.4a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 2-1.6l1.3-6.4H6.4Z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="10" cy="21" r="1.3" fill="currentColor" />
+        <circle cx="17" cy="21" r="1.3" fill="currentColor" />
+      </svg>
+      <span class="cart-fab-count" id="cartCount" hidden>0</span>
+    </button>
+
+    <div class="cart-overlay" id="cartOverlay">
+      <aside
+        class="cart-panel"
+        id="cartPanel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Корзина"
+      >
+        <div class="cart-panel-head">
+          <h2 id="cartPanelTitle">Корзина</h2>
+          <button
+            type="button"
+            class="cart-close"
+            id="cartCloseBtn"
+            aria-label="Закрыть корзину"
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- Шаг 1 — список товаров -->
+        <div class="cart-view" id="cartViewItems">
+          <div class="cart-items" id="cartItems"></div>
+          <p class="cart-empty" id="cartEmptyMsg" hidden>
+            Корзина пуста. Добавьте товары из каталога.
+          </p>
+          <div class="cart-summary" id="cartSummary" hidden>
+            <div class="cart-total-row">
+              <span>Итого</span>
+              <span id="cartTotal">0 сомони</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn--gold cart-checkout-btn"
+              id="cartCheckoutBtn"
+            >
+              Оформить заказ
+            </button>
+          </div>
+        </div>
+
+        <!-- Шаг 2 — данные клиента -->
+        <div class="cart-view" id="cartViewCheckout" hidden>
+          <button type="button" class="cart-back" id="cartBackBtn">
+            &larr; Назад к корзине
+          </button>
+          <form id="checkoutForm" class="checkout-form" novalidate>
+            <!-- honeypot: скрыто от обычных посетителей (см. styles.css .hp-field),
+                 ловит простых ботов, слепо заполняющих все поля формы -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="checkoutWebsite">Сайт компании</label>
+              <input
+                type="text"
+                id="checkoutWebsite"
+                name="website"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
+            <label class="field">
+              <span>Имя</span>
+              <input
+                type="text"
+                id="checkoutName"
+                maxlength="120"
+                autocomplete="name"
+                required
+              />
+            </label>
+            <label class="field">
+              <span>Телефон</span>
+              <input
+                type="tel"
+                id="checkoutPhone"
+                maxlength="40"
+                autocomplete="tel"
+                placeholder="+992 __ ___ __ __"
+                required
+              />
+            </label>
+            <div class="address-block">
+              <label class="field field--address">
+                <span>Адрес доставки</span>
+                <span class="address-input-wrap">
+                  <svg
+                    class="address-pin"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                    <circle
+                      cx="12"
+                      cy="9"
+                      r="2.4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                  <input
+                    type="text"
+                    id="checkoutAddress"
+                    maxlength="200"
+                    autocomplete="street-address"
+                    placeholder="улица, дом"
+                  />
+                </span>
+              </label>
+
+              <div class="address-grid">
+                <label class="field field--sm">
+                  <span>Подъезд</span>
+                  <input type="text" id="checkoutEntrance" maxlength="20" />
+                </label>
+                <label class="field field--sm">
+                  <span>Домофон</span>
+                  <input type="text" id="checkoutIntercom" maxlength="20" />
+                </label>
+                <label class="field field--sm">
+                  <span>Этаж</span>
+                  <input type="text" id="checkoutFloor" maxlength="10" />
+                </label>
+                <label class="field field--sm">
+                  <span>Квартира</span>
+                  <input type="text" id="checkoutApartment" maxlength="10" />
+                </label>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Комментарий <em>(необязательно)</em></span>
+              <textarea
+                id="checkoutComment"
+                maxlength="500"
+                rows="3"
+              ></textarea>
+            </label>
+
+            <div class="checkout-summary">
+              <div class="cart-total-row">
+                <span>Итого к оплате</span>
+                <span id="checkoutTotal">0 сомони</span>
+              </div>
+            </div>
+
+            <p class="form-error" id="checkoutError" hidden></p>
+
+            <button
+              type="submit"
+              class="btn btn--gold checkout-submit"
+              id="checkoutSubmitBtn"
+            >
+              Подтвердить заказ
+            </button>
+          </form>
+        </div>
+
+        <!-- Шаг 3 — подтверждение -->
+        <div class="cart-view" id="cartViewSuccess" hidden>
+          <div class="order-success">
+            <div class="order-success-icon">&#10003;</div>
+            <h3>Заказ №<span id="successOrderId"></span> принят!</h3>
+            <p>
+              Мы свяжемся с вами в ближайшее время, чтобы подтвердить заказ.
+            </p>
+            <button
+              type="button"
+              class="btn btn--ghost"
+              id="cartSuccessCloseBtn"
+            >
+              Продолжить покупки
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

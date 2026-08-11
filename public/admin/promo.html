@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Реклама на главной — панель управления Royal Fish</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/logo-circle-480.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-page">
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <a href="../index.html" class="admin-brand">
+      <img src="../assets/logo-circle-480.png" alt="Royal Fish" width="40" height="40">
+      <span>Royal Fish <em>· панель управления</em></span>
+    </a>
+    <div class="admin-header-actions">
+      <a href="dashboard.html" class="link-btn">Товары</a>
+      <a href="orders.html" class="link-btn">Заказы</a>
+      <span class="admin-user" id="adminUser"></span>
+      <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
+      <button class="btn-outline" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <p class="admin-hint">
+    Слайды показываются на главной странице сайта под заголовком, сменяют друг друга
+    автоматически каждые 3 секунды. Выключенные слайды на сайте не отображаются, но
+    остаются здесь — можно включить обратно в любой момент.
+  </p>
+
+  <p class="toast" id="toast" hidden></p>
+
+  <!-- ============ ДОБАВИТЬ НОВЫЙ СЛАЙД ============ -->
+  <div class="promo-add-card">
+    <h3>Добавить слайд</h3>
+    <form id="addSlideForm" class="promo-add-form">
+      <label class="field promo-add-field">
+        <span class="field-label">Изображение (JPG, PNG или WEBP, до 4 МБ)</span>
+        <input type="file" id="newSlideImage" accept="image/jpeg,image/png,image/webp" required>
+      </label>
+      <label class="field promo-add-field">
+        <span class="field-label">Подпись на слайде <em>(необязательно)</em></span>
+        <input type="text" id="newSlideTitle" maxlength="200" placeholder="например: Скидка 15% на креветки">
+      </label>
+      <button type="submit" class="btn-primary" id="addSlideBtn">Добавить слайд</button>
+    </form>
+    <p class="form-error" id="addSlideError" hidden></p>
+  </div>
+
+  <div class="promo-list" id="promoList">
+    <p class="list-status" id="listStatus">Загружаем слайды…</p>
+  </div>
+</main>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: СМЕНА ПАРОЛЯ ============ -->
+<div class="modal-overlay" id="passwordModalOverlay" hidden>
+  <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+    <div class="modal-head">
+      <h2 id="passwordModalTitle">Сменить пароль</h2>
+      <button class="modal-close" id="passwordModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <form id="passwordForm" class="product-form">
+      <label class="field">
+        <span class="field-label">Текущий пароль</span>
+        <input type="password" id="currentPassword" autocomplete="current-password" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Новый пароль (минимум 8 символов)</span>
+        <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+      </label>
+      <p class="form-error" id="passwordFormError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="passwordCancelBtn">Отмена</button>
+        <button type="submit" class="btn-primary">Сохранить пароль</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="promo.js"></script>
+</body>
+</html>

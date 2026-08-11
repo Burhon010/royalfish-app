@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход в панель управления — Royal Fish</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/logo-circle-480.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="login-page">
+
+<main class="login-card">
+  <img class="login-logo" src="../assets/logo-circle-480.png" alt="Royal Fish" width="72" height="72">
+  <h1 class="login-title">Панель управления</h1>
+  <p class="login-sub">Royal&nbsp;Fish · вход только для администратора</p>
+
+  <form id="loginForm" class="login-form" novalidate>
+    <label class="field">
+      <span class="field-label">Логин</span>
+      <input type="text" name="username" id="username" autocomplete="username" required>
+    </label>
+    <label class="field">
+      <span class="field-label">Пароль</span>
+      <input type="password" name="password" id="password" autocomplete="current-password" required>
+    </label>
+
+    <p class="form-error" id="loginError" hidden></p>
+
+    <button type="submit" class="btn-primary" id="loginSubmit">Войти</button>
+  </form>
+
+  <a class="back-link" href="../index.html">← Вернуться на сайт</a>
+</main>
+
+<script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заказы — панель управления Royal Fish</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/logo-circle-480.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-page">
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <a href="../index.html" class="admin-brand">
+      <img src="../assets/logo-circle-480.png" alt="Royal Fish" width="40" height="40">
+      <span>Royal Fish <em>· панель управления</em></span>
+    </a>
+    <div class="admin-header-actions">
+      <a href="dashboard.html" class="link-btn">Товары</a>
+      <a href="promo.html" class="link-btn">Реклама</a>
+      <span class="admin-user" id="adminUser"></span>
+      <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
+      <button class="btn-outline" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="admin-toolbar">
+    <div class="filter-row" id="orderFilterRow">
+      <button class="filter-pill is-active" data-filter="all">Все</button>
+      <button class="filter-pill" data-filter="new">Новые</button>
+      <button class="filter-pill" data-filter="processing">В обработке</button>
+      <button class="filter-pill" data-filter="delivering">Доставляются</button>
+      <button class="filter-pill" data-filter="completed">Завершённые</button>
+    </div>
+  </div>
+
+  <p class="admin-hint">Список заказов, оформленных на сайте. Статус можно менять прямо здесь — клиент увидит это в будущем через уведомления.</p>
+
+  <p class="toast" id="toast" hidden></p>
+
+  <div class="order-list" id="orderList">
+    <p class="list-status" id="listStatus">Загружаем заказы…</p>
+  </div>
+</main>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: ДЕТАЛИ ЗАКАЗА ============ -->
+<div class="modal-overlay" id="orderModalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+    <div class="modal-head">
+      <h2 id="orderModalTitle">Заказ №</h2>
+      <button class="modal-close" id="orderModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+
+    <div class="order-detail" id="orderDetail">
+      <!-- заполняется через JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: СМЕНА ПАРОЛЯ ============ -->
+<div class="modal-overlay" id="passwordModalOverlay" hidden>
+  <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+    <div class="modal-head">
+      <h2 id="passwordModalTitle">Сменить пароль</h2>
+      <button class="modal-close" id="passwordModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <form id="passwordForm" class="product-form">
+      <label class="field">
+        <span class="field-label">Текущий пароль</span>
+        <input type="password" id="currentPassword" autocomplete="current-password" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Новый пароль (минимум 8 символов)</span>
+        <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+      </label>
+      <p class="form-error" id="passwordFormError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="passwordCancelBtn">Отмена</button>
+        <button type="submit" class="btn-primary">Сохранить пароль</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="orders.js"></script>
+</body>
+</html>

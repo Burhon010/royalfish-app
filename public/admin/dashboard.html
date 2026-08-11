@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Товары — панель управления Royal Fish</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/logo-circle-480.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-page">
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <a href="../index.html" class="admin-brand">
+      <img src="../assets/logo-circle-480.png" alt="Royal Fish" width="40" height="40">
+      <span>Royal Fish <em>· панель управления</em></span>
+    </a>
+    <div class="admin-header-actions">
+      <a href="orders.html" class="link-btn">Заказы</a>
+      <a href="promo.html" class="link-btn">Реклама</a>
+      <span class="admin-user" id="adminUser"></span>
+      <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
+      <button class="btn-outline" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="admin-toolbar">
+    <div class="filter-row" id="adminFilterRow">
+      <button class="filter-pill is-active" data-filter="all">Все</button>
+      <button class="filter-pill" data-filter="fish">Рыба</button>
+      <button class="filter-pill" data-filter="shrimp">Креветки</button>
+      <button class="filter-pill" data-filter="squid">Кальмары</button>
+      <button class="filter-pill" data-filter="caviar">Икра</button>
+      <button class="filter-pill" data-filter="delicacy">Морские деликатесы</button>
+      <button class="filter-pill" data-filter="lobster">Лобстеры</button>
+      <button class="filter-pill" data-filter="other">Другие</button>
+    </div>
+    <button class="btn-primary" id="addProductBtn" type="button">+ Добавить товар</button>
+  </div>
+
+  <p class="admin-hint">Изменения сохраняются сразу и появляются на сайте royalfish.tj без перезагрузки каталога.</p>
+
+  <p class="toast" id="toast" hidden></p>
+
+  <div class="product-list" id="productList">
+    <p class="list-status" id="listStatus">Загружаем товары…</p>
+  </div>
+</main>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: ДОБАВИТЬ / РЕДАКТИРОВАТЬ ТОВАР ============ -->
+<div class="modal-overlay" id="productModalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="modal-head">
+      <h2 id="productModalTitle">Добавить товар</h2>
+      <button class="modal-close" id="productModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+
+    <form id="productForm" class="product-form">
+      <input type="hidden" id="productId" value="">
+
+      <div class="photo-field">
+        <div class="photo-preview" id="photoPreview">
+          <span id="photoPreviewEmpty">Нет фото</span>
+          <img id="photoPreviewImg" alt="" hidden>
+        </div>
+        <div class="photo-actions">
+          <label class="btn-outline photo-upload-btn">
+            Загрузить / заменить фото
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+          <button type="button" class="link-btn danger" id="removePhotoBtn" hidden>Удалить фото</button>
+        </div>
+        <p class="field-note">JPG, PNG или WEBP, до 4 МБ.</p>
+      </div>
+
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label">Название товара</span>
+          <input type="text" id="fieldName" maxlength="120" required>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Категория</span>
+          <select id="fieldCategory" required>
+            <option value="fish">Рыба</option>
+            <option value="shrimp">Креветки</option>
+            <option value="squid">Кальмары</option>
+            <option value="caviar">Икра</option>
+            <option value="delicacy">Морские деликатесы</option>
+            <option value="lobster">Лобстеры</option>
+            <option value="other">Другие</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Вес (например, 500 г или 1 кг)</span>
+          <input type="text" id="fieldWeight" maxlength="40" required>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Цена, сомони</span>
+          <input type="number" id="fieldPrice" min="0" step="0.01" required>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Скидка, %</span>
+          <input type="number" id="fieldDiscount" min="0" max="90" step="1" value="0">
+        </label>
+
+        <div class="field">
+          <span class="field-label">Цена после скидки</span>
+          <p class="computed-price" id="computedPrice">—</p>
+        </div>
+
+        <label class="field switch-field">
+          <span class="field-label">Метка «Новинка»</span>
+          <span class="switch">
+            <input type="checkbox" id="fieldIsNew">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Наличие</span>
+          <select id="fieldInStock">
+            <option value="true">В наличии</option>
+            <option value="false">Нет в наличии</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="form-error" id="productFormError" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="productCancelBtn">Отмена</button>
+        <button type="submit" class="btn-primary" id="productSaveBtn">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: СМЕНА ПАРОЛЯ ============ -->
+<div class="modal-overlay" id="passwordModalOverlay" hidden>
+  <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+    <div class="modal-head">
+      <h2 id="passwordModalTitle">Сменить пароль</h2>
+      <button class="modal-close" id="passwordModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <form id="passwordForm" class="product-form">
+      <label class="field">
+        <span class="field-label">Текущий пароль</span>
+        <input type="password" id="currentPassword" autocomplete="current-password" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Новый пароль (минимум 8 символов)</span>
+        <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+      </label>
+      <p class="form-error" id="passwordFormError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="passwordCancelBtn">Отмена</button>
+        <button type="submit" class="btn-primary">Сохранить пароль</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
