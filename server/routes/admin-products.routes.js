@@ -12,14 +12,31 @@ function computeFinalPrice(price, discountPercent) {
   return Math.round(price * (1 - discountPercent / 100) * 100) / 100;
 }
 
+function toBool(v) {
+  return v === "true" || v === true || v === "1";
+}
+
 function readBody(body) {
   const name = String(body.name || "").trim();
   const category = String(body.category || "").trim();
   const weight = String(body.weight || "").trim();
+  const description = body.description !== undefined ? String(body.description).trim() : "";
   const price = Number(body.price);
   const discountPercent = body.discountPercent !== undefined ? Number(body.discountPercent) : 0;
-  const isNew = body.isNew === "true" || body.isNew === true || body.isNew === "1";
-  const inStock = body.inStock === "true" || body.inStock === true || body.inStock === "1";
+  const isNew = toBool(body.isNew);
+  const inStock = toBool(body.inStock);
+  const availableRetail = body.availableRetail !== undefined ? toBool(body.availableRetail) : true;
+  const availableWholesale = toBool(body.availableWholesale);
+
+  // Оптовая цена необязательна (товар может продаваться только в розницу) —
+  // но если её прислали пустой строкой/не прислали вовсе, храним как null,
+  // а не 0 (0 сомони — это не "цены нет", а конкретная, скорее всего
+  // ошибочная цена).
+  const hasWholesalePrice = body.wholesalePrice !== undefined && String(body.wholesalePrice).trim() !== "";
+  const wholesalePrice = hasWholesalePrice ? Number(body.wholesalePrice) : null;
+  const wholesaleMinQty = body.wholesaleMinQty !== undefined && String(body.wholesaleMinQty).trim() !== ""
+    ? Number(body.wholesaleMinQty)
+    : 1;
 
   const errors = [];
   if (!name) errors.push("Укажите название товара.");
@@ -27,12 +44,39 @@ function readBody(body) {
   if (!CATEGORIES.includes(category)) errors.push("Выберите категорию из списка.");
   if (!weight) errors.push("Укажите вес (например, 500 г или 1 кг).");
   if (weight.length > 40) errors.push("Слишком длинное значение веса.");
-  if (!Number.isFinite(price) || price < 0) errors.push("Укажите корректную цену.");
+  if (description.length > 1000) errors.push("Описание слишком длинное (максимум 1000 символов).");
+  if (!Number.isFinite(price) || price < 0) errors.push("Укажите корректную розничную цену.");
   if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 90) {
     errors.push("Скидка должна быть от 0 до 90%.");
   }
+  if (hasWholesalePrice && (!Number.isFinite(wholesalePrice) || wholesalePrice < 0)) {
+    errors.push("Укажите корректную оптовую цену.");
+  }
+  if (!Number.isInteger(wholesaleMinQty) || wholesaleMinQty < 1) {
+    errors.push("Минимальная оптовая партия должна быть целым числом не меньше 1.");
+  }
+  if (availableWholesale && !hasWholesalePrice) {
+    errors.push("Чтобы включить товар в опт, сначала укажите оптовую цену.");
+  }
+  if (!availableRetail && !availableWholesale) {
+    errors.push("Товар должен быть доступен хотя бы в одном канале — рознице или опте.");
+  }
 
-  return { name, category, weight, price, discountPercent, isNew, inStock, errors };
+  return {
+    name,
+    category,
+    weight,
+    description,
+    price,
+    discountPercent,
+    isNew,
+    inStock,
+    wholesalePrice,
+    wholesaleMinQty,
+    availableRetail,
+    availableWholesale,
+    errors,
+  };
 }
 
 function serialize(p) {
@@ -41,12 +85,17 @@ function serialize(p) {
     name: p.name,
     category: p.category,
     weight: p.weight,
+    description: p.description,
     price: p.price,
     discountPercent: p.discount_percent,
     finalPrice: p.final_price,
     isNew: !!p.is_new,
     inStock: !!p.in_stock,
     image: p.image_path,
+    wholesalePrice: p.wholesale_price,
+    wholesaleMinQty: p.wholesale_min_qty,
+    availableRetail: !!p.available_retail,
+    availableWholesale: !!p.available_wholesale,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
   };
@@ -91,6 +140,7 @@ router.post("/", upload.single("image"), async (req, res, next) => {
       name: data.name,
       category: data.category,
       weight: data.weight,
+      description: data.description || null,
       price: data.price,
       discount_percent: data.discountPercent,
       final_price: finalPrice,
@@ -98,6 +148,10 @@ router.post("/", upload.single("image"), async (req, res, next) => {
       in_stock: data.inStock ? 1 : 0,
       image_path: imagePath,
       image_public_id: imagePublicId,
+      wholesale_price: data.wholesalePrice,
+      wholesale_min_qty: data.wholesaleMinQty,
+      available_retail: data.availableRetail,
+      available_wholesale: data.availableWholesale,
     });
 
     res.status(201).json(serialize(created));
@@ -148,6 +202,7 @@ router.put("/:id", upload.single("image"), async (req, res, next) => {
       name: data.name,
       category: data.category,
       weight: data.weight,
+      description: data.description || null,
       price: data.price,
       discount_percent: data.discountPercent,
       final_price: finalPrice,
@@ -155,6 +210,10 @@ router.put("/:id", upload.single("image"), async (req, res, next) => {
       in_stock: data.inStock ? 1 : 0,
       image_path: imagePath,
       image_public_id: imagePublicId,
+      wholesale_price: data.wholesalePrice,
+      wholesale_min_qty: data.wholesaleMinQty,
+      available_retail: data.availableRetail,
+      available_wholesale: data.availableWholesale,
     });
 
     res.json(serialize(updated));

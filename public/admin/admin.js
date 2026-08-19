@@ -18,6 +18,10 @@
   var filterPills = Array.prototype.slice.call(document.querySelectorAll("#adminFilterRow .filter-pill"));
   var activeFilter = "all";
 
+  var channelTabs = Array.prototype.slice.call(document.querySelectorAll("#channelTabRow .tab-pill"));
+  var channelHint = document.getElementById("channelHint");
+  var activeChannel = "retail"; // "retail" | "wholesale" — какой канал сейчас просматриваем
+
   var products = [];
 
   /* ---------------------------------------------------------
@@ -111,13 +115,22 @@
   function renderList() {
     productList.innerHTML = "";
 
-    var visible = products.filter(function (p) {
+    var channelKey = activeChannel === "wholesale" ? "availableWholesale" : "availableRetail";
+    var inChannel = products.filter(function (p) { return p[channelKey]; });
+    var visible = inChannel.filter(function (p) {
       return activeFilter === "all" || p.category === activeFilter;
     });
 
     if (!products.length) {
       listStatus.hidden = false;
       listStatus.textContent = "Пока нет ни одного товара. Нажмите «Добавить товар».";
+      return;
+    }
+    if (!inChannel.length) {
+      listStatus.hidden = false;
+      listStatus.textContent = activeChannel === "wholesale"
+        ? "В опте пока нет товаров. Включите «Показывать в опте» у нужного товара."
+        : "В рознице пока нет товаров.";
       return;
     }
     if (!visible.length) {
@@ -134,6 +147,22 @@
     productList.appendChild(fragment);
   }
 
+  channelTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      channelTabs.forEach(function (t) {
+        t.classList.remove("is-active");
+        t.setAttribute("aria-selected", "false");
+      });
+      tab.classList.add("is-active");
+      tab.setAttribute("aria-selected", "true");
+      activeChannel = tab.getAttribute("data-channel");
+      channelHint.textContent = activeChannel === "wholesale"
+        ? "Показаны товары, включённые в оптовый каталог «Для ресторанов». Цена и минимальная партия — в карточке ниже."
+        : "Изменения сохраняются сразу и появляются на сайте royalfish.tj без перезагрузки каталога.";
+      renderList();
+    });
+  });
+
   function buildRow(p) {
     var row = document.createElement("div");
     row.className = "product-row" + (p.inStock ? "" : " is-out");
@@ -143,12 +172,19 @@
       ? '<div class="row-thumb"><img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 150)) + '" alt=""></div>'
       : '<div class="row-thumb is-empty">Нет фото</div>';
 
-    var priceHtml = '<span class="price-final">' + formatPrice(p.finalPrice) + " смн</span>";
-    if (p.discountPercent > 0) {
+    var priceHtml;
+    if (activeChannel === "wholesale") {
       priceHtml =
-        '<span class="price-old">' + formatPrice(p.price) + " смн</span>" +
-        priceHtml +
-        '<span class="discount-badge">-' + p.discountPercent + "%</span>";
+        '<span class="price-final">' + formatPrice(p.wholesalePrice) + " смн/ед.</span>" +
+        '<span class="discount-badge">мин. ' + p.wholesaleMinQty + " шт.</span>";
+    } else {
+      priceHtml = '<span class="price-final">' + formatPrice(p.finalPrice) + " смн</span>";
+      if (p.discountPercent > 0) {
+        priceHtml =
+          '<span class="price-old">' + formatPrice(p.price) + " смн</span>" +
+          priceHtml +
+          '<span class="discount-badge">-' + p.discountPercent + "%</span>";
+      }
     }
 
     row.innerHTML =
@@ -209,14 +245,27 @@
      Быстрое переключение (Новинка / Наличие) без открытия формы
      --------------------------------------------------------- */
   function quickUpdate(product, changes) {
+    // PUT /api/admin/products/:id — это ПОЛНАЯ замена полей (не патч), см.
+    // server/routes/admin-products.routes.js. Поэтому даже быстрый тоггл
+    // "Наличие"/"Новинка" обязан переслать ВСЕ поля товара, включая
+    // оптовые (description/wholesalePrice/wholesaleMinQty/availableRetail/
+    // availableWholesale) — иначе они бы незаметно обнулялись при каждом
+    // клике по переключателю в списке.
     var formData = new FormData();
     formData.append("name", product.name);
     formData.append("category", product.category);
     formData.append("weight", product.weight);
+    formData.append("description", product.description || "");
     formData.append("price", product.price);
     formData.append("discountPercent", product.discountPercent);
     formData.append("isNew", "isNew" in changes ? changes.isNew : product.isNew);
     formData.append("inStock", "inStock" in changes ? changes.inStock : product.inStock);
+    if (product.wholesalePrice !== null && product.wholesalePrice !== undefined) {
+      formData.append("wholesalePrice", product.wholesalePrice);
+    }
+    formData.append("wholesaleMinQty", product.wholesaleMinQty || 1);
+    formData.append("availableRetail", "availableRetail" in changes ? changes.availableRetail : product.availableRetail);
+    formData.append("availableWholesale", "availableWholesale" in changes ? changes.availableWholesale : product.availableWholesale);
     // фото не отправляем — сервер оставит текущее изображение без изменений
 
     fetch("/api/admin/products/" + product.id, {
@@ -278,11 +327,16 @@
   var fieldName = document.getElementById("fieldName");
   var fieldCategory = document.getElementById("fieldCategory");
   var fieldWeight = document.getElementById("fieldWeight");
+  var fieldDescription = document.getElementById("fieldDescription");
   var fieldPrice = document.getElementById("fieldPrice");
   var fieldDiscount = document.getElementById("fieldDiscount");
   var fieldIsNew = document.getElementById("fieldIsNew");
   var fieldInStock = document.getElementById("fieldInStock");
   var computedPrice = document.getElementById("computedPrice");
+  var fieldWholesalePrice = document.getElementById("fieldWholesalePrice");
+  var fieldWholesaleMinQty = document.getElementById("fieldWholesaleMinQty");
+  var fieldAvailableRetail = document.getElementById("fieldAvailableRetail");
+  var fieldAvailableWholesale = document.getElementById("fieldAvailableWholesale");
 
   var photoInput = document.getElementById("photoInput");
   var photoPreview = document.getElementById("photoPreview");
@@ -332,10 +386,15 @@
       fieldName.value = product.name;
       fieldCategory.value = product.category;
       fieldWeight.value = product.weight;
+      fieldDescription.value = product.description || "";
       fieldPrice.value = product.price;
       fieldDiscount.value = product.discountPercent;
       fieldIsNew.checked = product.isNew;
       fieldInStock.value = product.inStock ? "true" : "false";
+      fieldWholesalePrice.value = product.wholesalePrice === null || product.wholesalePrice === undefined ? "" : product.wholesalePrice;
+      fieldWholesaleMinQty.value = product.wholesaleMinQty || 1;
+      fieldAvailableRetail.checked = product.availableRetail;
+      fieldAvailableWholesale.checked = product.availableWholesale;
       setPhotoPreview(product.image);
     } else {
       modalTitle.textContent = "Добавить товар";
@@ -343,6 +402,9 @@
       productForm.reset();
       fieldDiscount.value = 0;
       fieldInStock.value = "true";
+      fieldWholesaleMinQty.value = 1;
+      fieldAvailableRetail.checked = true;
+      fieldAvailableWholesale.checked = false;
       setPhotoPreview(null);
     }
 
@@ -392,7 +454,17 @@
     var discount = fieldDiscount.value || 0;
 
     if (!name || !weight || price === "") {
-      formError.textContent = "Заполните название, вес и цену.";
+      formError.textContent = "Заполните название, вес и розничную цену.";
+      formError.hidden = false;
+      return;
+    }
+    if (!fieldAvailableRetail.checked && !fieldAvailableWholesale.checked) {
+      formError.textContent = "Товар должен быть доступен хотя бы в одном канале — рознице или опте.";
+      formError.hidden = false;
+      return;
+    }
+    if (fieldAvailableWholesale.checked && !fieldWholesalePrice.value) {
+      formError.textContent = "Чтобы включить товар в опт, укажите оптовую цену.";
       formError.hidden = false;
       return;
     }
@@ -401,10 +473,15 @@
     formData.append("name", name);
     formData.append("category", fieldCategory.value);
     formData.append("weight", weight);
+    formData.append("description", fieldDescription.value.trim());
     formData.append("price", price);
     formData.append("discountPercent", discount);
     formData.append("isNew", fieldIsNew.checked);
     formData.append("inStock", fieldInStock.value === "true");
+    if (fieldWholesalePrice.value) formData.append("wholesalePrice", fieldWholesalePrice.value);
+    formData.append("wholesaleMinQty", fieldWholesaleMinQty.value || 1);
+    formData.append("availableRetail", fieldAvailableRetail.checked);
+    formData.append("availableWholesale", fieldAvailableWholesale.checked);
 
     if (photoInput.files[0]) {
       formData.append("image", photoInput.files[0]);

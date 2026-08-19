@@ -498,6 +498,63 @@ button, input, select{ font-family: inherit; }
   gap: 16px;
 }
 .field-grid .field:nth-child(1){ grid-column: 1 / -1; }
+.field--wide{ grid-column: 1 / -1; }
+.field textarea{
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+  resize: vertical;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.field textarea:focus{
+  outline: none;
+  border-color: var(--ocean);
+  box-shadow: 0 0 0 3px rgba(0,95,128,.14);
+}
+
+/* Отдельный блок оптовых полей в форме товара — визуально отделён от
+   розничных полей выше, чтобы было понятно: это настройки другого
+   канала продаж того же товара. */
+.field-grid--wholesale{
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1.5px dashed var(--line);
+}
+.field-grid-title{
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* Вкладки "Розница / Опт" над списком товаров (public/admin/dashboard.html) —
+   переиспользует внешний вид .filter-pill, но смысл другой (канал продаж,
+   а не категория), поэтому отдельный класс. */
+.tab-row{
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tab-pill{
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+.tab-pill:hover{ border-color: var(--ocean); color: var(--ocean); }
+.tab-pill.is-active{ background: var(--ocean); border-color: var(--ocean); color: #fff; }
 
 .computed-price{
   margin: 0;
@@ -585,6 +642,26 @@ button, input, select{ font-family: inherit; }
 .status-completed{ background: var(--success-bg); color: var(--success); border-color: transparent; }
 
 .order-row-actions{ display: flex; justify-content: flex-end; }
+
+/* Оптовые заказы (см. раздел "Для ресторанов") выделены золотой полоской
+   слева и бейджем "Опт" рядом с номером — чтобы их было видно в общем
+   списке заказов с первого взгляда, не открывая карточку. */
+.order-row.is-wholesale{
+  border-left: 3px solid var(--gold);
+}
+.order-type-badge{
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #7a5c1e;
+  background: rgba(201,164,85,.18);
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
 
 /* -------- детали заказа (модальное окно) -------- */
 .order-detail{

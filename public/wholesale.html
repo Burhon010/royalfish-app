@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Royal Fish — оптовые поставки для ресторанов в Душанбе</title>
+    <meta
+      name="description"
+      content="Royal Fish — оптовые поставки охлаждённой рыбы и морепродуктов для ресторанов и кафе в Душанбе. Оптовые цены, минимальные партии, доставка."
+    />
+    <meta name="robots" content="noindex, follow" />
+
+    <link rel="canonical" href="https://royalfish.tj/wholesale.html" />
+
+    <link rel="icon" href="assets/logo-circle-480.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340;9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#catalog">Перейти к каталогу</a>
+
+    <!-- ============ HEADER (тот же, что на главной — единый бренд) ============ -->
+    <header class="site-header" id="siteHeader">
+      <div class="wrap header-inner">
+        <a href="index.html#top" class="brand">
+          <img
+            class="brand-mark"
+            src="assets/logo-circle-480.png"
+            alt="Royal Fish — логотип"
+            width="52"
+            height="52"
+          />
+          <span class="brand-text">
+            <span class="brand-name">Royal&nbsp;Fish</span>
+            <span class="brand-url">royalfish.tj</span>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Основная навигация">
+          <a href="index.html#top" class="nav-link">Главная</a>
+          <a href="index.html#catalog" class="nav-link">Розничный каталог</a>
+          <a href="index.html#contacts" class="nav-link">Контакты</a>
+          <a href="wholesale.html" class="nav-link nav-link--cta is-active">Для ресторанов · Опт</a>
+        </nav>
+
+        <button
+          class="burger"
+          id="burgerBtn"
+          aria-label="Открыть меню"
+          aria-expanded="false"
+          aria-controls="mobileNav"
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-nav" id="mobileNav">
+      <a href="index.html#top" class="mobile-link">Главная</a>
+      <a href="index.html#catalog" class="mobile-link">Розничный каталог</a>
+      <a href="index.html#contacts" class="mobile-link">Контакты</a>
+      <a href="wholesale.html" class="mobile-link mobile-link--cta">Для ресторанов · Опт</a>
+      <div class="mobile-meta">
+        <span>09:00 – 21:00</span>
+        <span>Спартак, здание Пойтахт, Душанбе</span>
+      </div>
+    </div>
+
+    <!-- ============ HERO (упрощённый — без анимации пузырьков и промо-слайдера,
+         это розничные фишки главной страницы) ============ -->
+    <section class="hero wholesale-hero" id="top">
+      <div class="hero-glow" aria-hidden="true"></div>
+
+      <div class="wrap hero-inner">
+        <p class="eyebrow eyebrow--light">Royal&nbsp;Fish · Оптовый отдел</p>
+        <h1 class="hero-title">Для ресторанов<br />и кафе</h1>
+        <p class="hero-sub">
+          Оптовые поставки охлаждённой рыбы и морепродуктов в Душанбе —
+          отдельные цены, минимальные партии, тот же контроль качества.
+        </p>
+      </div>
+
+      <svg
+        class="wave-divider"
+        viewBox="0 0 1440 110"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,40 C 240,90 480,0 720,35 C 960,70 1200,10 1440,45 L1440,110 L0,110 Z"
+          fill="var(--paper)"
+        ></path>
+      </svg>
+    </section>
+
+    <!-- ============ WHOLESALE CATALOG ============ -->
+    <section class="catalog" id="catalog">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Оптовый прайс</p>
+          <h2 class="section-title">Каталог для ресторанов</h2>
+          <p class="section-sub">
+            Цены указаны за единицу с учётом оптовой скидки. У каждой
+            позиции — минимальный объём заказа.
+          </p>
+        </div>
+
+        <div class="product-grid" id="productGrid" aria-live="polite">
+          <p class="catalog-status" id="catalogStatus">Загружаем оптовый каталог…</p>
+        </div>
+
+        <p class="empty-state" id="emptyState" hidden>
+          Пока нет товаров в оптовом каталоге. Загляните позже.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ INFO BAND (те же контакты, что на главной) ============ -->
+    <section class="info-band" id="contacts">
+      <div class="wrap info-grid">
+        <div class="info-card">
+          <svg class="info-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="2" />
+            <path d="M24 14v11l8 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <h3>Часы работы</h3>
+          <p class="info-value">09:00 — 21:00</p>
+          <p class="info-note">ежедневно</p>
+        </div>
+
+        <div class="info-card">
+          <svg class="info-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M24 44s14-12.7 14-23A14 14 0 1 0 10 21c0 10.3 14 23 14 23Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <circle cx="24" cy="21" r="5" stroke="currentColor" stroke-width="2" />
+          </svg>
+          <h3>Адрес</h3>
+          <p class="info-value">Спартак, здание Пойтахт</p>
+          <p class="info-note">Душанбе</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <svg class="wave-divider wave-divider--top" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,70 C 240,20 480,110 720,75 C 960,40 1200,100 1440,65 L1440,0 L0,0 Z" fill="var(--ocean-deeper)"></path>
+      </svg>
+
+      <div class="wrap footer-inner">
+        <a href="index.html#top" class="brand brand--footer">
+          <img class="brand-mark" src="assets/logo-circle-480.png" alt="Royal Fish — логотип" width="56" height="56" />
+          <span class="brand-text">
+            <span class="brand-name">Royal&nbsp;Fish</span>
+            <span class="brand-url">royalfish.tj</span>
+          </span>
+        </a>
+
+        <div class="footer-cols">
+          <div class="footer-col">
+            <h4>Навигация</h4>
+            <a href="index.html#top">Главная</a>
+            <a href="index.html#catalog">Розничный каталог</a>
+            <a href="wholesale.html">Для ресторанов · Опт</a>
+            <a href="index.html#contacts">Контакты</a>
+          </div>
+          <div class="footer-col">
+            <h4>Контакты</h4>
+            <p>Спартак, здание Пойтахт, Душанбе</p>
+            <p>09:00 — 21:00, ежедневно</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap footer-bottom">
+        <p>© <span id="year"></span> Royal Fish. Первый магазин морепродуктов в Душанбе.</p>
+      </div>
+    </footer>
+
+    <!-- ============ WHOLESALE CART (отдельная от розничной — своя корзина
+         в localStorage под другим ключом, см. wholesale.js) ============ -->
+    <button type="button" class="cart-fab" id="cartFab" aria-label="Открыть оптовую заявку">
+      <svg class="cart-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M3 4h2.2l.7 2.4M6.4 8.4l1.6 7.4a2 2 0 0 0 2 1.6h6.6a2 2 0 0 0 2-1.6l1.3-6.4H6.4Z"
+          stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"
+        />
+        <circle cx="10" cy="21" r="1.3" fill="currentColor" />
+        <circle cx="17" cy="21" r="1.3" fill="currentColor" />
+      </svg>
+      <span class="cart-fab-count" id="cartCount" hidden>0</span>
+    </button>
+
+    <div class="cart-overlay" id="cartOverlay">
+      <aside class="cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-label="Оптовая заявка">
+        <div class="cart-panel-head">
+          <h2 id="cartPanelTitle">Оптовая заявка</h2>
+          <button type="button" class="cart-close" id="cartCloseBtn" aria-label="Закрыть">&times;</button>
+        </div>
+
+        <!-- Шаг 1 — список товаров -->
+        <div class="cart-view" id="cartViewItems">
+          <div class="cart-items" id="cartItems"></div>
+          <p class="cart-empty" id="cartEmptyMsg" hidden>
+            Заявка пуста. Добавьте товары из оптового каталога.
+          </p>
+          <div class="cart-summary" id="cartSummary" hidden>
+            <div class="cart-total-row">
+              <span>Итого</span>
+              <span id="cartTotal">0 сомони</span>
+            </div>
+            <button type="button" class="btn btn--gold cart-checkout-btn" id="cartCheckoutBtn">
+              Оформить заявку
+            </button>
+          </div>
+        </div>
+
+        <!-- Шаг 2 — данные ресторана -->
+        <div class="cart-view" id="cartViewCheckout" hidden>
+          <button type="button" class="cart-back" id="cartBackBtn">&larr; Назад к заявке</button>
+          <form id="checkoutForm" class="checkout-form" novalidate>
+            <div class="hp-field" aria-hidden="true">
+              <label for="checkoutWebsite">Сайт компании</label>
+              <input type="text" id="checkoutWebsite" name="website" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <label class="field">
+              <span>Название ресторана / компании</span>
+              <input type="text" id="checkoutCompany" maxlength="150" autocomplete="organization" required />
+            </label>
+            <label class="field">
+              <span>Контактное лицо</span>
+              <input type="text" id="checkoutName" maxlength="120" autocomplete="name" required />
+            </label>
+            <label class="field">
+              <span>Телефон</span>
+              <input
+                type="tel" id="checkoutPhone" maxlength="40" autocomplete="tel"
+                placeholder="+992 __ ___ __ __" required
+              />
+            </label>
+            <label class="field">
+              <span>Адрес доставки</span>
+              <input type="text" id="checkoutAddress" maxlength="300" autocomplete="street-address" placeholder="улица, дом" />
+            </label>
+            <label class="field">
+              <span>Комментарий <em>(необязательно)</em></span>
+              <textarea id="checkoutComment" maxlength="500" rows="3"></textarea>
+            </label>
+
+            <div class="checkout-summary">
+              <div class="cart-total-row">
+                <span>Итого к оплате</span>
+                <span id="checkoutTotal">0 сомони</span>
+              </div>
+            </div>
+
+            <p class="form-error" id="checkoutError" hidden></p>
+
+            <button type="submit" class="btn btn--gold checkout-submit" id="checkoutSubmitBtn">
+              Отправить заявку
+            </button>
+          </form>
+        </div>
+
+        <!-- Шаг 3 — подтверждение -->
+        <div class="cart-view" id="cartViewSuccess" hidden>
+          <div class="order-success">
+            <div class="order-success-icon">&#10003;</div>
+            <h3>Заявка №<span id="successOrderId"></span> принята!</h3>
+            <p>Мы свяжемся с вами в ближайшее время, чтобы подтвердить заказ.</p>
+            <button type="button" class="btn btn--ghost" id="cartSuccessCloseBtn">Продолжить выбор</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script src="wholesale.js"></script>
+  </body>
+</html>

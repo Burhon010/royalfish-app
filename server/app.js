@@ -5,6 +5,7 @@ const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth.routes");
 const productsRoutes = require("./routes/products.routes");
+const wholesaleProductsRoutes = require("./routes/wholesale-products.routes");
 const adminProductsRoutes = require("./routes/admin-products.routes");
 const ordersRoutes = require("./routes/orders.routes");
 const adminOrdersRoutes = require("./routes/admin-orders.routes");
@@ -59,6 +60,19 @@ function createApp() {
           baseUri: ["'self'"],
           formAction: ["'self'"],
           frameAncestors: ["'self'"],
+          // Helmet по умолчанию добавляет эту директиву — она заставляет
+          // браузер переписывать ЛЮБУЮ ссылку на http:// (стили, скрипты,
+          // картинки) в https://, даже если сама страница открыта по
+          // обычному http. На хостинге за HTTPS (Vercel/Render) это ничего
+          // не меняет — своих http://-ссылок в проекте нет, всё либо
+          // относительное, либо уже https (Google Fonts/Cloudinary/
+          // Unsplash). А вот при локальном запуске (npm start, обычный
+          // http://localhost или IP в локальной сети) она ломает вообще
+          // всё: браузер пытается перезагрузить styles.css/script.js/
+          // картинки через несуществующий https-порт, и страница
+          // остаётся голым HTML без стилей и без JS. Отключаем — пользы
+          // ноль, а вред реальный.
+          upgradeInsecureRequests: null,
         },
       },
       crossOriginResourcePolicy: false,
@@ -74,6 +88,7 @@ function createApp() {
   // API
   app.use("/api/auth", authRoutes);
   app.use("/api/products", productsRoutes);
+  app.use("/api/wholesale/products", wholesaleProductsRoutes);
   app.use("/api/admin/products", adminProductsRoutes);
   app.use("/api/orders", ordersRoutes);
   app.use("/api/admin/orders", adminOrdersRoutes);

@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS admins (
   id            SERIAL PRIMARY KEY,
   username      TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  -- Осталась от разработки системы ролей, от которой в итоге отказались —
+  -- сейчас у любого администратора полный доступ, код role не проверяет.
+  role          TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin','manager','sales','smm')),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -21,14 +24,19 @@ CREATE TABLE IF NOT EXISTS products (
   name              TEXT NOT NULL,
   category          TEXT NOT NULL CHECK (category IN ('fish','shrimp','squid','caviar','delicacy','lobster','other')),
   weight            TEXT NOT NULL,                 -- например "1 кг", "500 г", "250 г"
-  price             NUMERIC NOT NULL CHECK (price >= 0),
+  description       TEXT,                          -- описание — показывается в оптовом каталоге
+  price             NUMERIC NOT NULL CHECK (price >= 0),               -- розничная цена
   discount_percent  INTEGER NOT NULL DEFAULT 0 CHECK (discount_percent BETWEEN 0 AND 90),
-  final_price       NUMERIC NOT NULL DEFAULT 0,    -- вычисляется автоматически на сервере
+  final_price       NUMERIC NOT NULL DEFAULT 0,    -- вычисляется автоматически на сервере (розница)
   is_new            BOOLEAN NOT NULL DEFAULT false, -- метка "Новинка"
   in_stock          BOOLEAN NOT NULL DEFAULT true,  -- наличие
   image_path        TEXT,                          -- secure_url из Cloudinary (или внешний URL демо-товара)
   image_public_id   TEXT,                          -- public_id в Cloudinary — нужен, чтобы удалить старое
                                                      -- фото при замене/удалении товара
+  wholesale_price      NUMERIC CHECK (wholesale_price IS NULL OR wholesale_price >= 0), -- опт. цена за ед., NULL = не продаётся оптом
+  wholesale_min_qty    INTEGER NOT NULL DEFAULT 1 CHECK (wholesale_min_qty >= 1),        -- минимальная оптовая партия, шт
+  available_retail     BOOLEAN NOT NULL DEFAULT true,   -- показывать в розничном каталоге
+  available_wholesale  BOOLEAN NOT NULL DEFAULT false,  -- показывать в оптовом каталоге "Для ресторанов"
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -59,7 +67,9 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS orders (
   id                SERIAL PRIMARY KEY,
-  customer_name     TEXT NOT NULL,
+  order_type        TEXT NOT NULL DEFAULT 'retail' CHECK (order_type IN ('retail','wholesale')),
+  company_name      TEXT,                          -- название ресторана — только у оптовых заказов
+  customer_name     TEXT NOT NULL,                  -- в опте — контактное лицо
   customer_phone    TEXT NOT NULL,
   customer_address  TEXT,                          -- необязательно (можно самовывоз)
   comment           TEXT,

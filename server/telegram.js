@@ -46,11 +46,21 @@ function escapeHtml(str) {
 
 function buildOrderMessage(order) {
   const lines = [];
+  const isWholesale = order.order_type === "wholesale";
 
-  lines.push(`🐟 <b>Новый заказ №${order.id}</b>`);
+  if (isWholesale) {
+    lines.push(`🧾 <b>Новый ОПТОВЫЙ заказ для ресторана №${order.id}</b>`);
+  } else {
+    lines.push(`🐟 <b>Новый заказ №${order.id}</b>`);
+  }
   lines.push(formatDate(order.created_at || new Date()));
   lines.push("");
-  lines.push(`<b>Клиент:</b> ${escapeHtml(order.customer_name)}`);
+  if (isWholesale) {
+    lines.push(`<b>Ресторан/компания:</b> ${escapeHtml(order.company_name || "—")}`);
+    lines.push(`<b>Контактное лицо:</b> ${escapeHtml(order.customer_name)}`);
+  } else {
+    lines.push(`<b>Клиент:</b> ${escapeHtml(order.customer_name)}`);
+  }
   lines.push(`<b>Телефон:</b> ${escapeHtml(order.customer_phone)}`);
   lines.push(`<b>Адрес:</b> ${order.customer_address ? escapeHtml(order.customer_address) : "самовывоз (не указан)"}`);
   if (order.comment) {

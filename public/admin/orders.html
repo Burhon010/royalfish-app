@@ -30,9 +30,15 @@
 </header>
 
 <main class="admin-main">
+  <div class="tab-row" id="typeTabRow" role="tablist" aria-label="Тип заказа">
+    <button class="tab-pill is-active" data-type="all" role="tab" aria-selected="true">Все заказы</button>
+    <button class="tab-pill" data-type="retail" role="tab" aria-selected="false">Розница</button>
+    <button class="tab-pill" data-type="wholesale" role="tab" aria-selected="false">Опт / Рестораны</button>
+  </div>
+
   <div class="admin-toolbar">
     <div class="filter-row" id="orderFilterRow">
-      <button class="filter-pill is-active" data-filter="all">Все</button>
+      <button class="filter-pill is-active" data-filter="all">Все статусы</button>
       <button class="filter-pill" data-filter="new">Новые</button>
       <button class="filter-pill" data-filter="processing">В обработке</button>
       <button class="filter-pill" data-filter="delivering">Доставляются</button>

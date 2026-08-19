@@ -8,6 +8,8 @@ router.use(requireAuth);
 function serializeOrderSummary(order) {
   return {
     id: order.id,
+    orderType: order.order_type,
+    companyName: order.company_name,
     customerName: order.customer_name,
     customerPhone: order.customer_phone,
     customerAddress: order.customer_address,

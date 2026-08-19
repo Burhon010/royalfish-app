@@ -268,6 +268,22 @@ a {
   color: #fff;
 }
 
+/* Заметная кнопка "Для ресторанов · Опт" в навигации — выделяется на
+   фоне обычных текстовых пунктов меню золотой заливкой бренда, как и
+   .btn--gold (кнопка "Оформить заказ"), но компактнее под шапку. */
+.nav-link--cta {
+  color: #21170a;
+  background: linear-gradient(180deg, var(--gold-light), var(--gold));
+  font-weight: 700;
+}
+.nav-link--cta::after {
+  display: none;
+}
+.nav-link--cta:hover {
+  color: #21170a;
+  filter: brightness(1.05);
+}
+
 .burger {
   display: none;
   flex-direction: column;
@@ -363,6 +379,12 @@ a {
 .mobile-nav.is-open .mobile-link:nth-child(4) {
   transition-delay: 0.26s;
 }
+.mobile-nav.is-open .mobile-link:nth-child(5) {
+  transition-delay: 0.32s;
+}
+.mobile-link--cta {
+  color: var(--gold-light);
+}
 .mobile-meta {
   display: flex;
   flex-direction: column;
@@ -404,6 +426,13 @@ body.nav-open {
   .burger {
     display: flex;
   }
+}
+
+/* Оптовая страница "Для ресторанов" (public/wholesale.html) — тот же
+   .hero, что и на главной, но короче: там нет анимации пузырьков и
+   промо-слайдера, полноэкранная высота была бы просто пустой. */
+.wholesale-hero {
+  min-height: 42vh;
 }
 
 /* ============================================================
@@ -1043,6 +1072,26 @@ body.nav-open {
   font-size: 13.5px;
   color: var(--ink-soft);
   margin: 0 0 14px;
+}
+/* Описание товара — используется в оптовом каталоге "Для ресторанов"
+   (public/wholesale.html), в рознице карточка описание не показывает. */
+.card-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: -8px 0 14px;
+}
+/* Отметка минимальной оптовой партии на карточке опт-каталога. */
+.moq-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ocean);
+  background: rgba(0, 95, 128, 0.08);
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin: 0 0 10px;
 }
 .card-price-row {
   display: flex;

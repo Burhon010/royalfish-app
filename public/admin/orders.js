@@ -16,6 +16,9 @@
   var filterPills = Array.prototype.slice.call(document.querySelectorAll("#orderFilterRow .filter-pill"));
   var activeFilter = "all";
 
+  var typeTabs = Array.prototype.slice.call(document.querySelectorAll("#typeTabRow .tab-pill"));
+  var activeType = "all"; // "all" | "retail" | "wholesale"
+
   var orders = [];
 
   /* ---------------------------------------------------------
@@ -107,13 +110,21 @@
   function renderList() {
     orderList.innerHTML = "";
 
-    var visible = orders.filter(function (o) {
+    var byType = orders.filter(function (o) {
+      return activeType === "all" || o.orderType === activeType;
+    });
+    var visible = byType.filter(function (o) {
       return activeFilter === "all" || o.status === activeFilter;
     });
 
     if (!orders.length) {
       listStatus.hidden = false;
       listStatus.textContent = "Заказов пока нет. Как только клиент оформит заказ на сайте, он появится здесь.";
+      return;
+    }
+    if (!byType.length) {
+      listStatus.hidden = false;
+      listStatus.textContent = activeType === "wholesale" ? "Оптовых заказов пока нет." : "Розничных заказов пока нет.";
       return;
     }
     if (!visible.length) {
@@ -130,6 +141,19 @@
     orderList.appendChild(fragment);
   }
 
+  typeTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      typeTabs.forEach(function (t) {
+        t.classList.remove("is-active");
+        t.setAttribute("aria-selected", "false");
+      });
+      tab.classList.add("is-active");
+      tab.setAttribute("aria-selected", "true");
+      activeType = tab.getAttribute("data-type");
+      renderList();
+    });
+  });
+
   function statusOptionsHtml(currentStatus) {
     return STATUS_ORDER.map(function (s) {
       return '<option value="' + s + '"' + (s === currentStatus ? " selected" : "") + '>' + STATUS_LABELS[s] + "</option>";
@@ -138,13 +162,19 @@
 
   function buildRow(o) {
     var row = document.createElement("div");
-    row.className = "order-row";
+    row.className = "order-row" + (o.orderType === "wholesale" ? " is-wholesale" : "");
     row.setAttribute("data-id", o.id);
+
+    var isWholesale = o.orderType === "wholesale";
+    var typeBadge = isWholesale ? '<span class="order-type-badge">Опт</span>' : "";
+    var customerLine = isWholesale
+      ? escapeHtml(o.companyName || "—") + " · " + escapeHtml(o.customerName)
+      : escapeHtml(o.customerName) + " · " + escapeHtml(o.customerPhone);
 
     row.innerHTML =
       '<div class="order-row-main">' +
-        '<p class="order-row-id">Заказ №' + o.id + "</p>" +
-        '<p class="order-row-customer">' + escapeHtml(o.customerName) + " · " + escapeHtml(o.customerPhone) + "</p>" +
+        '<p class="order-row-id">Заказ №' + o.id + " " + typeBadge + "</p>" +
+        '<p class="order-row-customer">' + customerLine + "</p>" +
         '<p class="order-row-meta">' + o.itemsCount + " поз. · " + formatDate(o.createdAt) + "</p>" +
       "</div>" +
       '<div class="order-row-total">' + formatPrice(o.totalAmount) + " смн</div>" +
@@ -213,7 +243,7 @@
   var orderDetail = document.getElementById("orderDetail");
 
   function openOrderDetail(order) {
-    modalTitle.textContent = "Заказ №" + order.id;
+    modalTitle.textContent = "Заказ №" + order.id + (order.orderType === "wholesale" ? " · оптовый" : "");
     orderDetail.innerHTML = '<p class="list-status">Загружаем…</p>';
     overlay.hidden = false;
 
@@ -243,10 +273,14 @@
       })
       .join("");
 
+    var isWholesale = o.orderType === "wholesale";
+
     orderDetail.innerHTML =
       '<div class="order-detail-section">' +
-        "<h4>Клиент</h4>" +
-        "<p><strong>" + escapeHtml(o.customerName) + "</strong></p>" +
+        "<h4>" + (isWholesale ? "Ресторан / компания" : "Клиент") + "</h4>" +
+        (isWholesale
+          ? "<p><strong>" + escapeHtml(o.companyName || "—") + "</strong></p><p>Контакт: " + escapeHtml(o.customerName) + "</p>"
+          : "<p><strong>" + escapeHtml(o.customerName) + "</strong></p>") +
         "<p>" + escapeHtml(o.customerPhone) + "</p>" +
         (o.customerAddress
           ? "<p>" + escapeHtml(o.customerAddress) + "</p>"

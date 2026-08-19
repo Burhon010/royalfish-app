@@ -66,6 +66,43 @@ async function initSchema() {
     -- на случай, если таблица products уже существовала до этого поля
     -- (например, до подключения облачного хранилища фото)
     ALTER TABLE products ADD COLUMN IF NOT EXISTS image_public_id TEXT;
+
+    -- ------------------------------------------------------------
+    -- Оптовый каталог "Для ресторанов" (см. README, раздел про опт).
+    -- Один и тот же товар может продаваться и в розницу, и оптом —
+    -- поэтому это просто дополнительные колонки в той же таблице
+    -- products, а не отдельная таблица. Розничные price/discount_percent/
+    -- final_price выше не трогаем — это по-прежнему "розничная цена".
+    -- ------------------------------------------------------------
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS wholesale_price NUMERIC;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS wholesale_min_qty INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS available_retail BOOLEAN NOT NULL DEFAULT true;
+    ALTER TABLE products ADD COLUMN IF NOT EXISTS available_wholesale BOOLEAN NOT NULL DEFAULT false;
+
+    -- admins.role: колонка осталась от разработки системы ролей, от
+    -- которой в итоге отказались (сейчас у любого администратора полный
+    -- доступ, код нигде role не читает и не проверяет). Оставлена в схеме
+    -- как есть (просто лишняя колонка со значением по умолчанию) — так
+    -- проще и безопаснее для уже работающей базы, чем делать DROP COLUMN.
+    ALTER TABLE admins ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin';
+  `);
+
+  // Отдельно — CHECK-ограничения на новые колонки (DROP IF EXISTS + ADD,
+  // тот же приём, что и для category ниже — безопасно перезапускать при
+  // каждом старте, существующие данные не трогает).
+  await pool.query(`
+    ALTER TABLE products DROP CONSTRAINT IF EXISTS products_wholesale_price_check;
+    ALTER TABLE products ADD CONSTRAINT products_wholesale_price_check
+      CHECK (wholesale_price IS NULL OR wholesale_price >= 0);
+
+    ALTER TABLE products DROP CONSTRAINT IF EXISTS products_wholesale_min_qty_check;
+    ALTER TABLE products ADD CONSTRAINT products_wholesale_min_qty_check
+      CHECK (wholesale_min_qty >= 1);
+
+    ALTER TABLE admins DROP CONSTRAINT IF EXISTS admins_role_check;
+    ALTER TABLE admins ADD CONSTRAINT admins_role_check
+      CHECK (role IN ('admin','manager','sales','smm'));
   `);
 
   // Расширяем список допустимых категорий (добавлены "Лобстеры" = 'lobster'
@@ -97,6 +134,14 @@ async function initSchema() {
       updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
     );
 
+    -- Оптовые заказы ресторанов (см. раздел "Для ресторанов") идут в те же
+    -- таблицы orders/order_items, что и розничные — order_type просто
+    -- помечает, какой это заказ, а company_name хранит название ресторана
+    -- (для розницы остаётся NULL). Так статусы/история/админка заказов
+    -- общие для обоих потоков, ничего не дублируется.
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type TEXT NOT NULL DEFAULT 'retail';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS company_name TEXT;
+
     CREATE TABLE IF NOT EXISTS order_items (
       id            SERIAL PRIMARY KEY,
       order_id      INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -108,6 +153,12 @@ async function initSchema() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_order_type_check;
+    ALTER TABLE orders ADD CONSTRAINT orders_order_type_check
+      CHECK (order_type IN ('retail','wholesale'));
   `);
 
   // ------------------------------------------------------------
@@ -172,6 +223,29 @@ async function getAllProducts() {
   return rows;
 }
 
+// Публичный розничный каталог — только товары, включённые владельцем в
+// розницу. wholesale_price здесь не фильтруется отдельно: розничный
+// маршрут (server/routes/products.routes.js) в любом случае не отдаёт
+// это поле клиенту, но фильтр по available_retail сам по себе уже не
+// показывает опт-only товары обычным покупателям.
+async function getRetailProducts() {
+  const { rows } = await pool.query(
+    "SELECT * FROM products WHERE available_retail = true ORDER BY created_at DESC"
+  );
+  return rows;
+}
+
+// Публичный оптовый каталог "Для ресторанов" — только товары, явно
+// включённые владельцем в опт (available_wholesale = true). Товар без
+// назначенной оптовой цены в опте не показываем, даже если флаг стоит —
+// защита от пустой/некорректной карточки, если цену забыли заполнить.
+async function getWholesaleProducts() {
+  const { rows } = await pool.query(
+    "SELECT * FROM products WHERE available_wholesale = true AND wholesale_price IS NOT NULL ORDER BY created_at DESC"
+  );
+  return rows;
+}
+
 async function getProductById(id) {
   const { rows } = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
   return rows[0] || null;
@@ -180,8 +254,10 @@ async function getProductById(id) {
 async function createProduct(data) {
   const { rows } = await pool.query(
     `INSERT INTO products
-       (name, category, weight, price, discount_percent, final_price, is_new, in_stock, image_path, image_public_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       (name, category, weight, price, discount_percent, final_price, is_new, in_stock,
+        image_path, image_public_id, description, wholesale_price, wholesale_min_qty,
+        available_retail, available_wholesale)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      RETURNING *`,
     [
       data.name,
@@ -194,6 +270,11 @@ async function createProduct(data) {
       Boolean(data.in_stock),
       data.image_path || null,
       data.image_public_id || null,
+      data.description || null,
+      data.wholesale_price === undefined || data.wholesale_price === null ? null : data.wholesale_price,
+      data.wholesale_min_qty || 1,
+      data.available_retail === undefined ? true : Boolean(data.available_retail),
+      Boolean(data.available_wholesale),
     ]
   );
   return rows[0];
@@ -217,12 +298,18 @@ async function updateProduct(id, data) {
     in_stock: "in_stock",
     image_path: "image_path",
     image_public_id: "image_public_id",
+    description: "description",
+    wholesale_price: "wholesale_price",
+    wholesale_min_qty: "wholesale_min_qty",
+    available_retail: "available_retail",
+    available_wholesale: "available_wholesale",
   };
+  const booleanColumns = new Set(["is_new", "in_stock", "available_retail", "available_wholesale"]);
 
   for (const key of Object.keys(data)) {
     if (!(key in columnMap)) continue;
     let value = data[key];
-    if (key === "is_new" || key === "in_stock") value = Boolean(value);
+    if (booleanColumns.has(key)) value = Boolean(value);
     fields.push(`${columnMap[key]} = $${i}`);
     values.push(value);
     i += 1;
@@ -280,8 +367,19 @@ async function seedProductsIfEmpty(items) {
    ============================================================ */
 
 const ORDER_STATUSES = ["new", "processing", "delivering", "completed"];
+const ORDER_TYPES = ["retail", "wholesale"];
 
-async function createOrder({ customerName, customerPhone, customerAddress, comment, items }) {
+async function createOrder({
+  customerName,
+  customerPhone,
+  customerAddress,
+  comment,
+  items,
+  orderType,
+  companyName,
+}) {
+  const type = orderType === "wholesale" ? "wholesale" : "retail";
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -303,8 +401,32 @@ async function createOrder({ customerName, customerPhone, customerAddress, comme
         throw err;
       }
 
+      let unitPrice;
+      if (type === "wholesale") {
+        if (!product.available_wholesale || product.wholesale_price === null) {
+          const err = new Error(`Товар «${product.name}» недоступен в оптовом каталоге.`);
+          err.statusCode = 400;
+          throw err;
+        }
+        const minQty = product.wholesale_min_qty || 1;
+        if (item.quantity < minQty) {
+          const err = new Error(
+            `Минимальный заказ для «${product.name}» — ${minQty} шт. Увеличьте количество.`
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+        unitPrice = Number(product.wholesale_price);
+      } else {
+        if (!product.available_retail) {
+          const err = new Error(`Товар «${product.name}» сейчас недоступен для розничного заказа.`);
+          err.statusCode = 400;
+          throw err;
+        }
+        unitPrice = Number(product.final_price);
+      }
+
       const quantity = item.quantity;
-      const unitPrice = Number(product.final_price);
       const subtotal = Math.round(unitPrice * quantity * 100) / 100;
       total += subtotal;
 
@@ -320,10 +442,18 @@ async function createOrder({ customerName, customerPhone, customerAddress, comme
     total = Math.round(total * 100) / 100;
 
     const orderRes = await client.query(
-      `INSERT INTO orders (customer_name, customer_phone, customer_address, comment, total_amount)
-       VALUES ($1,$2,$3,$4,$5)
+      `INSERT INTO orders (customer_name, customer_phone, customer_address, comment, total_amount, order_type, company_name)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING *`,
-      [customerName, customerPhone, customerAddress || null, comment || null, total]
+      [
+        customerName,
+        customerPhone,
+        customerAddress || null,
+        comment || null,
+        total,
+        type,
+        companyName || null,
+      ]
     );
     const order = orderRes.rows[0];
 
@@ -504,12 +634,15 @@ module.exports = {
   updateAdminPassword,
   seedAdminIfNeeded,
   getAllProducts,
+  getRetailProducts,
+  getWholesaleProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
   seedProductsIfEmpty,
   ORDER_STATUSES,
+  ORDER_TYPES,
   createOrder,
   getAllOrders,
   getOrderById,

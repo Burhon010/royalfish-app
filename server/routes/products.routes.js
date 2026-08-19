@@ -30,10 +30,13 @@ function serialize(p) {
   };
 }
 
-// GET /api/products — публичный список товаров для каталога на сайте
+// GET /api/products — публичный список товаров для розничного каталога
+// на сайте. Только available_retail = true; оптовая цена (wholesale_price)
+// сюда никогда не попадает — serialize() её просто не включает, поэтому
+// розничный покупатель не может случайно увидеть оптовую цену.
 router.get("/", productsRateLimit, async (req, res, next) => {
   try {
-    const rows = await db.getAllProducts();
+    const rows = await db.getRetailProducts();
     res.json(rows.map(serialize));
   } catch (err) {
     next(err);

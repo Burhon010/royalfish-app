@@ -6,7 +6,8 @@ const { createRateLimiter } = require("../middleware/rateLimit");
 const router = express.Router();
 
 const MAX_ITEMS_PER_ORDER = 50;
-const MAX_QTY_PER_ITEM = 99;
+const MAX_QTY_PER_ITEM = 99; // розница — квартирная закупка, 99 шт с запасом достаточно
+const MAX_QTY_PER_ITEM_WHOLESALE = 999; // опт для ресторана — партии крупнее
 
 // Honeypot — скрытое от обычных посетителей поле формы (см. index.html/
 // styles.css). Реальный человек его не видит и не заполняет; простые
@@ -31,6 +32,8 @@ const ordersRateLimit = createRateLimiter({
 function serializeOrder(order) {
   return {
     id: order.id,
+    orderType: order.order_type,
+    companyName: order.company_name,
     customerName: order.customer_name,
     customerPhone: order.customer_phone,
     customerAddress: order.customer_address,
@@ -51,12 +54,19 @@ function serializeOrder(order) {
 function validateOrderBody(body) {
   const errors = [];
 
+  const orderType = body.orderType === "wholesale" ? "wholesale" : "retail";
+  const isWholesale = orderType === "wholesale";
+  const maxQty = isWholesale ? MAX_QTY_PER_ITEM_WHOLESALE : MAX_QTY_PER_ITEM;
+
+  const companyName = body.companyName ? String(body.companyName).trim() : "";
   const customerName = String(body.customerName || "").trim();
   const customerPhone = String(body.customerPhone || "").trim();
   const customerAddress = body.customerAddress ? String(body.customerAddress).trim() : "";
   const comment = body.comment ? String(body.comment).trim() : "";
 
-  if (!customerName) errors.push("Укажите имя.");
+  if (isWholesale && !companyName) errors.push("Укажите название ресторана/компании.");
+  if (companyName.length > 150) errors.push("Название ресторана/компании слишком длинное.");
+  if (!customerName) errors.push(isWholesale ? "Укажите имя контактного лица." : "Укажите имя.");
   if (customerName.length > 120) errors.push("Имя слишком длинное.");
   if (!customerPhone) errors.push("Укажите номер телефона.");
   if (customerPhone.length > 40) errors.push("Номер телефона слишком длинный.");
@@ -75,14 +85,23 @@ function validateOrderBody(body) {
       errors.push("Некорректный товар в корзине.");
       continue;
     }
-    if (!Number.isInteger(quantity) || quantity <= 0 || quantity > MAX_QTY_PER_ITEM) {
+    if (!Number.isInteger(quantity) || quantity <= 0 || quantity > maxQty) {
       errors.push("Некорректное количество для одного из товаров.");
       continue;
     }
     items.push({ productId, quantity });
   }
 
-  return { customerName, customerPhone, customerAddress, comment, items, errors };
+  return {
+    orderType,
+    companyName,
+    customerName,
+    customerPhone,
+    customerAddress,
+    comment,
+    items,
+    errors,
+  };
 }
 
 /* POST /api/orders — оформление заказа из корзины (публичный эндпойнт) */

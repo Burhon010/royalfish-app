@@ -30,6 +30,11 @@
 </header>
 
 <main class="admin-main">
+  <div class="tab-row" id="channelTabRow" role="tablist" aria-label="Канал продаж">
+    <button class="tab-pill is-active" data-channel="retail" role="tab" aria-selected="true">Розница</button>
+    <button class="tab-pill" data-channel="wholesale" role="tab" aria-selected="false">Опт / Рестораны</button>
+  </div>
+
   <div class="admin-toolbar">
     <div class="filter-row" id="adminFilterRow">
       <button class="filter-pill is-active" data-filter="all">Все</button>
@@ -44,7 +49,7 @@
     <button class="btn-primary" id="addProductBtn" type="button">+ Добавить товар</button>
   </div>
 
-  <p class="admin-hint">Изменения сохраняются сразу и появляются на сайте royalfish.tj без перезагрузки каталога.</p>
+  <p class="admin-hint" id="channelHint">Изменения сохраняются сразу и появляются на сайте royalfish.tj без перезагрузки каталога.</p>
 
   <p class="toast" id="toast" hidden></p>
 
@@ -103,8 +108,13 @@
           <input type="text" id="fieldWeight" maxlength="40" required>
         </label>
 
+        <label class="field field--wide">
+          <span class="field-label">Описание <em>(для оптового каталога)</em></span>
+          <textarea id="fieldDescription" maxlength="1000" rows="2"></textarea>
+        </label>
+
         <label class="field">
-          <span class="field-label">Цена, сомони</span>
+          <span class="field-label">Розничная цена, сомони</span>
           <input type="number" id="fieldPrice" min="0" step="0.01" required>
         </label>
 
@@ -114,7 +124,7 @@
         </label>
 
         <div class="field">
-          <span class="field-label">Цена после скидки</span>
+          <span class="field-label">Розничная цена после скидки</span>
           <p class="computed-price" id="computedPrice">—</p>
         </div>
 
@@ -132,6 +142,36 @@
             <option value="true">В наличии</option>
             <option value="false">Нет в наличии</option>
           </select>
+        </label>
+      </div>
+
+      <div class="field-grid field-grid--wholesale">
+        <p class="field-grid-title">Оптовая карточка (раздел «Для ресторанов»)</p>
+
+        <label class="field">
+          <span class="field-label">Оптовая цена, сомони <em>(за ед.)</em></span>
+          <input type="number" id="fieldWholesalePrice" min="0" step="0.01" placeholder="не задана">
+        </label>
+
+        <label class="field">
+          <span class="field-label">Минимальная партия, шт</span>
+          <input type="number" id="fieldWholesaleMinQty" min="1" step="1" value="1">
+        </label>
+
+        <label class="field switch-field">
+          <span class="field-label">Показывать в рознице</span>
+          <span class="switch">
+            <input type="checkbox" id="fieldAvailableRetail" checked>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label class="field switch-field">
+          <span class="field-label">Показывать в опте</span>
+          <span class="switch">
+            <input type="checkbox" id="fieldAvailableWholesale">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
         </label>
       </div>
 
