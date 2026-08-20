@@ -192,11 +192,22 @@
     productsById = {};
     products.forEach(function (p) { productsById[p.id] = p; });
 
+    // Корзина живёт в localStorage дольше, чем каталог, — товар из неё мог
+    // уже пропасть из опта (сняли с продажи, убрали доступность). Раньше
+    // счётчик на кнопке корзины считал такие "мёртвые" позиции, а сама
+    // корзина их же и отфильтровывала — отсюда расхождение: бейдж
+    // показывал число, а внутри было пусто. Чистим сразу после загрузки
+    // актуального каталога.
+    var beforeCount = cart.length;
+    cart = cart.filter(function (it) { return productsById[it.productId]; });
+    if (cart.length !== beforeCount) saveCart();
+
     hasProducts = products.length > 0;
     if (!hasProducts) {
       productGrid.innerHTML = "";
       emptyState.textContent = "Пока нет товаров в оптовом каталоге. Загляните позже.";
       emptyState.hidden = false;
+      renderCartBadge();
       return;
     }
 
@@ -211,6 +222,7 @@
 
     initReveal(cards);
     applyFilter();
+    renderCartBadge();
     renderCartItems();
   }
 
@@ -321,7 +333,12 @@
     return cart.filter(function (it) { return it.productId === productId; })[0];
   }
   function cartCount() {
-    return cart.reduce(function (sum, it) { return sum + it.quantity; }, 0);
+    // Дополнительная защита: считаем только товары, реально присутствующие
+    // в каталоге (см. чистку в renderProducts) — на случай, если бейдж
+    // отрисуется раньше, чем товары успели загрузиться.
+    return cart.reduce(function (sum, it) {
+      return productsById[it.productId] ? sum + it.quantity : sum;
+    }, 0);
   }
   function cartTotal() {
     return cart.reduce(function (sum, it) {
