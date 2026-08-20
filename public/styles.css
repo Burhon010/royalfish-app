@@ -435,6 +435,26 @@ body.nav-open {
   min-height: 42vh;
 }
 
+/* Стрелка-ссылка "← Розничный каталог" — быстрый путь назад с оптовой
+   страницы, без похода в меню (там тоже есть ссылка, эта — на виду сразу). */
+.hero-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+.hero-back-link:hover {
+  color: #fff;
+  transform: translateX(-3px);
+}
+
 /* ============================================================
    Hero
    ============================================================ */
