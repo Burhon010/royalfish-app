@@ -135,7 +135,6 @@
       <a href="#catalog" class="mobile-link">Каталог</a>
       <a href="#about" class="mobile-link">О магазине</a>
       <a href="#contacts" class="mobile-link">Контакты</a>
-      <a href="wholesale.html" class="mobile-link mobile-link--cta">Для ресторанов · Опт</a>
       <div class="mobile-meta">
         <span>09:00 – 21:00</span>
         <span>Спартак, здание Пойтахт, Душанбе</span>
@@ -231,7 +230,16 @@
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Меню магазина</p>
-          <h2 class="section-title">Каталог</h2>
+          <div class="section-title-row">
+            <h2 class="section-title">Каталог</h2>
+            <!-- Дублирует пункт "Для ресторанов · Опт" из главного меню —
+                 виден только на мобильных (см. styles.css), где на десктопе
+                 эта же кнопка стоит прямо в шапке, а в бургер-меню её
+                 специально убрали, чтобы не прятать за лишним кликом. -->
+            <a href="wholesale.html" class="catalog-wholesale-link"
+              >Для ресторанов · Опт</a
+            >
+          </div>
           <p class="section-sub">
             Актуальный ассортимент, вес и цены. Наличие уточняется ежедневно.
           </p>

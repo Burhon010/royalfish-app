@@ -797,12 +797,44 @@ body.nav-open {
   max-width: 640px;
   margin-bottom: 40px;
 }
+.section-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
 .section-title {
   font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(30px, 4vw, 44px);
   margin: 0 0 12px;
   color: var(--ink);
+}
+
+/* Кнопка "Для ресторанов · Опт" рядом с заголовком розничного каталога —
+   на десктопе она уже есть в шапке (.nav-link--cta), тут не нужна;
+   появляется только на мобильных, где эта же кнопка убрана из
+   бургер-меню, чтобы не прятать оптовый раздел за лишним кликом. */
+.catalog-wholesale-link {
+  display: none;
+}
+@media (max-width: 860px) {
+  .catalog-wholesale-link {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #21170a;
+    background: linear-gradient(180deg, var(--gold-light), var(--gold));
+    white-space: nowrap;
+    transition: filter 0.2s ease;
+  }
+  .catalog-wholesale-link:hover {
+    filter: brightness(1.05);
+  }
 }
 .section-sub {
   color: var(--ink-soft);
