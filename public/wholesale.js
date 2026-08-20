@@ -101,12 +101,16 @@
      --------------------------------------------------------- */
   var productGrid = document.getElementById("productGrid");
   var emptyState = document.getElementById("emptyState");
+  var pills = Array.prototype.slice.call(document.querySelectorAll(".filter-pill"));
+  var activeFilter = "all";
   var productsById = {};
+  var hasProducts = false;
 
   function buildCard(p) {
     var article = document.createElement("article");
     article.className = "card" + (p.inStock ? "" : " is-out");
     article.setAttribute("data-id", p.id);
+    article.setAttribute("data-cat", p.category);
 
     var mediaInner = p.image
       ? '<img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
@@ -175,12 +179,13 @@
     productsById = {};
     products.forEach(function (p) { productsById[p.id] = p; });
 
-    if (!products.length) {
+    hasProducts = products.length > 0;
+    if (!hasProducts) {
       productGrid.innerHTML = "";
+      emptyState.textContent = "Пока нет товаров в оптовом каталоге. Загляните позже.";
       emptyState.hidden = false;
       return;
     }
-    emptyState.hidden = true;
 
     var fragment = document.createDocumentFragment();
     var cards = [];
@@ -192,8 +197,43 @@
     productGrid.appendChild(fragment);
 
     initReveal(cards);
+    applyFilter();
     renderCartItems();
   }
+
+  // Фильтр по категориям — та же механика, что и в рознице (script.js):
+  // карточки не пересоздаются, просто скрываются классом is-filtered-out.
+  function applyFilter() {
+    if (!hasProducts) return;
+    var cards = Array.prototype.slice.call(productGrid.querySelectorAll(".card"));
+    var visibleCount = 0;
+
+    cards.forEach(function (card) {
+      var match = activeFilter === "all" || card.getAttribute("data-cat") === activeFilter;
+      card.classList.toggle("is-filtered-out", !match);
+      if (match) visibleCount++;
+    });
+
+    if (visibleCount === 0) {
+      emptyState.textContent = "В этой категории пока нет товаров. Попробуйте другую.";
+      emptyState.hidden = false;
+    } else {
+      emptyState.hidden = true;
+    }
+  }
+
+  pills.forEach(function (pill) {
+    pill.addEventListener("click", function () {
+      pills.forEach(function (p) {
+        p.classList.remove("is-active");
+        p.setAttribute("aria-selected", "false");
+      });
+      pill.classList.add("is-active");
+      pill.setAttribute("aria-selected", "true");
+      activeFilter = pill.getAttribute("data-filter");
+      applyFilter();
+    });
+  });
 
   function renderError() {
     productGrid.innerHTML = '<p class="catalog-status is-error">Не удалось загрузить оптовый каталог. Попробуйте обновить страницу.</p>';
