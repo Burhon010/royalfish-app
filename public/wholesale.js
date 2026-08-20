@@ -1,6 +1,34 @@
 (function () {
   "use strict";
 
+  // Карточки товаров (.card, общий стиль с розничным каталогом) по умолчанию
+  // невидимы (opacity: 0) — появление запускается добавлением класса
+  // is-visible при попадании в область просмотра. Та же логика, что и в
+  // script.js — здесь она не была отдельно продублирована, из-за чего
+  // оптовые карточки навсегда оставались невидимыми.
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var revealObserver = null;
+
+  function initReveal(cards) {
+    if ("IntersectionObserver" in window && !reduceMotion) {
+      if (revealObserver) revealObserver.disconnect();
+      revealObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+      );
+      cards.forEach(function (card) { revealObserver.observe(card); });
+    } else {
+      cards.forEach(function (card) { card.classList.add("is-visible"); });
+    }
+  }
+
   /* ---------------------------------------------------------
      Year in footer
      --------------------------------------------------------- */
@@ -155,9 +183,15 @@
     emptyState.hidden = true;
 
     var fragment = document.createDocumentFragment();
-    products.forEach(function (p) { fragment.appendChild(buildCard(p)); });
+    var cards = [];
+    products.forEach(function (p) {
+      var card = buildCard(p);
+      fragment.appendChild(card);
+      cards.push(card);
+    });
     productGrid.appendChild(fragment);
 
+    initReveal(cards);
     renderCartItems();
   }
 
