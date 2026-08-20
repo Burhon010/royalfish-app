@@ -102,15 +102,28 @@
   var productGrid = document.getElementById("productGrid");
   var emptyState = document.getElementById("emptyState");
   var pills = Array.prototype.slice.call(document.querySelectorAll(".filter-pill"));
+  var searchInput = document.getElementById("catalogSearch");
+  var searchClearBtn = document.getElementById("searchClear");
   var activeFilter = "all";
+  var searchQuery = "";
   var productsById = {};
   var hasProducts = false;
+
+  function debounce(fn, wait) {
+    var t;
+    return function () {
+      clearTimeout(t);
+      var args = arguments;
+      t = setTimeout(function () { fn.apply(null, args); }, wait);
+    };
+  }
 
   function buildCard(p) {
     var article = document.createElement("article");
     article.className = "card" + (p.inStock ? "" : " is-out");
     article.setAttribute("data-id", p.id);
     article.setAttribute("data-cat", p.category);
+    article.setAttribute("data-name", String(p.name || "").toLowerCase());
 
     var mediaInner = p.image
       ? '<img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
@@ -206,16 +219,19 @@
   function applyFilter() {
     if (!hasProducts) return;
     var cards = Array.prototype.slice.call(productGrid.querySelectorAll(".card"));
+    var query = searchQuery.trim().toLowerCase();
     var visibleCount = 0;
 
     cards.forEach(function (card) {
-      var match = activeFilter === "all" || card.getAttribute("data-cat") === activeFilter;
+      var matchesCategory = activeFilter === "all" || card.getAttribute("data-cat") === activeFilter;
+      var matchesSearch = !query || card.getAttribute("data-name").indexOf(query) !== -1;
+      var match = matchesCategory && matchesSearch;
       card.classList.toggle("is-filtered-out", !match);
       if (match) visibleCount++;
     });
 
     if (visibleCount === 0) {
-      emptyState.textContent = "В этой категории пока нет товаров. Попробуйте другую.";
+      emptyState.textContent = "Ничего не найдено. Попробуйте изменить запрос или категорию.";
       emptyState.hidden = false;
     } else {
       emptyState.hidden = true;
@@ -234,6 +250,27 @@
       applyFilter();
     });
   });
+
+  if (searchInput) {
+    var runSearch = debounce(function () {
+      searchQuery = searchInput.value;
+      if (searchClearBtn) searchClearBtn.hidden = !searchQuery;
+      applyFilter();
+    }, 150);
+
+    searchInput.addEventListener("input", runSearch);
+    searchInput.addEventListener("search", runSearch); // клик по крестику самого input[type=search]
+
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener("click", function () {
+        searchInput.value = "";
+        searchQuery = "";
+        searchClearBtn.hidden = true;
+        applyFilter();
+        searchInput.focus();
+      });
+    }
+  }
 
   function renderError() {
     productGrid.innerHTML = '<p class="catalog-status is-error">Не удалось загрузить оптовый каталог. Попробуйте обновить страницу.</p>';

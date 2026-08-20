@@ -111,6 +111,30 @@
         </div>
 
         <div class="catalog-controls">
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              id="catalogSearch"
+              class="search-input"
+              placeholder="Найти товар, например «лосось»"
+              aria-label="Поиск товаров по названию"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="search-clear"
+              id="searchClear"
+              aria-label="Очистить поиск"
+              hidden
+            >
+              &times;
+            </button>
+          </div>
+
           <div
             class="filter-row"
             id="filterRow"
