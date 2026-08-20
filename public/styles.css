@@ -436,22 +436,29 @@ body.nav-open {
 }
 
 /* Стрелка-ссылка "← Розничный каталог" — быстрый путь назад с оптовой
-   страницы, без похода в меню (там тоже есть ссылка, эта — на виду сразу). */
+   страницы, без похода в меню (там тоже есть ссылка, эта — на виду сразу).
+   Оформлена как настоящая кнопка (обводка + пилюля), чтобы сразу читалась
+   как кликабельный элемент, а не просто подпись. */
 .hero-back-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 18px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+  color: #fff;
   transition:
-    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
     transform 0.2s ease;
 }
 .hero-back-link:hover {
-  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.8);
   transform: translateX(-3px);
 }
 
