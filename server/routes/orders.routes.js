@@ -122,9 +122,15 @@ router.post("/", ordersRateLimit, async (req, res, next) => {
     const order = await db.createOrder(data);
 
     // Уведомление в Telegram — заказ уже сохранён в базе к этому моменту.
-    // Не ждём (await) отправку и ловим любые ошибки здесь же, чтобы
-    // недоступность Telegram никак не влияла на ответ клиенту.
-    sendOrderNotification(order).catch(() => {});
+    // Раньше это не ждали (fire-and-forget), но на Vercel serverless
+    // функция может быть заморожена сразу после отправки ответа клиенту —
+    // фоновый запрос к Telegram просто не успевал долететь, и заказ
+    // "терялся" молча, без ошибки в логах (см. диагностику оптовых
+    // заказов). Поэтому теперь дожидаемся отправки — она быстрая
+    // (обычно доли секунды) — но ошибка Telegram по-прежнему никак не
+    // влияет на ответ клиенту: sendOrderNotification сама ловит и
+    // логирует свои ошибки, этот catch — просто дополнительная гарантия.
+    await sendOrderNotification(order).catch(() => {});
 
     res.status(201).json(serializeOrder(order));
   } catch (err) {
