@@ -373,8 +373,13 @@
     // Дополнительная защита: считаем только товары, реально присутствующие
     // в каталоге (см. чистку в renderProducts) — на случай, если бейдж
     // отрисуется раньше, чем товары успели загрузиться.
+    // Считаем "блоками": одна минимальная партия товара (например, 20 шт.)
+    // = 1 блок. Так цифра на корзине не зависит от размера партии.
     return cart.reduce(function (sum, it) {
-      return productsById[it.productId] ? sum + it.quantity : sum;
+      var p = productsById[it.productId];
+      if (!p) return sum;
+      var minQty = Math.max(1, Number(p.wholesaleMinQty) || 1);
+      return sum + Math.ceil(it.quantity / minQty);
     }, 0);
   }
   function cartTotal() {
