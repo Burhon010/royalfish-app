@@ -1031,10 +1031,71 @@ body.nav-open {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* Телефон: две карточки в ряд, компактнее — степпер и кнопка друг под другом. */
 @media (max-width: 620px) {
   .product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
+  .card:hover {
+    transform: none;
+  }
+  .card-media {
+    aspect-ratio: 1 / 1;
+  }
+  .status-chip {
+    top: 8px;
+    right: 8px;
+    font-size: 10.5px;
+    padding: 4px 8px;
+  }
+  .card-body {
+    padding: 12px 12px 14px;
+  }
+  .card-name {
+    font-size: 16px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .card-weight {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 12px;
+    margin: -4px 0 8px;
+  }
+  .card-price-row {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+  .price {
+    font-size: 15px;
+  }
+  .price-old {
+    font-size: 12px;
+  }
+  .card-cart-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .qty-stepper {
+    justify-content: space-between;
+  }
+  .qty-value {
+    flex: 1;
+  }
+  .btn-add-cart {
+    flex: none;
+    width: 100%;
+    font-size: 13px;
+  }
+}
+
+.qty-value.is-empty-flash {
+  color: var(--danger);
 }
 
 .card {

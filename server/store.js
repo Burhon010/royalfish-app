@@ -456,6 +456,8 @@ async function createOrder({
       ]
     );
     const order = orderRes.rows[0];
+    const numRes = await client.query("SELECT COUNT(*)::int AS n FROM orders WHERE id <= $1", [order.id]);
+    order.number = numRes.rows[0].n;
 
     for (const item of resolvedItems) {
       await client.query(
@@ -479,7 +481,8 @@ async function createOrder({
 
 async function getAllOrders() {
   const { rows } = await pool.query(`
-    SELECT o.*, COALESCE(COUNT(oi.id), 0)::int AS items_count
+    SELECT o.*, COALESCE(COUNT(oi.id), 0)::int AS items_count,
+           ROW_NUMBER() OVER (ORDER BY o.id)::int AS number
     FROM orders o
     LEFT JOIN order_items oi ON oi.order_id = o.id
     GROUP BY o.id
@@ -489,7 +492,10 @@ async function getAllOrders() {
 }
 
 async function getOrderById(id) {
-  const orderRes = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
+  const orderRes = await pool.query(
+    "SELECT o.*, (SELECT COUNT(*)::int FROM orders WHERE id <= o.id) AS number FROM orders o WHERE o.id = $1",
+    [id]
+  );
   const order = orderRes.rows[0];
   if (!order) return null;
 

@@ -10,9 +10,12 @@
    ============================================================ */
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+// Несколько получателей — через запятую: TELEGRAM_CHAT_ID=111111,222222,-100333444
+const CHAT_IDS = String(process.env.TELEGRAM_CHAT_ID || "")
+  .split(/[,\s;]+/)
+  .filter(Boolean);
 
-if (!BOT_TOKEN || !CHAT_ID) {
+if (!BOT_TOKEN || !CHAT_IDS.length) {
   console.warn(
     "[telegram] TELEGRAM_BOT_TOKEN и/или TELEGRAM_CHAT_ID не заданы — " +
     "уведомления о новых заказах отправляться не будут (сами заказы при этом сохраняются как обычно)."
@@ -29,8 +32,6 @@ function formatDate(date) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -49,9 +50,9 @@ function buildOrderMessage(order) {
   const isWholesale = order.order_type === "wholesale";
 
   if (isWholesale) {
-    lines.push(`🧾 <b>Новый ОПТОВЫЙ заказ для ресторана №${order.id}</b>`);
+    lines.push(`🧾 <b>Новый ОПТОВЫЙ заказ для ресторана №${order.number || order.id}</b>`);
   } else {
-    lines.push(`🐟 <b>Новый заказ №${order.id}</b>`);
+    lines.push(`🐟 <b>Новый заказ №${order.number || order.id}</b>`);
   }
   lines.push(formatDate(order.created_at || new Date()));
   lines.push("");
@@ -82,30 +83,36 @@ function buildOrderMessage(order) {
 }
 
 async function sendOrderNotification(order) {
-  if (!BOT_TOKEN || !CHAT_ID) return;
+  if (!BOT_TOKEN || !CHAT_IDS.length) return;
 
   const text = buildOrderMessage(order);
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
-    });
+  // Каждому получателю — отдельный запрос; ошибка у одного (например,
+  // человек ещё не нажал /start у бота) не мешает остальным.
+  await Promise.all(
+    CHAT_IDS.map(async (chatId) => {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            parse_mode: "HTML",
+            disable_web_page_preview: true,
+          }),
+        });
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(`[telegram] Не удалось отправить уведомление (HTTP ${res.status}): ${body}`);
-    }
-  } catch (err) {
-    console.error("[telegram] Ошибка отправки уведомления:", err.message);
-  }
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error(`[telegram] Не удалось отправить уведомление в ${chatId} (HTTP ${res.status}): ${body}`);
+        }
+      } catch (err) {
+        console.error(`[telegram] Ошибка отправки уведомления в ${chatId}:`, err.message);
+      }
+    })
+  );
 }
 
 module.exports = { sendOrderNotification };

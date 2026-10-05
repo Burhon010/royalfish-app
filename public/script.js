@@ -158,7 +158,7 @@
         '<div class="card-cart-row">' +
           '<div class="qty-stepper" data-role="qty">' +
             '<button type="button" class="qty-btn" data-action="dec" aria-label="Уменьшить количество">&minus;</button>' +
-            '<span class="qty-value">1</span>' +
+            '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           '</div>' +
           '<button type="button" class="btn-add-cart"' + (p.inStock ? "" : " disabled") + '>' +
@@ -174,7 +174,7 @@
       var addBtn = article.querySelector(".btn-add-cart");
 
       decBtn.addEventListener("click", function () {
-        var v = Math.max(1, Number(qtyValueEl.textContent) - 1);
+        var v = Math.max(0, Number(qtyValueEl.textContent) - 1);
         qtyValueEl.textContent = String(v);
       });
       incBtn.addEventListener("click", function () {
@@ -182,9 +182,13 @@
         qtyValueEl.textContent = String(v);
       });
       addBtn.addEventListener("click", function () {
-        var qty = Number(qtyValueEl.textContent) || 1;
+        var qty = Number(qtyValueEl.textContent);
+        if (qty < 1) {
+          flashEmptyQty(qtyValueEl);
+          return;
+        }
         addToCart(p.id, qty);
-        qtyValueEl.textContent = "1";
+        qtyValueEl.textContent = "0";
         flashAddedToCart(addBtn);
       });
     }
@@ -386,6 +390,13 @@
       btn.textContent = original;
       btn.classList.remove("is-added");
     }, 1100);
+  }
+
+  function flashEmptyQty(el) {
+    el.classList.add("is-empty-flash");
+    setTimeout(function () {
+      el.classList.remove("is-empty-flash");
+    }, 600);
   }
 
   var cartFab = document.getElementById("cartFab");

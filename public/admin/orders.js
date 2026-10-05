@@ -77,7 +77,6 @@
     if (isNaN(d.getTime())) return "";
     return d.toLocaleString("ru-RU", {
       day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
     });
   }
 
@@ -173,7 +172,7 @@
 
     row.innerHTML =
       '<div class="order-row-main">' +
-        '<p class="order-row-id">Заказ №' + o.id + " " + typeBadge + "</p>" +
+        '<p class="order-row-id">Заказ №' + (o.number || o.id) + " " + typeBadge + "</p>" +
         '<p class="order-row-customer">' + customerLine + "</p>" +
         '<p class="order-row-meta">' + o.itemsCount + " поз. · " + formatDate(o.createdAt) + "</p>" +
       "</div>" +
@@ -243,7 +242,7 @@
   var orderDetail = document.getElementById("orderDetail");
 
   function openOrderDetail(order) {
-    modalTitle.textContent = "Заказ №" + order.id + (order.orderType === "wholesale" ? " · оптовый" : "");
+    modalTitle.textContent = "Заказ №" + (order.number || order.id) + (order.orderType === "wholesale" ? " · оптовый" : "");
     orderDetail.innerHTML = '<p class="list-status">Загружаем…</p>';
     overlay.hidden = false;
 
