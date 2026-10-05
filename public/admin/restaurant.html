@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Рестораны — панель управления Royal Fish</title>
+<title>Ресторан — панель управления Royal Fish</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="../assets/logo-circle-480.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,28 +33,15 @@
 </header>
 
 <main class="admin-main">
-  <div class="admin-toolbar">
-    <p class="admin-hint rest-hint">Рестораны по порядку регистрации. Нажмите «Цены», чтобы изменить цены конкретного ресторана.</p>
-    <button class="btn-outline" id="groupsBtn" type="button">Группы цен</button>
-  </div>
+  <a href="restaurants.html" class="rest-back">&larr; Все рестораны</a>
+  <h1 class="rest-page-title" id="restPageTitle">Ресторан</h1>
 
   <p class="toast" id="toast" hidden></p>
 
-  <div class="rest-list" id="restList">
-    <p class="list-status" id="listStatus">Загружаем рестораны…</p>
+  <div class="rest-page" id="restPage">
+    <p class="list-status">Загружаем…</p>
   </div>
 </main>
-
-<!-- ============ ОКНО: ГРУППЫ ЦЕН ============ -->
-<div class="modal-overlay" id="groupsModalOverlay" hidden>
-  <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="groupsModalTitle">
-    <div class="modal-head">
-      <h2 id="groupsModalTitle">Группы цен</h2>
-      <button class="modal-close" id="groupsModalClose" type="button" aria-label="Закрыть">×</button>
-    </div>
-    <div class="adm-pad" id="groupsModalBody"></div>
-  </div>
-</div>
 
 <!-- ============ МОДАЛЬНОЕ ОКНО: СМЕНА ПАРОЛЯ ============ -->
 <div class="modal-overlay" id="passwordModalOverlay" hidden>
@@ -82,6 +69,6 @@
 </div>
 
 <script src="admin-shared.js"></script>
-<script src="restaurants.js"></script>
+<script src="restaurant.js"></script>
 </body>
 </html>

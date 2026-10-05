@@ -951,3 +951,21 @@ button, input, select{ font-family: inherit; }
 }
 .rest-prices-btn{ padding: 8px 18px; }
 .rest-hint{ margin: 0 0 12px; }
+
+/* Отдельная страница ресторана */
+.rest-back{
+  display: inline-block; margin-bottom: 8px; color: var(--ocean);
+  font-weight: 700; font-size: 14px; text-decoration: none;
+}
+.rest-back:hover{ text-decoration: underline; }
+.rest-page-title{
+  font-family: var(--font-display); font-weight: 500; font-size: 30px; margin: 0 0 14px;
+}
+.rest-page{
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 18px 22px 24px;
+}
+@media (max-width: 760px){
+  .rest-page{ padding: 14px 12px 18px; }
+  .rest-page-title{ font-size: 24px; }
+}

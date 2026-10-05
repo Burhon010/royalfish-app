@@ -149,7 +149,8 @@ async function getRestaurantByName(name) {
 
 async function getRestaurantById(id) {
   const { rows } = await pool.query(
-    `SELECT r.*, g.name AS price_group_name
+    `SELECT r.*, g.name AS price_group_name,
+            (SELECT COUNT(*)::int FROM wholesale_orders o WHERE o.restaurant_id = r.id) AS orders_count
      FROM restaurants r LEFT JOIN price_groups g ON g.id = r.price_group_id
      WHERE r.id = $1`,
     [id]
