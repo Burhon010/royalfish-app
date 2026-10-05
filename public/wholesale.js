@@ -554,8 +554,8 @@
       checkoutError.hidden = false;
       return;
     }
-    if (!payload.customerName || !payload.customerPhone) {
-      checkoutError.textContent = "Укажите контактное лицо и номер телефона.";
+    if (!payload.customerName || !payload.customerPhone || !payload.customerAddress) {
+      checkoutError.textContent = "Укажите контактное лицо, номер телефона и адрес доставки.";
       checkoutError.hidden = false;
       return;
     }
