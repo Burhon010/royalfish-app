@@ -145,12 +145,12 @@
         '<h3 class="card-name">' + escapeHtml(p.name) + "</h3>" +
         '<p class="card-weight">' + escapeHtml(p.weight) + "</p>" +
         descHtml +
-        '<span class="moq-note">от ' + minQty + " шт. в заказе</span>" +
+        '<span class="moq-note">1 блок = ' + minQty + " шт.</span>" +
         '<div class="card-price-row"><span class="price">' + formatPrice(p.wholesalePrice) + " сомони / ед.</span></div>" +
         '<div class="card-cart-row">' +
           '<div class="qty-stepper" data-role="qty">' +
             '<button type="button" class="qty-btn" data-action="dec" aria-label="Уменьшить количество">&minus;</button>' +
-            '<span class="qty-value">' + minQty + "</span>" +
+            '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           "</div>" +
           '<button type="button" class="btn-add-cart"' + (p.inStock ? "" : " disabled") + '>' +
@@ -165,25 +165,47 @@
       var incBtn = article.querySelector('[data-action="inc"]');
       var addBtn = article.querySelector(".btn-add-cart");
 
-      // Количество на карточке не может уйти ниже минимальной оптовой
-      // партии товара — это ограничение конкретного товара, а не общая
-      // "1 шт." по умолчанию, как в рознице.
+      // Количество на карточке считается блоками: 1 блок = минимальная
+      // партия товара (например, 20 шт.), "+" добавляет сразу целый блок.
+      var noteEl = article.querySelector(".moq-note");
+      function renderBlocks() {
+        var blocks = Number(qtyValueEl.textContent);
+        noteEl.textContent = blocks > 0
+          ? blocks + " " + blocksWord(blocks) + " = " + blocks * minQty + " шт."
+          : "1 блок = " + minQty + " шт.";
+      }
       decBtn.addEventListener("click", function () {
-        var v = Math.max(minQty, Number(qtyValueEl.textContent) - 1);
+        var v = Math.max(0, Number(qtyValueEl.textContent) - 1);
         qtyValueEl.textContent = String(v);
+        renderBlocks();
       });
       incBtn.addEventListener("click", function () {
-        var v = Math.min(999, Number(qtyValueEl.textContent) + 1);
+        var v = Math.min(Math.floor(999 / minQty) || 1, Number(qtyValueEl.textContent) + 1);
         qtyValueEl.textContent = String(v);
+        renderBlocks();
       });
       addBtn.addEventListener("click", function () {
-        var qty = Math.max(minQty, Number(qtyValueEl.textContent) || minQty);
-        addToCart(p.id, qty);
+        var blocks = Number(qtyValueEl.textContent);
+        if (blocks < 1) {
+          qtyValueEl.classList.add("is-empty-flash");
+          setTimeout(function () { qtyValueEl.classList.remove("is-empty-flash"); }, 600);
+          return;
+        }
+        addToCart(p.id, blocks * minQty);
+        qtyValueEl.textContent = "0";
+        renderBlocks();
         flashAddedToCart(addBtn);
       });
     }
 
     return article;
+  }
+
+  function blocksWord(n) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return "блок";
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "блока";
+    return "блоков";
   }
 
   function renderProducts(products) {
@@ -477,22 +499,22 @@
         "</div>" +
         '<div class="cart-item-body">' +
           '<p class="cart-item-name">' + escapeHtml(p.name) + "</p>" +
-          '<p class="cart-item-price">' + formatPrice(p.wholesalePrice) + " сомони / ед. · мин. " + minQty + "</p>" +
+          '<p class="cart-item-price">' + formatPrice(p.wholesalePrice) + " сомони / ед. · 1 блок = " + minQty + " шт. · всего " + it.quantity + " шт.</p>" +
         "</div>" +
         '<div class="cart-item-actions">' +
           '<div class="qty-stepper qty-stepper--sm">' +
             '<button type="button" class="qty-btn" data-action="dec" aria-label="Уменьшить количество">&minus;</button>' +
-            '<span class="qty-value">' + it.quantity + "</span>" +
+            '<span class="qty-value">' + Math.ceil(it.quantity / minQty) + "</span>" +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           "</div>" +
           '<button type="button" class="cart-item-remove" aria-label="Убрать из заявки">&times;</button>' +
         "</div>";
 
       row.querySelector('[data-action="dec"]').addEventListener("click", function () {
-        setCartQuantity(it.productId, it.quantity - 1);
+        setCartQuantity(it.productId, it.quantity - minQty);
       });
       row.querySelector('[data-action="inc"]').addEventListener("click", function () {
-        setCartQuantity(it.productId, it.quantity + 1);
+        setCartQuantity(it.productId, it.quantity + minQty);
       });
       row.querySelector(".cart-item-remove").addEventListener("click", function () {
         removeFromCart(it.productId);
