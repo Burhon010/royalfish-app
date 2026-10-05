@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Заказы — панель управления Royal Fish</title>
+<title>Рестораны — панель управления Royal Fish</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="../assets/logo-circle-480.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,9 +21,9 @@
     </a>
     <div class="admin-header-actions">
       <a href="dashboard.html" class="link-btn">Товары</a>
-      <a href="orders.html" class="link-btn is-active" aria-current="page">Заказы</a>
+      <a href="orders.html" class="link-btn">Заказы</a>
       <a href="wholesale-orders.html" class="link-btn">Опт. заказы</a>
-      <a href="restaurants.html" class="link-btn">Рестораны</a>
+      <a href="restaurants.html" class="link-btn is-active" aria-current="page">Рестораны</a>
       <a href="promo.html" class="link-btn">Реклама</a>
       <span class="admin-user" id="adminUser"></span>
       <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
@@ -33,47 +33,45 @@
 </header>
 
 <main class="admin-main">
-  <div class="tab-row" id="typeTabRow" role="tablist" aria-label="Тип заказа">
-    <button class="tab-pill is-active" data-type="all" role="tab" aria-selected="true">Все заказы</button>
-    <button class="tab-pill" data-type="retail" role="tab" aria-selected="false">Розница</button>
-    <button class="tab-pill" data-type="wholesale" role="tab" aria-selected="false">Опт / Рестораны</button>
-  </div>
-
   <div class="admin-toolbar">
-    <div class="filter-row" id="orderFilterRow">
-      <button class="filter-pill is-active" data-filter="all">Все статусы</button>
-      <button class="filter-pill" data-filter="new">Новые</button>
-      <button class="filter-pill" data-filter="processing">В обработке</button>
-      <button class="filter-pill" data-filter="delivering">Доставляются</button>
-      <button class="filter-pill" data-filter="completed">Завершённые</button>
+    <div class="filter-row" id="statusFilterRow">
+      <button class="filter-pill is-active" data-filter="all">Все</button>
+      <button class="filter-pill" data-filter="pending">На рассмотрении</button>
+      <button class="filter-pill" data-filter="approved">Одобрены</button>
+      <button class="filter-pill" data-filter="rejected">Отклонены</button>
+      <button class="filter-pill" data-filter="blocked">Заблокированы</button>
     </div>
+    <button class="btn-outline" id="groupsBtn" type="button">Группы цен</button>
   </div>
 
-  <div class="orders-danger">
-    <button type="button" class="btn-outline btn-danger" id="clearKeepBtn">Очистить историю</button>
-    <button type="button" class="btn-outline btn-danger" id="clearResetBtn">Очистить и начать с №1</button>
-  </div>
-
-  <p class="admin-hint">Список заказов, оформленных на сайте. Статус можно менять прямо здесь — клиент увидит это в будущем через уведомления.</p>
+  <p class="admin-hint">Рестораны и кафе, зарегистрировавшиеся в оптовом портале. Одобрите заявку, назначьте группу цен или индивидуальные цены.</p>
 
   <p class="toast" id="toast" hidden></p>
 
-  <div class="order-list" id="orderList">
-    <p class="list-status" id="listStatus">Загружаем заказы…</p>
+  <div class="rest-list" id="restList">
+    <p class="list-status" id="listStatus">Загружаем рестораны…</p>
   </div>
 </main>
 
-<!-- ============ МОДАЛЬНОЕ ОКНО: ДЕТАЛИ ЗАКАЗА ============ -->
-<div class="modal-overlay" id="orderModalOverlay" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+<!-- ============ ОКНО: РЕСТОРАН ============ -->
+<div class="modal-overlay" id="restModalOverlay" hidden>
+  <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="restModalTitle">
     <div class="modal-head">
-      <h2 id="orderModalTitle">Заказ №</h2>
-      <button class="modal-close" id="orderModalClose" type="button" aria-label="Закрыть">×</button>
+      <h2 id="restModalTitle">Ресторан</h2>
+      <button class="modal-close" id="restModalClose" type="button" aria-label="Закрыть">×</button>
     </div>
+    <div class="adm-pad" id="restModalBody"></div>
+  </div>
+</div>
 
-    <div class="order-detail" id="orderDetail">
-      <!-- заполняется через JS -->
+<!-- ============ ОКНО: ГРУППЫ ЦЕН ============ -->
+<div class="modal-overlay" id="groupsModalOverlay" hidden>
+  <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="groupsModalTitle">
+    <div class="modal-head">
+      <h2 id="groupsModalTitle">Группы цен</h2>
+      <button class="modal-close" id="groupsModalClose" type="button" aria-label="Закрыть">×</button>
     </div>
+    <div class="adm-pad" id="groupsModalBody"></div>
   </div>
 </div>
 
@@ -102,6 +100,7 @@
   </div>
 </div>
 
-<script src="orders.js"></script>
+<script src="admin-shared.js"></script>
+<script src="restaurants.js"></script>
 </body>
 </html>

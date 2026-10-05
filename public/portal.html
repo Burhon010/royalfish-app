@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Личный кабинет ресторана — Royal Fish</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="assets/logo-circle-480.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340;9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="partner.css" />
+  </head>
+  <body>
+    <header class="portal-header">
+      <div class="portal-header-inner">
+        <a href="wholesale.html" class="portal-brand">
+          <img src="assets/logo-circle-480.png" alt="Royal Fish" width="40" height="40" />
+          <span>Royal Fish</span>
+        </a>
+        <div class="portal-hello" id="portalHello" hidden>Ресторан: <strong id="portalHelloName"></strong></div>
+        <button type="button" class="portal-logout" id="logoutBtn">Выйти</button>
+      </div>
+    </header>
+
+    <main class="portal-main">
+      <h1 class="portal-welcome" id="welcomeTitle">Личный кабинет</h1>
+      <p class="portal-welcome-sub" id="welcomeSub">Загружаем…</p>
+
+      <div class="portal-banner" id="statusBanner" hidden></div>
+
+      <div id="portalApp" hidden>
+        <div class="portal-tabs" role="tablist">
+          <button type="button" class="portal-tab is-active" data-tab="catalog" role="tab">Каталог</button>
+          <button type="button" class="portal-tab" data-tab="orders" role="tab">Мои заказы</button>
+          <button type="button" class="portal-tab" data-tab="account" role="tab">Аккаунт</button>
+        </div>
+
+        <!-- Каталог -->
+        <section id="tabCatalog">
+          <div class="portal-search">
+            <input type="search" id="catalogSearch" placeholder="Поиск по названию" autocomplete="off" />
+            <div class="filter-row" id="catFilterRow" role="tablist" aria-label="Категории">
+              <button class="filter-pill is-active" data-filter="all" role="tab" aria-selected="true">Все</button>
+            </div>
+          </div>
+          <div class="portal-grid" id="catalogGrid">
+            <p class="p-empty">Загружаем каталог…</p>
+          </div>
+        </section>
+
+        <!-- Заказы -->
+        <section id="tabOrders" hidden>
+          <div class="p-order-list" id="orderList"></div>
+        </section>
+
+        <!-- Аккаунт -->
+        <section id="tabAccount" hidden>
+          <div class="p-modal-static">
+            <div class="p-info" id="accountInfo"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Нижняя панель корзины -->
+    <div class="portal-cartbar" id="cartBar" hidden>
+      <div class="portal-cartbar-inner">
+        <div class="portal-cartbar-info">
+          <span id="cartBarLine">Корзина пуста</span>
+          <strong id="cartBarTotal">0 сомони</strong>
+        </div>
+        <button type="button" class="btn btn--gold" id="openCartBtn">Корзина и оформление</button>
+      </div>
+    </div>
+
+    <!-- Корзина / оформление -->
+    <div class="p-overlay" id="cartOverlay" hidden>
+      <div class="p-modal" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+        <div class="p-modal-head">
+          <h2 id="cartTitle">Корзина</h2>
+          <button type="button" class="p-close" id="cartClose" aria-label="Закрыть">&times;</button>
+        </div>
+        <div id="cartBody"></div>
+      </div>
+    </div>
+
+    <!-- Детали заказа -->
+    <div class="p-overlay" id="orderOverlay" hidden>
+      <div class="p-modal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+        <div class="p-modal-head">
+          <h2 id="orderTitle">Заказ</h2>
+          <button type="button" class="p-close" id="orderClose" aria-label="Закрыть">&times;</button>
+        </div>
+        <div id="orderBody"></div>
+      </div>
+    </div>
+
+    <div class="p-toast" id="toast" hidden></div>
+
+    <script src="portal.js"></script>
+  </body>
+</html>

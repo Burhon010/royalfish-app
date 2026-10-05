@@ -82,10 +82,9 @@ function buildOrderMessage(order) {
   return lines.join("\n");
 }
 
-async function sendOrderNotification(order) {
+async function sendText(text) {
   if (!BOT_TOKEN || !CHAT_IDS.length) return;
 
-  const text = buildOrderMessage(order);
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
   // Каждому получателю — отдельный запрос; ошибка у одного (например,
@@ -115,4 +114,42 @@ async function sendOrderNotification(order) {
   );
 }
 
-module.exports = { sendOrderNotification };
+async function sendOrderNotification(order) {
+  await sendText(buildOrderMessage(order));
+}
+
+function buildWholesaleOrderMessage(order) {
+  const lines = [];
+  lines.push(`🧾 <b>Новый оптовый заказ ${escapeHtml(order.number)}</b>`);
+  lines.push(formatDate(order.createdAt || new Date()));
+  lines.push("");
+  lines.push(`<b>Ресторан:</b> ${escapeHtml(order.restaurantName)}`);
+  lines.push(`<b>Телефон:</b> ${escapeHtml(order.restaurantPhone)}`);
+  lines.push(`<b>Адрес:</b> ${escapeHtml(order.restaurantAddress)}`);
+  if (order.customerComment) lines.push(`<b>Комментарий:</b> ${escapeHtml(order.customerComment)}`);
+  lines.push("");
+  lines.push("<b>Товары:</b>");
+  (order.items || []).forEach((it) => {
+    lines.push(
+      `• ${escapeHtml(it.productName)} — ${it.orderedBlocks} бл. (${it.orderedUnits} шт.) × ${formatPrice(it.pricePerBlock)} = ${formatPrice(it.orderedSubtotal)} смн`
+    );
+  });
+  lines.push("");
+  lines.push(`<b>Всего: ${order.totals.orderedBlocks} бл. / ${order.totals.orderedUnits} шт. / ${formatPrice(order.totals.orderedTotal)} сомони</b>`);
+  lines.push("Статус: ожидает подтверждения");
+  return lines.join("\n");
+}
+
+function buildRegistrationMessage(r) {
+  return [
+    "🏪 <b>Новая заявка ресторана на партнёрство</b>",
+    "",
+    `<b>Название:</b> ${escapeHtml(r.name)}`,
+    `<b>Телефон:</b> ${escapeHtml(r.phone)}`,
+    `<b>Адрес:</b> ${escapeHtml(r.address)}`,
+    "",
+    "Одобрить можно в админке → Рестораны.",
+  ].join("\n");
+}
+
+module.exports = { sendOrderNotification, sendText, buildWholesaleOrderMessage, buildRegistrationMessage };

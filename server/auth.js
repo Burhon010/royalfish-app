@@ -16,10 +16,17 @@ function base64url(input) {
 /**
  * Подписывает объект в компактный токен вида "payload.signature".
  */
-function sign(payloadObj) {
+// Токены ресторанов подписываются другим ключом (SECRET + ":partner"),
+// поэтому токен ресторана никогда не пройдёт проверку как токен
+// администратора и наоборот.
+function secretFor(purpose) {
+  return purpose ? SECRET + ":" + purpose : SECRET;
+}
+
+function sign(payloadObj, purpose) {
   const payload = base64url(JSON.stringify(payloadObj));
   const signature = crypto
-    .createHmac("sha256", SECRET)
+    .createHmac("sha256", secretFor(purpose))
     .update(payload)
     .digest("base64url");
   return `${payload}.${signature}`;
@@ -29,12 +36,12 @@ function sign(payloadObj) {
  * Проверяет подпись и срок действия токена.
  * Возвращает распакованные данные или null, если токен недействителен.
  */
-function verify(token) {
+function verify(token, purpose) {
   if (!token || typeof token !== "string" || !token.includes(".")) return null;
 
   const [payload, signature] = token.split(".");
   const expectedSignature = crypto
-    .createHmac("sha256", SECRET)
+    .createHmac("sha256", secretFor(purpose))
     .update(payload)
     .digest("base64url");
 
@@ -55,4 +62,13 @@ function createSessionToken(adminId, username) {
   return sign({ sub: adminId, username, exp: Date.now() + TOKEN_TTL_MS });
 }
 
-module.exports = { createSessionToken, verify, TOKEN_TTL_MS };
+function createPartnerToken(restaurantId) {
+  return sign({ sub: restaurantId, role: "partner", exp: Date.now() + TOKEN_TTL_MS }, "partner");
+}
+
+function verifyPartnerToken(token) {
+  const data = verify(token, "partner");
+  return data && data.role === "partner" ? data : null;
+}
+
+module.exports = { createSessionToken, verify, createPartnerToken, verifyPartnerToken, TOKEN_TTL_MS };

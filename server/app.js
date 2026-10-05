@@ -5,7 +5,8 @@ const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth.routes");
 const productsRoutes = require("./routes/products.routes");
-const wholesaleProductsRoutes = require("./routes/wholesale-products.routes");
+const partnersRoutes = require("./routes/partners.routes");
+const adminPartners = require("./routes/admin-partners.routes");
 const adminProductsRoutes = require("./routes/admin-products.routes");
 const categoriesRoutes = require("./routes/categories.routes");
 const adminCategoriesRoutes = require("./routes/admin-categories.routes");
@@ -90,7 +91,10 @@ function createApp() {
   // API
   app.use("/api/auth", authRoutes);
   app.use("/api/products", productsRoutes);
-  app.use("/api/wholesale/products", wholesaleProductsRoutes);
+  app.use("/api/partners", partnersRoutes);
+  app.use("/api/admin/restaurants", adminPartners.restaurantsRouter);
+  app.use("/api/admin/price-groups", adminPartners.groupsRouter);
+  app.use("/api/admin/wholesale-orders", adminPartners.ordersRouter);
   app.use("/api/admin/products", adminProductsRoutes);
   app.use("/api/categories", categoriesRoutes);
   app.use("/api/admin/categories", adminCategoriesRoutes);

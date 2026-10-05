@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Royal Fish — оптовые поставки для ресторанов в Душанбе</title>
+    <title>Вход для ресторанов — Royal Fish</title>
     <meta
       name="description"
-      content="Royal Fish — оптовые поставки охлаждённой рыбы и морепродуктов для ресторанов и кафе в Душанбе. Личный кабинет партнёра, цены по группам, заказ блоками."
+      content="Вход в оптовый кабинет ресторана Royal Fish."
     />
     <meta name="robots" content="noindex, follow" />
 
@@ -46,7 +46,7 @@
           <a href="index.html#top" class="nav-link">Главная</a>
           <a href="index.html#catalog" class="nav-link">Розничный каталог</a>
           <a href="index.html#contacts" class="nav-link">Контакты</a>
-          <a href="wholesale.html" class="nav-link nav-link--cta is-active">Для ресторанов · Опт</a>
+          <a href="wholesale.html" class="nav-link nav-link--cta ">Для ресторанов · Опт</a>
           <a href="/admin" class="nav-link nav-link--staff">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
             Вход для сотрудников
@@ -83,9 +83,9 @@
 
       <div class="wrap hero-inner">
         <a href="wholesale.html" class="hero-back-link">&larr; Для ресторанов</a>
-        <p class="eyebrow eyebrow--light">Royal&nbsp;Fish · Оптовый отдел</p>
-        <h1 class="hero-title">Для ресторанов<br />и кафе</h1>
-        <p class="hero-sub">Личный кабинет партнёра: ваши цены, заказ блоками и история заказов. Регистрация бесплатная, доступ открывает администратор.</p>
+        <p class="eyebrow eyebrow--light">Royal&nbsp;Fish · Партнёрам</p>
+        <h1 class="hero-title">Вход для<br />ресторанов</h1>
+        <p class="hero-sub">Войдите по названию ресторана и паролю, чтобы открыть личный оптовый кабинет.</p>
       </div>
 
       <svg class="wave-divider" viewBox="0 0 1440 110" preserveAspectRatio="none" aria-hidden="true">
@@ -94,25 +94,28 @@
     </section>
 
     <main id="main">
-      <section class="partner-cta">
+      <section class="auth-page">
         <div class="wrap">
-          <div class="partner-cta-grid">
-            <div class="partner-benefit">
-              <h3>Ваши цены</h3>
-              <p>Каждый партнёр видит только свои оптовые цены — по группе или индивидуально согласованные.</p>
-            </div>
-            <div class="partner-benefit">
-              <h3>Заказ блоками</h3>
-              <p>Оптовая продукция продаётся блоками. Система сама считает штуки и сумму заказа.</p>
-            </div>
-            <div class="partner-benefit">
-              <h3>История и документы</h3>
-              <p>Все заказы в одном кабинете. Заказ можно распечатать или сохранить в PDF.</p>
-            </div>
-          </div>
-          <div class="partner-cta-actions">
-            <a class="btn btn--gold" href="partner-register.html">Стать партнёром</a>
-            <a class="btn btn--ghost-dark" href="partner-login.html">Вход для ресторанов</a>
+          <div class="auth-card">
+            <h1>Вход для ресторанов</h1>
+            <p class="auth-sub">Введите название ресторана так, как оно указано при регистрации.</p>
+
+            <form class="pform" id="loginForm" novalidate>
+              <label class="field">
+                <span>Название ресторана</span>
+                <input type="text" id="loginName" maxlength="100" autocomplete="username" required />
+              </label>
+              <label class="field">
+                <span>Пароль</span>
+                <span class="pw-field">
+                  <input type="password" id="loginPassword" maxlength="100" autocomplete="current-password" required />
+                  <button type="button" class="pw-toggle-btn" data-target="loginPassword">Показать</button>
+                </span>
+              </label>
+              <p class="pform-msg is-error" id="loginError" hidden></p>
+              <button type="submit" class="btn btn--gold" id="loginSubmit">Войти</button>
+            </form>
+            <p class="auth-alt">Ещё не партнёр? <a href="partner-register.html">Зарегистрироваться</a></p>
           </div>
         </div>
       </section>
@@ -156,5 +159,6 @@
     </footer>
 
     <script src="partner-common.js"></script>
+    <script src="partner-login.js"></script>
   </body>
 </html>

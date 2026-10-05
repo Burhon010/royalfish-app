@@ -40,6 +40,7 @@ function assertAdminPasswordIsSafeForProduction(password) {
    ---------------------------------------------------------- */
 async function init() {
   await store.initSchema();
+  await require("./partners").initPartnerSchema();
 
   const adminUsername = process.env.ADMIN_USERNAME || "admin";
   const adminPassword = process.env.ADMIN_PASSWORD || "royalfish2026";

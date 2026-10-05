@@ -55,7 +55,9 @@ function serializeOrder(order) {
 function validateOrderBody(body) {
   const errors = [];
 
-  const orderType = body.orderType === "wholesale" ? "wholesale" : "retail";
+  // Публичная форма — только розница. Оптовые заказы оформляются в
+  // личном кабинете ресторана (server/routes/partners.routes.js).
+  const orderType = "retail";
   const isWholesale = orderType === "wholesale";
   const maxQty = isWholesale ? MAX_QTY_PER_ITEM_WHOLESALE : MAX_QTY_PER_ITEM;
 
