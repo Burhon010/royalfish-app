@@ -53,7 +53,9 @@
   }
 
   function priceRow(r, p) {
-    return "<tr>" +
+    return '<tr class="' + (p.hidden ? "row-hidden" : "") + '">' +
+      '<td><label class="vis-toggle"><input type="checkbox" class="vis-input" data-id="' + p.productId + '"' +
+        (p.hidden ? "" : " checked") + "> <span>" + (p.hidden ? "скрыт" : "виден") + "</span></label></td>" +
       "<td>" + esc(p.name) + "<br><small>" + esc(p.weight) + " · блок " + p.unitsPerBlock + " шт.</small></td>" +
       '<td class="num">' + money(p.basePrice) + "</td>" +
       '<td class="num">' + (p.groupPrice === null ? "—" : money(p.groupPrice)) + "</td>" +
@@ -99,10 +101,10 @@
       "</form>" +
       '<h3 class="adm-h3" id="restPricesTitle">Цены ресторана «' + esc(r.name) + '» (за блок)</h3>' +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
-        "<th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
+        "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
       "</tr></thead><tbody>" +
       (r.prices.length ? r.prices.map(function (p) { return priceRow(r, p); }).join("") :
-        '<tr><td colspan="6">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
+        '<tr><td colspan="7">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
       "</tbody></table></div>";
 
     document.getElementById("restForm").addEventListener("submit", function (e) {
@@ -120,6 +122,21 @@
     Array.prototype.forEach.call(restBody.querySelectorAll(".q-act"), function (b) {
       b.addEventListener("click", function () {
         saveRestaurant(r.id, { status: b.getAttribute("data-s") });
+      });
+    });
+
+    Array.prototype.forEach.call(restBody.querySelectorAll(".vis-input"), function (cb) {
+      cb.addEventListener("change", function () {
+        var visible = cb.checked;
+        api("PUT", "/api/admin/restaurants/" + r.id + "/products/" + cb.getAttribute("data-id"), { visible: visible })
+          .then(function () {
+            S.showToast(visible ? "Товар снова виден ресторану" : "Товар скрыт для ресторана");
+            load(true);
+          })
+          .catch(function (err) {
+            cb.checked = !visible;
+            S.showToast(err.message, true);
+          });
       });
     });
 

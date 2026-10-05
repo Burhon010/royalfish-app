@@ -141,6 +141,22 @@ restaurantsRouter.delete("/:id/prices/:productId", async (req, res, next) => {
   }
 });
 
+// Показать / скрыть товар для конкретного ресторана: { visible: true|false }
+restaurantsRouter.put("/:id/products/:productId", async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const productId = parseId(req.params.productId);
+    const visible = req.body && req.body.visible;
+    if (!id || !productId || typeof visible !== "boolean") return res.status(400).json({ error: "Некорректный запрос." });
+    if (!(await partners.getRestaurantById(id))) return res.status(404).json({ error: "Ресторан не найден." });
+    await partners.setProductHidden(id, productId, !visible);
+    res.json({ ok: true });
+  } catch (err) {
+    if (err.code === "23503") return res.status(400).json({ error: "Товар не найден." });
+    next(err);
+  }
+});
+
 /* ---------------- Группы цен ---------------- */
 
 groupsRouter.get("/", async (req, res, next) => {

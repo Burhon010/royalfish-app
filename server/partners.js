@@ -81,6 +81,14 @@ async function initPartnerSchema() {
       PRIMARY KEY (restaurant_id, product_id)
     );
 
+    -- Товары, скрытые владельцем для конкретного ресторана (не видны в его
+    -- каталоге и не доступны для заказа).
+    CREATE TABLE IF NOT EXISTS restaurant_hidden_products (
+      restaurant_id  INTEGER NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      product_id     INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      PRIMARY KEY (restaurant_id, product_id)
+    );
+
     CREATE TABLE IF NOT EXISTS wholesale_orders (
       id                  SERIAL PRIMARY KEY,
       restaurant_id       INTEGER REFERENCES restaurants(id) ON DELETE SET NULL,
@@ -257,10 +265,12 @@ function baseBlockPrice(p) {
 async function getRestaurantPriceTable(restaurant) {
   const { rows } = await pool.query(
     `SELECT p.id, p.name, p.weight, p.wholesale_price, p.wholesale_min_qty,
-            gp.price AS group_price, rp.price AS own_price
+            gp.price AS group_price, rp.price AS own_price,
+            (hp.product_id IS NOT NULL) AS hidden
      FROM products p
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
      LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $1
+     LEFT JOIN restaurant_hidden_products hp ON hp.product_id = p.id AND hp.restaurant_id = $1
      WHERE p.available_wholesale = true AND p.wholesale_price IS NOT NULL
      ORDER BY p.name`,
     [restaurant.id, restaurant.price_group_id]
@@ -270,6 +280,7 @@ async function getRestaurantPriceTable(restaurant) {
     const group = p.group_price === null ? null : round2(p.group_price);
     const own = p.own_price === null ? null : round2(p.own_price);
     return {
+      hidden: p.hidden,
       productId: p.id,
       name: p.name,
       weight: p.weight,
@@ -311,6 +322,16 @@ async function setRestaurantPrice(restaurantId, productId, price) {
 async function deleteRestaurantPrice(restaurantId, productId) {
   await pool.query("DELETE FROM restaurant_prices WHERE restaurant_id = $1 AND product_id = $2", [restaurantId, productId]);
 }
+async function setProductHidden(restaurantId, productId, hidden) {
+  if (hidden) {
+    await pool.query(
+      "INSERT INTO restaurant_hidden_products (restaurant_id, product_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [restaurantId, productId]
+    );
+  } else {
+    await pool.query("DELETE FROM restaurant_hidden_products WHERE restaurant_id = $1 AND product_id = $2", [restaurantId, productId]);
+  }
+}
 async function setGroupPrice(groupId, productId, price) {
   await pool.query(
     `INSERT INTO price_group_prices (group_id, product_id, price) VALUES ($1,$2,$3)
@@ -333,6 +354,7 @@ async function getCatalogForRestaurant(restaurant) {
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
      LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $1
      WHERE p.available_wholesale = true AND p.wholesale_price IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM restaurant_hidden_products h WHERE h.restaurant_id = $1 AND h.product_id = p.id)
      ORDER BY p.created_at DESC`,
     [restaurant.id, restaurant.price_group_id]
   );
@@ -363,10 +385,12 @@ async function createWholesaleOrder(restaurant, items, comment) {
     const ids = items.map((i) => i.productId);
     const { rows } = await client.query(
       `SELECT p.id, p.name, p.wholesale_price, p.wholesale_min_qty, p.available_wholesale,
-              gp.price AS group_price, rp.price AS own_price
+              gp.price AS group_price, rp.price AS own_price,
+              (hp.product_id IS NOT NULL) AS hidden
        FROM products p
        LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $3
        LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $2
+       LEFT JOIN restaurant_hidden_products hp ON hp.product_id = p.id AND hp.restaurant_id = $2
        WHERE p.id = ANY($1::int[])`,
       [ids, restaurant.id, restaurant.price_group_id]
     );
@@ -375,7 +399,7 @@ async function createWholesaleOrder(restaurant, items, comment) {
     const resolved = [];
     for (const it of items) {
       const p = byId.get(it.productId);
-      if (!p || !p.available_wholesale || p.wholesale_price === null) {
+      if (!p || !p.available_wholesale || p.wholesale_price === null || p.hidden) {
         const err = new Error("Один из товаров недоступен для оптового заказа. Обновите страницу.");
         err.statusCode = 400;
         throw err;
@@ -562,6 +586,7 @@ module.exports = {
   deleteRestaurantPrice,
   setGroupPrice,
   deleteGroupPrice,
+  setProductHidden,
   getCatalogForRestaurant,
   createWholesaleOrder,
   getWholesaleOrder,
