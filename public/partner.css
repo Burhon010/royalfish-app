@@ -918,3 +918,52 @@
 .portal-adminbar-link:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Режим администратора: управление товарами ресторана */
+.portal-card.is-unpublished .portal-card-media,
+.portal-card.is-unpublished .portal-card-name {
+  opacity: 0.45;
+}
+.manage-meta {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.pub-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.pub-switch input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+.manage-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.manage-price {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 16px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+}
+.manage-btns {
+  display: flex;
+  gap: 8px;
+}
+.manage-btns .btn-add-cart {
+  flex: 1;
+  width: auto;
+}

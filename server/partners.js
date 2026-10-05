@@ -264,7 +264,7 @@ function baseBlockPrice(p) {
 // групповая, индивидуальная и итоговая цена ресторана.
 async function getRestaurantPriceTable(restaurant) {
   const { rows } = await pool.query(
-    `SELECT p.id, p.name, p.weight, p.wholesale_price, p.wholesale_min_qty,
+    `SELECT p.id, p.name, p.weight, p.category, p.image_path, p.wholesale_price, p.wholesale_min_qty,
             gp.price AS group_price, rp.price AS own_price,
             (hp.product_id IS NOT NULL) AS hidden
      FROM products p
@@ -282,6 +282,8 @@ async function getRestaurantPriceTable(restaurant) {
     return {
       hidden: p.hidden,
       productId: p.id,
+      category: p.category,
+      image: p.image_path,
       name: p.name,
       weight: p.weight,
       unitsPerBlock: p.wholesale_min_qty,

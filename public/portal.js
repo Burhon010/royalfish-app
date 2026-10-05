@@ -125,7 +125,7 @@
 
   function renderCartBar() {
     var t = cartTotals();
-    el("cartBar").hidden = !(profile && profile.status === "approved") || t.blocks === 0;
+    el("cartBar").hidden = impersonated || !(profile && profile.status === "approved") || t.blocks === 0;
     el("cartBarLine").textContent = t.blocks + " " + blocksWord(t.blocks) + " · " + t.units + " шт.";
     el("cartBarTotal").textContent = money(t.sum) + " сомони";
   }
@@ -237,8 +237,119 @@
       return;
     }
     var frag = document.createDocumentFragment();
-    list.forEach(function (p) { frag.appendChild(buildCard(p)); });
+    list.forEach(function (p) { frag.appendChild(impersonated ? buildManageCard(p) : buildCard(p)); });
     grid.appendChild(frag);
+  }
+
+  /* ---------------- режим администратора: управление товарами ресторана ----------------
+     Владелец, зашедший в кабинет ресторана, видит не корзину, а управление:
+     публикация товара для этого ресторана и его индивидуальная цена.
+     Запросы идут в админский API (сессия администратора rf_session). */
+  function adminApi(method, url, body) {
+    return fetch(url, {
+      method: method,
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (res.status === 401) {
+          window.location.href = "admin/login.html";
+          throw new Error("unauthorized");
+        }
+        if (!res.ok) throw new Error(data.error || "Ошибка запроса.");
+        return data;
+      });
+    });
+  }
+
+  function loadManageCatalog() {
+    return adminApi("GET", "/api/admin/restaurants/" + profile.id).then(function (r) {
+      catalog = r.prices.map(function (p) {
+        return {
+          id: p.productId, name: p.name, category: p.category, weight: p.weight, image: p.image,
+          unitsPerBlock: p.unitsPerBlock, pricePerBlock: p.finalPrice, _m: p,
+        };
+      });
+    });
+  }
+
+  function refreshManage() {
+    var y = window.scrollY;
+    return loadManageCatalog().then(function () {
+      renderCategoryPills();
+      renderCatalog();
+      window.scrollTo(0, y);
+    });
+  }
+
+  function buildManageCard(p) {
+    var m = p._m;
+    var art = document.createElement("article");
+    art.className = "portal-card" + (m.hidden ? " is-unpublished" : "");
+    var media = p.image
+      ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
+      : "";
+    art.innerHTML =
+      '<div class="portal-card-media">' + media + "</div>" +
+      '<div class="portal-card-body">' +
+        '<h3 class="portal-card-name">' + esc(p.name) + "</h3>" +
+        '<p class="portal-card-weight">' + esc(p.weight) + "</p>" +
+        '<span class="portal-block-note">1 блок = ' + p.unitsPerBlock + " шт.</span>" +
+        '<div class="portal-price">' + money(m.finalPrice) + " <small>сомони / блок (для ресторана)</small></div>" +
+        '<div class="manage-meta">База ' + money(m.basePrice) + " · Группа " + (m.groupPrice === null ? "—" : money(m.groupPrice)) + "</div>" +
+        '<div class="portal-card-actions">' +
+          '<label class="pub-switch"><input type="checkbox" class="pub-input"' + (m.hidden ? "" : " checked") + '> <span>' +
+            (m.hidden ? "Не опубликован" : "Опубликован") + "</span></label>" +
+          '<label class="manage-label">Индивидуальная цена за блок' +
+            '<input type="number" min="0" step="0.01" class="manage-price" value="' + (m.ownPrice === null ? "" : m.ownPrice) + '" placeholder="' + m.finalPrice + '"></label>' +
+          '<div class="manage-btns">' +
+            '<button type="button" class="btn-add-cart manage-save">Сохранить цену</button>' +
+            '<button type="button" class="p-btn p-btn--ghost manage-clear"' + (m.ownPrice === null ? " disabled" : "") + ">Сбросить</button>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+
+    var base = "/api/admin/restaurants/" + profile.id;
+    art.querySelector(".pub-input").addEventListener("change", function (e) {
+      var visible = e.target.checked;
+      adminApi("PUT", base + "/products/" + p.id, { visible: visible })
+        .then(function () {
+          showToast(visible ? "Товар опубликован для ресторана" : "Товар скрыт от ресторана");
+          return refreshManage();
+        })
+        .catch(function (err) { e.target.checked = !visible; showToast(err.message, true); });
+    });
+    art.querySelector(".manage-save").addEventListener("click", function () {
+      var v = art.querySelector(".manage-price").value;
+      if (v === "") { showToast("Введите цену или нажмите «Сбросить».", true); return; }
+      adminApi("PUT", base + "/prices/" + p.id, { price: Number(v) })
+        .then(function () { showToast("Цена сохранена"); return refreshManage(); })
+        .catch(function (err) { showToast(err.message, true); });
+    });
+    art.querySelector(".manage-clear").addEventListener("click", function () {
+      adminApi("DELETE", base + "/prices/" + p.id)
+        .then(function () { showToast("Возвращена цена группы / базовая"); return refreshManage(); })
+        .catch(function (err) { showToast(err.message, true); });
+    });
+    return art;
+  }
+
+  function startAdminMode(me) {
+    el("welcomeTitle").textContent = "Управление: " + me.name;
+    el("welcomeSub").textContent = "Вы владелец Royal Fish: публикуйте товары для этого ресторана и меняйте его цены. Ресторан увидит изменения сразу.";
+    document.querySelector('.portal-tab[data-tab="catalog"]').textContent = "Товары и цены";
+    el("portalApp").hidden = false;
+    return Promise.all([
+      loadManageCatalog(),
+      fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+      me.status === "approved" ? loadOrders().catch(function () {}) : Promise.resolve(),
+    ]).then(function (res) {
+      categories = res[1];
+      renderCategoryPills();
+      renderCatalog();
+      renderCartBar();
+    });
   }
 
   /* ---------------- корзина: окно ---------------- */
@@ -477,6 +588,8 @@
         "<span><b>Статус:</b> " + ACCOUNT_STATUS[me.status] + "</span>" +
         (me.priceGroup ? "<span><b>Группа цен:</b> " + esc(me.priceGroup) + "</span>" : "") +
         "<span><b>Дата регистрации:</b> " + fmtDate(me.createdAt) + "</span>";
+
+      if (me.impersonated) return startAdminMode(me);
 
       var banner = el("statusBanner");
       if (me.status !== "approved") {
