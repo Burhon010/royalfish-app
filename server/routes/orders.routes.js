@@ -71,6 +71,7 @@ function validateOrderBody(body) {
   if (customerName.length > 120) errors.push("Имя слишком длинное.");
   if (!customerPhone) errors.push("Укажите номер телефона.");
   if (customerPhone.length > 40) errors.push("Номер телефона слишком длинный.");
+  if (!isWholesale && !customerAddress) errors.push("Укажите адрес доставки.");
   if (customerAddress.length > 300) errors.push("Адрес слишком длинный.");
   if (comment.length > 500) errors.push("Комментарий слишком длинный.");
 

@@ -553,8 +553,8 @@
       website: document.getElementById("checkoutWebsite").value,
     };
 
-    if (!payload.customerName || !payload.customerPhone) {
-      checkoutError.textContent = "Укажите имя и номер телефона.";
+    if (!payload.customerName || !payload.customerPhone || !payload.customerAddress) {
+      checkoutError.textContent = "Укажите имя, номер телефона и адрес доставки.";
       checkoutError.hidden = false;
       return;
     }

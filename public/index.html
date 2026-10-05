@@ -594,7 +594,7 @@
             </div>
 
             <label class="field">
-              <span>Имя</span>
+              <span>Имя <b class="req">*</b></span>
               <input
                 type="text"
                 id="checkoutName"
@@ -604,7 +604,7 @@
               />
             </label>
             <label class="field">
-              <span>Телефон</span>
+              <span>Телефон <b class="req">*</b></span>
               <input
                 type="tel"
                 id="checkoutPhone"
@@ -616,7 +616,7 @@
             </label>
             <div class="address-block">
               <label class="field field--address">
-                <span>Адрес доставки</span>
+                <span>Адрес доставки <b class="req">*</b></span>
                 <span class="address-input-wrap">
                   <svg
                     class="address-pin"
@@ -644,25 +644,26 @@
                     maxlength="200"
                     autocomplete="street-address"
                     placeholder="улица, дом"
+                    required
                   />
                 </span>
               </label>
 
               <div class="address-grid">
                 <label class="field field--sm">
-                  <span>Подъезд</span>
+                  <span>Подъезд <em>(необяз.)</em></span>
                   <input type="text" id="checkoutEntrance" maxlength="20" />
                 </label>
                 <label class="field field--sm">
-                  <span>Домофон</span>
+                  <span>Домофон <em>(необяз.)</em></span>
                   <input type="text" id="checkoutIntercom" maxlength="20" />
                 </label>
                 <label class="field field--sm">
-                  <span>Этаж</span>
+                  <span>Этаж <em>(необяз.)</em></span>
                   <input type="text" id="checkoutFloor" maxlength="10" />
                 </label>
                 <label class="field field--sm">
-                  <span>Квартира</span>
+                  <span>Квартира <em>(необяз.)</em></span>
                   <input type="text" id="checkoutApartment" maxlength="10" />
                 </label>
               </div>
