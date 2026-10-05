@@ -861,3 +861,11 @@ button, input, select{ font-family: inherit; }
 .orders-danger{ display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 14px; }
 .btn-danger{ color: var(--danger, #b3261e); border-color: currentColor; }
 .btn-danger:hover{ background: rgba(179, 38, 30, 0.08); }
+
+/* Текущий раздел в шапке админки */
+.admin-header-actions .link-btn.is-active{
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
