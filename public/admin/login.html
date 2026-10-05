@@ -21,7 +21,10 @@
   <form id="loginForm" class="login-form" novalidate>
     <label class="field">
       <span class="field-label">Пароль</span>
-      <input type="password" name="password" id="password" autocomplete="current-password" required autofocus>
+      <span class="pw-wrap">
+        <input type="password" name="password" id="password" autocomplete="current-password" required autofocus>
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="Показать пароль" aria-pressed="false">Показать</button>
+      </span>
     </label>
 
     <p class="form-error" id="loginError" hidden></p>

@@ -10,6 +10,17 @@
     if (res.ok) window.location.href = "dashboard.html";
   });
 
+  var pwInput = document.getElementById("password");
+  var pwToggle = document.getElementById("pwToggle");
+  pwToggle.addEventListener("click", function () {
+    var show = pwInput.type === "password";
+    pwInput.type = show ? "text" : "password";
+    pwToggle.textContent = show ? "Скрыть" : "Показать";
+    pwToggle.setAttribute("aria-pressed", show ? "true" : "false");
+    pwToggle.setAttribute("aria-label", show ? "Скрыть пароль" : "Показать пароль");
+    pwInput.focus();
+  });
+
   function showError(message) {
     errorBox.textContent = message;
     errorBox.hidden = false;
