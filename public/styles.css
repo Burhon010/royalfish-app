@@ -1997,3 +1997,13 @@ body.cart-open {
     transition: none !important;
   }
 }
+
+.map-link {
+  color: var(--ocean);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.map-link:hover {
+  color: var(--ocean-light);
+}
