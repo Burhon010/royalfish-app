@@ -13,7 +13,6 @@
 
   var restaurants = [];
   var groups = [];
-  var activeFilter = "all";
 
   var listEl = document.getElementById("restList");
   var listStatus = document.getElementById("listStatus");
@@ -45,7 +44,7 @@
   }
 
   function renderList() {
-    var visible = restaurants.filter(function (r) { return activeFilter === "all" || r.status === activeFilter; });
+    var visible = restaurants;
     listEl.innerHTML = "";
     if (!restaurants.length) {
       listEl.innerHTML = '<p class="list-status">Пока нет зарегистрированных ресторанов.</p>';
@@ -55,32 +54,29 @@
       listEl.innerHTML = '<p class="list-status">В этом статусе ресторанов нет.</p>';
       return;
     }
-    visible.forEach(function (r) {
-      var row = document.createElement("button");
-      row.type = "button";
+    visible.forEach(function (r, index) {
+      var row = document.createElement("div");
       row.className = "rest-row";
+      row.setAttribute("tabindex", "0");
+      row.setAttribute("role", "button");
       row.innerHTML =
-        "<div><p class=\"rest-row-name\">" + esc(r.name) + "</p>" +
-        "<p class=\"rest-row-meta\">" + esc(r.phone) + " · " + esc(r.address) + "</p></div>" +
-        "<div><p class=\"rest-row-meta\">Регистрация: " + S.fmtDate(r.createdAt) + "</p>" +
-        "<p class=\"rest-row-meta\">Группа: " + (r.priceGroupName ? esc(r.priceGroupName) : "—") + "</p></div>" +
-        "<div class=\"rest-row-right\">" + r.ordersCount + " опт. заказ(ов)</div>" +
-        "<div><span class=\"adm-badge st-" + r.status + "\">" + STATUS[r.status] + "</span></div>";
-      row.addEventListener("click", function () { openRestaurant(r.id); });
+        '<div class="rest-row-num">' + (index + 1) + "</div>" +
+        '<div class="rest-row-main"><p class="rest-row-name">' + esc(r.name) + "</p>" +
+        '<p class="rest-row-meta">' + esc(r.phone) + " · " + esc(r.address) + "</p></div>" +
+        '<div><p class="rest-row-meta">Регистрация: ' + S.fmtDate(r.createdAt) + "</p>" +
+        '<p class="rest-row-meta">Группа: ' + (r.priceGroupName ? esc(r.priceGroupName) : "—") + "</p></div>" +
+        '<div class="rest-row-right">' + r.ordersCount + " опт. заказ(ов)</div>" +
+        '<div><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span></div>" +
+        '<div><button type="button" class="btn-primary rest-prices-btn">Цены</button></div>';
+      row.addEventListener("click", function (e) {
+        openRestaurant(r.id, !!e.target.closest(".rest-prices-btn"));
+      });
+      row.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") openRestaurant(r.id, false);
+      });
       listEl.appendChild(row);
     });
   }
-
-  Array.prototype.forEach.call(document.querySelectorAll("#statusFilterRow .filter-pill"), function (pill) {
-    pill.addEventListener("click", function () {
-      Array.prototype.forEach.call(document.querySelectorAll("#statusFilterRow .filter-pill"), function (p) {
-        p.classList.remove("is-active");
-      });
-      pill.classList.add("is-active");
-      activeFilter = pill.getAttribute("data-filter");
-      renderList();
-    });
-  });
 
   /* ---------------- карточка ресторана ---------------- */
   function groupOptions(selectedId) {
@@ -94,10 +90,16 @@
     }).join("");
   }
 
-  function openRestaurant(id) {
+  function openRestaurant(id, scrollToPrices) {
     restBody.innerHTML = '<p class="list-status">Загружаем…</p>';
     restOverlay.hidden = false;
-    api("GET", "/api/admin/restaurants/" + id).then(renderRestaurant).catch(function (err) {
+    api("GET", "/api/admin/restaurants/" + id).then(function (r) {
+      renderRestaurant(r);
+      if (scrollToPrices) {
+        var h = document.getElementById("restPricesTitle");
+        if (h) h.scrollIntoView();
+      }
+    }).catch(function (err) {
       restBody.innerHTML = '<p class="form-error">' + esc(err.message) + "</p>";
     });
   }
@@ -146,7 +148,7 @@
         '<p class="form-error field--full" id="rError" hidden></p>' +
         '<div class="field--full"><button type="submit" class="btn-primary">Сохранить данные</button></div>' +
       "</form>" +
-      '<h3 class="adm-h3">Цены (за блок)</h3>' +
+      '<h3 class="adm-h3" id="restPricesTitle">Цены ресторана «' + esc(r.name) + '» (за блок)</h3>' +
       '<div class="adm-note">Итоговая цена ресторана: 1) индивидуальная, 2) цена группы, 3) базовая оптовая. Изменение группы применяется после «Сохранить данные».</div>' +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
         "<th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
@@ -184,7 +186,7 @@
         api("PUT", "/api/admin/restaurants/" + r.id + "/prices/" + id, { price: Number(input.value) })
           .then(function () {
             S.showToast("Индивидуальная цена сохранена");
-            openRestaurant(r.id);
+            openRestaurant(r.id, true);
           })
           .catch(function (err) { S.showToast(err.message, true); });
       });
@@ -194,7 +196,7 @@
         api("DELETE", "/api/admin/restaurants/" + r.id + "/prices/" + b.getAttribute("data-id"))
           .then(function () {
             S.showToast("Возвращена цена группы");
-            openRestaurant(r.id);
+            openRestaurant(r.id, true);
           })
           .catch(function (err) { S.showToast(err.message, true); });
       });

@@ -163,7 +163,7 @@ async function listRestaurants() {
             g.name AS price_group_name,
             (SELECT COUNT(*)::int FROM wholesale_orders o WHERE o.restaurant_id = r.id) AS orders_count
      FROM restaurants r LEFT JOIN price_groups g ON g.id = r.price_group_id
-     ORDER BY (r.status = 'pending') DESC, r.created_at DESC`
+     ORDER BY r.id ASC`
   );
   return rows;
 }

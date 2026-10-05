@@ -876,7 +876,7 @@ button, input, select{ font-family: inherit; }
 .rest-list{ display: flex; flex-direction: column; gap: 10px; }
 .rest-row{
   display: grid;
-  grid-template-columns: 1.8fr 1fr 1fr auto;
+  grid-template-columns: 36px 1.8fr 1fr 1fr auto auto;
   align-items: center;
   gap: 16px;
   background: #fff;
@@ -934,10 +934,20 @@ button, input, select{ font-family: inherit; }
 .group-row{ display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .group-row input{ flex: 1; }
 @media (max-width: 760px){
-  .rest-row{ grid-template-columns: 1fr; gap: 6px; }
+  .rest-row{ grid-template-columns: 36px 1fr; gap: 6px 10px; }
+  .rest-row > div:nth-child(n+3){ grid-column: 2; }
   .rest-row-right{ text-align: left; }
   .adm-form{ grid-template-columns: 1fr; }
   .adm-pad{ padding: 4px 12px 6px; }
 }
 
 .adm-link-btn{ text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+
+.rest-row-num{
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,95,128,.1); color: var(--ocean);
+  font-family: var(--font-mono); font-weight: 800; font-size: 13px;
+}
+.rest-prices-btn{ padding: 8px 18px; }
+.rest-hint{ margin: 0 0 12px; }
