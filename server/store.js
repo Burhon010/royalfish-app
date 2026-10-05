@@ -105,14 +105,37 @@ async function initSchema() {
       CHECK (role IN ('admin','manager','sales','smm'));
   `);
 
-  // Расширяем список допустимых категорий (добавлены "Лобстеры" = 'lobster'
-  // и ранее "Другие" = 'other'). Пересоздаём CHECK-ограничение —
-  // существующие товары и их категории не трогаем.
+  // Категории теперь хранятся в таблице и редактируются из админки, поэтому
+  // жёсткое CHECK-ограничение на products.category снимаем. Существующие
+  // товары и их категории не трогаем; стартовый набор создаём только в пустой
+  // таблице.
+  await pool.query(`ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_check;`);
   await pool.query(`
-    ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_check;
-    ALTER TABLE products ADD CONSTRAINT products_category_check
-      CHECK (category IN ('fish','shrimp','squid','caviar','delicacy','lobster','other'));
+    CREATE TABLE IF NOT EXISTS categories (
+      slug        TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      sort_order  INTEGER NOT NULL DEFAULT 0,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
   `);
+  const { rows: catCount } = await pool.query("SELECT COUNT(*)::int AS n FROM categories");
+  if (catCount[0].n === 0) {
+    const defaults = [
+      ["fish", "Рыба"],
+      ["shrimp", "Креветки"],
+      ["squid", "Кальмары"],
+      ["caviar", "Икра"],
+      ["delicacy", "Морские деликатесы"],
+      ["lobster", "Лобстеры"],
+      ["other", "Другие"],
+    ];
+    for (let i = 0; i < defaults.length; i++) {
+      await pool.query(
+        "INSERT INTO categories (slug, name, sort_order) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING",
+        [defaults[i][0], defaults[i][1], i]
+      );
+    }
+  }
 
   // ------------------------------------------------------------
   // Заказы. Отдельные таблицы, никак не пересекаются с товарами
@@ -185,6 +208,36 @@ async function initSchema() {
 /* ============================================================
    Администраторы
    ============================================================ */
+
+async function getCategories() {
+  const { rows } = await pool.query("SELECT slug, name FROM categories ORDER BY sort_order, created_at");
+  return rows;
+}
+
+async function categoryExists(slug) {
+  const { rows } = await pool.query("SELECT 1 FROM categories WHERE slug = $1", [slug]);
+  return rows.length > 0;
+}
+
+async function createCategory(name) {
+  const slug = "c" + Date.now().toString(36);
+  const { rows } = await pool.query(
+    `INSERT INTO categories (slug, name, sort_order)
+     VALUES ($1, $2, COALESCE((SELECT MAX(sort_order) + 1 FROM categories), 0))
+     RETURNING slug, name`,
+    [slug, name]
+  );
+  return rows[0];
+}
+
+async function countProductsInCategory(slug) {
+  const { rows } = await pool.query("SELECT COUNT(*)::int AS n FROM products WHERE category = $1", [slug]);
+  return rows[0].n;
+}
+
+async function deleteCategory(slug) {
+  await pool.query("DELETE FROM categories WHERE slug = $1", [slug]);
+}
 
 async function getAdminByUsername(username) {
   const { rows } = await pool.query("SELECT * FROM admins WHERE username = $1", [username]);
@@ -648,6 +701,11 @@ module.exports = {
   pool,
   initSchema,
   getAdminByUsername,
+  getCategories,
+  categoryExists,
+  createCategory,
+  countProductsInCategory,
+  deleteCategory,
   getAdminById,
   getFirstAdmin,
   updateAdminPassword,

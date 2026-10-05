@@ -7,6 +7,8 @@ const authRoutes = require("./routes/auth.routes");
 const productsRoutes = require("./routes/products.routes");
 const wholesaleProductsRoutes = require("./routes/wholesale-products.routes");
 const adminProductsRoutes = require("./routes/admin-products.routes");
+const categoriesRoutes = require("./routes/categories.routes");
+const adminCategoriesRoutes = require("./routes/admin-categories.routes");
 const ordersRoutes = require("./routes/orders.routes");
 const adminOrdersRoutes = require("./routes/admin-orders.routes");
 const promoSlidesRoutes = require("./routes/promo-slides.routes");
@@ -90,6 +92,8 @@ function createApp() {
   app.use("/api/products", productsRoutes);
   app.use("/api/wholesale/products", wholesaleProductsRoutes);
   app.use("/api/admin/products", adminProductsRoutes);
+  app.use("/api/categories", categoriesRoutes);
+  app.use("/api/admin/categories", adminCategoriesRoutes);
   app.use("/api/orders", ordersRoutes);
   app.use("/api/admin/orders", adminOrdersRoutes);
   app.use("/api/promo-slides", promoSlidesRoutes);

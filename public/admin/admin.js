@@ -1,21 +1,14 @@
 (function () {
   "use strict";
 
-  var CATEGORY_LABELS = {
-    fish: "Рыба",
-    shrimp: "Креветки",
-    squid: "Кальмары",
-    caviar: "Икра",
-    delicacy: "Морские деликатесы",
-    lobster: "Лобстеры",
-    other: "Другие",
-  };
+  var CATEGORY_LABELS = {};
+  var categories = [];
 
   var productList = document.getElementById("productList");
   var listStatus = document.getElementById("listStatus");
   var toast = document.getElementById("toast");
   var adminUser = document.getElementById("adminUser");
-  var filterPills = Array.prototype.slice.call(document.querySelectorAll("#adminFilterRow .filter-pill"));
+  var adminFilterRow = document.getElementById("adminFilterRow");
   var activeFilter = "all";
 
   var channelTabs = Array.prototype.slice.call(document.querySelectorAll("#channelTabRow .tab-pill"));
@@ -34,7 +27,7 @@
     })
     .then(function (data) {
       adminUser.textContent = data.username;
-      loadProducts();
+      loadCategories().then(loadProducts, loadProducts);
     })
     .catch(function () {
       window.location.href = "login.html";
@@ -232,13 +225,125 @@
     return row;
   }
 
-  filterPills.forEach(function (pill) {
-    pill.addEventListener("click", function () {
-      filterPills.forEach(function (p) { p.classList.remove("is-active"); });
-      pill.classList.add("is-active");
-      activeFilter = pill.getAttribute("data-filter");
-      renderList();
+  adminFilterRow.addEventListener("click", function (e) {
+    var pill = e.target.closest(".filter-pill");
+    if (!pill) return;
+    Array.prototype.forEach.call(adminFilterRow.querySelectorAll(".filter-pill"), function (p) {
+      p.classList.remove("is-active");
     });
+    pill.classList.add("is-active");
+    activeFilter = pill.getAttribute("data-filter");
+    renderList();
+  });
+
+  /* ---------------------------------------------------------
+     Категории: загрузка, фильтры, выпадающий список, добавление/удаление
+     --------------------------------------------------------- */
+  var categoryOverlay = document.getElementById("categoryModalOverlay");
+  var categoryList = document.getElementById("categoryList");
+  var categoryForm = document.getElementById("categoryForm");
+  var categoryNameInput = document.getElementById("categoryName");
+  var categoryError = document.getElementById("categoryError");
+
+  function applyCategories(list) {
+    categories = list;
+    CATEGORY_LABELS = {};
+    list.forEach(function (c) { CATEGORY_LABELS[c.slug] = c.name; });
+
+    var html = '<button class="filter-pill" data-filter="all">Все</button>';
+    list.forEach(function (c) {
+      html += '<button class="filter-pill" data-filter="' + escapeHtml(c.slug) + '">' + escapeHtml(c.name) + "</button>";
+    });
+    adminFilterRow.innerHTML = html;
+    var current = adminFilterRow.querySelector('[data-filter="' + activeFilter + '"]');
+    if (!current) {
+      activeFilter = "all";
+      current = adminFilterRow.querySelector('[data-filter="all"]');
+    }
+    current.classList.add("is-active");
+
+    var prev = fieldCategory.value;
+    fieldCategory.innerHTML = list.map(function (c) {
+      return '<option value="' + escapeHtml(c.slug) + '">' + escapeHtml(c.name) + "</option>";
+    }).join("");
+    if (prev && CATEGORY_LABELS[prev]) fieldCategory.value = prev;
+
+    categoryList.innerHTML = list.map(function (c) {
+      return '<li class="category-item"><span>' + escapeHtml(c.name) + "</span>" +
+        '<button type="button" class="icon-btn category-del" data-slug="' + escapeHtml(c.slug) + '" title="Удалить" aria-label="Удалить категорию">&#128465;</button></li>';
+    }).join("");
+
+    if (products.length) renderList();
+  }
+
+  function loadCategories() {
+    return fetch("/api/categories", { credentials: "same-origin" })
+      .then(function (res) { return res.json(); })
+      .then(applyCategories);
+  }
+
+  document.getElementById("manageCategoriesBtn").addEventListener("click", function () {
+    categoryError.hidden = true;
+    categoryNameInput.value = "";
+    categoryOverlay.hidden = false;
+  });
+  document.getElementById("categoryModalClose").addEventListener("click", function () {
+    categoryOverlay.hidden = true;
+  });
+  categoryOverlay.addEventListener("click", function (e) {
+    if (e.target === categoryOverlay) categoryOverlay.hidden = true;
+  });
+
+  categoryForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    categoryError.hidden = true;
+    fetch("/api/admin/categories", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: categoryNameInput.value }),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "Не удалось добавить категорию.");
+          return data;
+        });
+      })
+      .then(function () {
+        categoryNameInput.value = "";
+        showToast("Категория добавлена");
+        return loadCategories();
+      })
+      .catch(function (err) {
+        categoryError.textContent = err.message;
+        categoryError.hidden = false;
+      });
+  });
+
+  categoryList.addEventListener("click", function (e) {
+    var btn = e.target.closest(".category-del");
+    if (!btn) return;
+    var slug = btn.getAttribute("data-slug");
+    if (!window.confirm("Удалить категорию «" + (CATEGORY_LABELS[slug] || "") + "»?")) return;
+    categoryError.hidden = true;
+    fetch("/api/admin/categories/" + encodeURIComponent(slug), {
+      method: "DELETE",
+      credentials: "same-origin",
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "Не удалось удалить категорию.");
+          return data;
+        });
+      })
+      .then(function () {
+        showToast("Категория удалена");
+        return loadCategories();
+      })
+      .catch(function (err) {
+        categoryError.textContent = err.message;
+        categoryError.hidden = false;
+      });
   });
 
   /* ---------------------------------------------------------

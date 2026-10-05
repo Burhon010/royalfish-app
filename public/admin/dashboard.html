@@ -38,14 +38,8 @@
   <div class="admin-toolbar">
     <div class="filter-row" id="adminFilterRow">
       <button class="filter-pill is-active" data-filter="all">Все</button>
-      <button class="filter-pill" data-filter="fish">Рыба</button>
-      <button class="filter-pill" data-filter="shrimp">Креветки</button>
-      <button class="filter-pill" data-filter="squid">Кальмары</button>
-      <button class="filter-pill" data-filter="caviar">Икра</button>
-      <button class="filter-pill" data-filter="delicacy">Морские деликатесы</button>
-      <button class="filter-pill" data-filter="lobster">Лобстеры</button>
-      <button class="filter-pill" data-filter="other">Другие</button>
     </div>
+    <button class="btn-outline" id="manageCategoriesBtn" type="button">Категории</button>
     <button class="btn-primary" id="addProductBtn" type="button">+ Добавить товар</button>
   </div>
 
@@ -93,13 +87,6 @@
         <label class="field">
           <span class="field-label">Категория</span>
           <select id="fieldCategory" required>
-            <option value="fish">Рыба</option>
-            <option value="shrimp">Креветки</option>
-            <option value="squid">Кальмары</option>
-            <option value="caviar">Икра</option>
-            <option value="delicacy">Морские деликатесы</option>
-            <option value="lobster">Лобстеры</option>
-            <option value="other">Другие</option>
           </select>
         </label>
 
@@ -179,9 +166,26 @@
 
       <div class="modal-actions">
         <button type="button" class="btn-outline" id="productCancelBtn">Отмена</button>
-        <button type="submit" class="btn-primary" id="productSaveBtn">Сохранить пароль</button>
+        <button type="submit" class="btn-primary" id="productSaveBtn">Сохранить</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ============ МОДАЛЬНОЕ ОКНО: КАТЕГОРИИ ============ -->
+<div class="modal-overlay" id="categoryModalOverlay" hidden>
+  <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+    <div class="modal-head">
+      <h2 id="categoryModalTitle">Категории</h2>
+      <button class="modal-close" id="categoryModalClose" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <ul class="category-list" id="categoryList"></ul>
+    <form id="categoryForm" class="category-add">
+      <input type="text" id="categoryName" maxlength="40" placeholder="Новая категория" autocomplete="off" required>
+      <button type="submit" class="btn-primary">Добавить</button>
+    </form>
+    <p class="form-error" id="categoryError" hidden></p>
+    <p class="admin-hint">Удалить можно только пустую категорию — без товаров.</p>
   </div>
 </div>
 

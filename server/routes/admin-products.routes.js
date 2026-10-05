@@ -6,8 +6,6 @@ const { uploadImageBuffer, deleteCloudinaryImage, upload, MAX_IMAGE_BYTES } = re
 const router = express.Router();
 router.use(requireAuth);
 
-const CATEGORIES = ["fish", "shrimp", "squid", "caviar", "delicacy", "lobster", "other"];
-
 function computeFinalPrice(price, discountPercent) {
   return Math.round(price * (1 - discountPercent / 100) * 100) / 100;
 }
@@ -41,7 +39,7 @@ function readBody(body) {
   const errors = [];
   if (!name) errors.push("Укажите название товара.");
   if (name.length > 120) errors.push("Название слишком длинное (максимум 120 символов).");
-  if (!CATEGORIES.includes(category)) errors.push("Выберите категорию из списка.");
+  if (!category) errors.push("Выберите категорию из списка.");
   if (!weight) errors.push("Укажите вес (например, 500 г или 1 кг).");
   if (weight.length > 40) errors.push("Слишком длинное значение веса.");
   if (description.length > 1000) errors.push("Описание слишком длинное (максимум 1000 символов).");
@@ -118,6 +116,9 @@ router.post("/", upload.single("image"), async (req, res, next) => {
     if (data.errors.length) {
       return res.status(400).json({ error: data.errors.join(" ") });
     }
+    if (!(await db.categoryExists(data.category))) {
+      return res.status(400).json({ error: "Выберите категорию из списка." });
+    }
 
     let imagePath = null;
     let imagePublicId = null;
@@ -170,6 +171,9 @@ router.put("/:id", upload.single("image"), async (req, res, next) => {
     const data = readBody(req.body);
     if (data.errors.length) {
       return res.status(400).json({ error: data.errors.join(" ") });
+    }
+    if (!(await db.categoryExists(data.category))) {
+      return res.status(400).json({ error: "Выберите категорию из списка." });
     }
 
     let imagePath = existing.image_path;

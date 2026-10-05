@@ -101,7 +101,6 @@
      --------------------------------------------------------- */
   var productGrid = document.getElementById("productGrid");
   var emptyState = document.getElementById("emptyState");
-  var pills = Array.prototype.slice.call(document.querySelectorAll(".filter-pill"));
   var searchInput = document.getElementById("catalogSearch");
   var searchClearBtn = document.getElementById("searchClear");
   var activeFilter = "all";
@@ -250,18 +249,52 @@
     }
   }
 
-  pills.forEach(function (pill) {
-    pill.addEventListener("click", function () {
-      pills.forEach(function (p) {
-        p.classList.remove("is-active");
-        p.setAttribute("aria-selected", "false");
-      });
-      pill.classList.add("is-active");
-      pill.setAttribute("aria-selected", "true");
-      activeFilter = pill.getAttribute("data-filter");
-      applyFilter();
+  var filterRow = document.getElementById("filterRow");
+  var allProducts = null;
+  var allCategories = null;
+
+  function buildFilterPills() {
+    if (!allProducts || !allCategories) return;
+    var used = {};
+    allProducts.forEach(function (p) { used[p.category] = true; });
+
+    var html = '<button class="filter-pill" data-filter="all" role="tab" aria-selected="false">Все</button>';
+    allCategories.forEach(function (c) {
+      if (!used[c.slug]) return; // пустые категории на сайте не показываем
+      html += '<button class="filter-pill" data-filter="' + escapeHtml(c.slug) + '" role="tab" aria-selected="false">' + escapeHtml(c.name) + "</button>";
     });
+    filterRow.innerHTML = html;
+
+    var current = filterRow.querySelector('[data-filter="' + activeFilter + '"]');
+    if (!current) {
+      activeFilter = "all";
+      current = filterRow.querySelector('[data-filter="all"]');
+      applyFilter();
+    }
+    current.classList.add("is-active");
+    current.setAttribute("aria-selected", "true");
+  }
+
+  filterRow.addEventListener("click", function (e) {
+    var pill = e.target.closest(".filter-pill");
+    if (!pill) return;
+    Array.prototype.forEach.call(filterRow.querySelectorAll(".filter-pill"), function (p) {
+      p.classList.remove("is-active");
+      p.setAttribute("aria-selected", "false");
+    });
+    pill.classList.add("is-active");
+    pill.setAttribute("aria-selected", "true");
+    activeFilter = pill.getAttribute("data-filter");
+    applyFilter();
   });
+
+  fetch("/api/categories")
+    .then(function (res) { return res.ok ? res.json() : []; })
+    .catch(function () { return []; })
+    .then(function (cats) {
+      allCategories = cats;
+      buildFilterPills();
+    });
 
   if (searchInput) {
     var runSearch = debounce(function () {
@@ -304,7 +337,11 @@
       if (!res.ok) throw new Error("Ошибка сети");
       return res.json();
     })
-    .then(renderProducts)
+    .then(function (data) {
+      allProducts = data;
+      renderProducts(data);
+      buildFilterPills();
+    })
     .catch(renderError);
 
   /* ---------------------------------------------------------
