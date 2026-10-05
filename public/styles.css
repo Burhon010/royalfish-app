@@ -284,6 +284,24 @@ a {
   filter: brightness(1.05);
 }
 
+/* Небольшая ссылка "Вход для сотрудников" с замком рядом с CTA — на
+   десктопе в шапке, на телефоне только в бургер-меню (.main-nav там скрыт). */
+.nav-link--staff {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+}
+.nav-link--staff::after {
+  display: none;
+}
+.nav-link--staff:hover {
+  color: #fff;
+}
+
 .burger {
   display: none;
   flex-direction: column;
@@ -382,8 +400,16 @@ a {
 .mobile-nav.is-open .mobile-link:nth-child(5) {
   transition-delay: 0.32s;
 }
+.mobile-nav.is-open .mobile-link:nth-child(6) {
+  transition-delay: 0.38s;
+}
 .mobile-link--cta {
   color: var(--gold-light);
+}
+.mobile-link--staff {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
 }
 .mobile-meta {
   display: flex;
