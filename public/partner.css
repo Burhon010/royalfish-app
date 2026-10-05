@@ -843,3 +843,44 @@
   font-weight: 400;
   color: var(--ink-soft);
 }
+
+/* Полоса "Постоянный партнёр?" на оптовой странице */
+.partner-strip {
+  padding: 22px 0 6px;
+}
+.partner-strip-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 22px;
+}
+.partner-strip-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.partner-strip-text strong {
+  color: var(--ink);
+  margin-right: 6px;
+}
+.partner-strip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 760px) {
+  .partner-strip-actions,
+  .partner-strip-actions .btn {
+    width: 100%;
+  }
+  .partner-strip-actions .btn {
+    justify-content: center;
+  }
+}
