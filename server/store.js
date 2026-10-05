@@ -137,6 +137,14 @@ async function initSchema() {
     }
   }
 
+  // Простые настройки "ключ-значение" (сейчас — сдвиг нумерации заказов).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key    TEXT PRIMARY KEY,
+      value  TEXT NOT NULL
+    );
+  `);
+
   // ------------------------------------------------------------
   // Заказы. Отдельные таблицы, никак не пересекаются с товарами
   // напрямую — product_id может стать NULL, если товар потом
@@ -434,6 +442,48 @@ async function seedProductsIfEmpty(items) {
 const ORDER_STATUSES = ["new", "processing", "delivering", "completed"];
 const ORDER_TYPES = ["retail", "wholesale"];
 
+// Номер заказа на экране = порядковый номер среди существующих заказов +
+// сдвиг. Сдвиг растёт, когда историю очищают "с продолжением нумерации",
+// и обнуляется при очистке "с №1".
+async function getOrderNumberBase(client) {
+  const { rows } = await (client || pool).query("SELECT value FROM settings WHERE key = 'order_number_base'");
+  return rows[0] ? Number(rows[0].value) || 0 : 0;
+}
+
+async function setOrderNumberBase(value) {
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ('order_number_base', $1)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [String(value)]
+  );
+}
+
+// mode: "keep" — удалить все заказы, нумерация продолжается;
+//       "reset" — удалить все заказы, следующий заказ будет №1.
+async function clearOrders(mode) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const base = await getOrderNumberBase(client);
+    const { rows } = await client.query("SELECT COUNT(*)::int AS n FROM orders");
+    const count = rows[0].n;
+    await client.query("DELETE FROM orders");
+    const nextBase = mode === "reset" ? 0 : base + count;
+    await client.query(
+      `INSERT INTO settings (key, value) VALUES ('order_number_base', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [String(nextBase)]
+    );
+    await client.query("COMMIT");
+    return { deleted: count };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function createOrder({
   customerName,
   customerPhone,
@@ -522,7 +572,7 @@ async function createOrder({
     );
     const order = orderRes.rows[0];
     const numRes = await client.query("SELECT COUNT(*)::int AS n FROM orders WHERE id <= $1", [order.id]);
-    order.number = numRes.rows[0].n;
+    order.number = numRes.rows[0].n + (await getOrderNumberBase(client));
 
     for (const item of resolvedItems) {
       await client.query(
@@ -547,7 +597,7 @@ async function createOrder({
 async function getAllOrders() {
   const { rows } = await pool.query(`
     SELECT o.*, COALESCE(COUNT(oi.id), 0)::int AS items_count,
-           ROW_NUMBER() OVER (ORDER BY o.id)::int AS number
+           (ROW_NUMBER() OVER (ORDER BY o.id) + COALESCE((SELECT value::int FROM settings WHERE key = 'order_number_base'), 0))::int AS number
     FROM orders o
     LEFT JOIN order_items oi ON oi.order_id = o.id
     GROUP BY o.id
@@ -558,7 +608,9 @@ async function getAllOrders() {
 
 async function getOrderById(id) {
   const orderRes = await pool.query(
-    "SELECT o.*, (SELECT COUNT(*)::int FROM orders WHERE id <= o.id) AS number FROM orders o WHERE o.id = $1",
+    `SELECT o.*,
+            ((SELECT COUNT(*) FROM orders WHERE id <= o.id) + COALESCE((SELECT value::int FROM settings WHERE key = 'order_number_base'), 0))::int AS number
+     FROM orders o WHERE o.id = $1`,
     [id]
   );
   const order = orderRes.rows[0];
@@ -722,6 +774,7 @@ module.exports = {
   ORDER_STATUSES,
   ORDER_TYPES,
   createOrder,
+  clearOrders,
   getAllOrders,
   getOrderById,
   updateOrderStatus,

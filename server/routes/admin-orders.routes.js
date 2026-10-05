@@ -46,6 +46,22 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+/* POST /api/admin/orders/clear — { mode: "keep" | "reset" }
+   keep  — удалить всю историю, нумерация продолжается;
+   reset — удалить всю историю, следующий заказ получит №1. */
+router.post("/clear", async (req, res, next) => {
+  try {
+    const mode = req.body && req.body.mode;
+    if (mode !== "keep" && mode !== "reset") {
+      return res.status(400).json({ error: "Неизвестный режим очистки." });
+    }
+    const result = await db.clearOrders(mode);
+    res.json({ ok: true, deleted: result.deleted });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* GET /api/admin/orders/:id — детали одного заказа с позициями */
 router.get("/:id", async (req, res, next) => {
   try {

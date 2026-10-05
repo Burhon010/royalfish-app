@@ -153,6 +153,39 @@
     });
   });
 
+  /* ---------------------------------------------------------
+     Очистка истории заказов
+     --------------------------------------------------------- */
+  function clearOrders(mode) {
+    var message = mode === "reset"
+      ? "Удалить ВСЕ заказы и начать нумерацию заново с №1?\n\nЭто действие нельзя отменить."
+      : "Удалить ВСЕ заказы? Нумерация продолжится дальше (следующий заказ получит следующий номер).\n\nЭто действие нельзя отменить.";
+    if (!window.confirm(message)) return;
+
+    fetch("/api/admin/orders/clear", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: mode }),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || "Не удалось очистить историю.");
+          return data;
+        });
+      })
+      .then(function (data) {
+        showToast("История очищена (удалено заказов: " + data.deleted + ")");
+        loadOrders();
+      })
+      .catch(function (err) {
+        showToast(err.message, true);
+      });
+  }
+
+  document.getElementById("clearKeepBtn").addEventListener("click", function () { clearOrders("keep"); });
+  document.getElementById("clearResetBtn").addEventListener("click", function () { clearOrders("reset"); });
+
   function statusOptionsHtml(currentStatus) {
     return STATUS_ORDER.map(function (s) {
       return '<option value="' + s + '"' + (s === currentStatus ? " selected" : "") + '>' + STATUS_LABELS[s] + "</option>";

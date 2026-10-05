@@ -856,3 +856,8 @@ button, input, select{ font-family: inherit; }
   flex: 1; min-width: 0; padding: 11px 14px; font: inherit; font-size: 16px;
   border: 1.5px solid var(--line, #e6ecef); border-radius: 10px; box-sizing: border-box;
 }
+
+/* Очистка истории заказов */
+.orders-danger{ display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 14px; }
+.btn-danger{ color: var(--danger, #b3261e); border-color: currentColor; }
+.btn-danger:hover{ background: rgba(179, 38, 30, 0.08); }
