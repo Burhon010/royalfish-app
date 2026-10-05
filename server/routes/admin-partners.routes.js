@@ -1,6 +1,7 @@
 const express = require("express");
 const partners = require("../partners");
 const requireAuth = require("../middleware/requireAuth");
+const { createPartnerToken, IMPERSONATE_TTL_MS } = require("../auth");
 
 /* Админские маршруты оптового портала: рестораны, группы цен,
    индивидуальные цены и оптовые заказы. Всё под requireAuth
@@ -135,6 +136,28 @@ restaurantsRouter.delete("/:id/prices/:productId", async (req, res, next) => {
     const productId = parseId(req.params.productId);
     if (!id || !productId) return res.status(400).json({ error: "Некорректный запрос." });
     await partners.deleteRestaurantPrice(id, productId);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Вход владельца в кабинет конкретного ресторана ("зайти как ресторан").
+// Доступно только администратору (requireAuth на всём роутере). Выдаёт
+// короткую (2 ч) сессию ресторана с пометкой imp — кабинет покажет плашку
+// "режим администратора".
+restaurantsRouter.post("/:id/enter", async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const r = id && (await partners.getRestaurantById(id));
+    if (!r) return res.status(404).json({ error: "Ресторан не найден." });
+    res.cookie("rf_partner", createPartnerToken(r.id, { imp: true }), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: IMPERSONATE_TTL_MS,
+      path: "/",
+    });
     res.json({ ok: true });
   } catch (err) {
     next(err);

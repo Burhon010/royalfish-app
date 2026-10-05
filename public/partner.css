@@ -884,3 +884,37 @@
     justify-content: center;
   }
 }
+
+/* Плашка "режим администратора" в кабинете ресторана */
+.portal-adminbar {
+  background: #7a5c14;
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 70;
+}
+.portal-adminbar[hidden] {
+  display: none;
+}
+.portal-adminbar strong {
+  color: var(--gold-light);
+}
+.portal-adminbar-link {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.portal-adminbar-link:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

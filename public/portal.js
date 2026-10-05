@@ -437,7 +437,17 @@
     });
   });
 
+  var impersonated = false;
+  var impersonatedId = null;
+
   el("logoutBtn").addEventListener("click", function () {
+    if (impersonated) {
+      // выходим только из кабинета ресторана, сессия админа остаётся
+      fetch("/api/partners/logout", { method: "POST", credentials: "same-origin" }).then(function () {
+        window.location.href = "admin/restaurant.html?id=" + impersonatedId;
+      });
+      return;
+    }
     fetch("/api/partners/logout", { method: "POST", credentials: "same-origin" }).then(function () {
       window.location.href = "wholesale.html";
     });
@@ -450,6 +460,15 @@
       el("welcomeTitle").textContent = "Добро пожаловать, " + me.name;
       el("portalHelloName").textContent = me.name;
       el("portalHello").hidden = false;
+
+      if (me.impersonated) {
+        impersonated = true;
+        impersonatedId = me.id;
+        el("adminBar").hidden = false;
+        el("adminBarName").textContent = me.name;
+        el("adminBarBack").setAttribute("href", "admin/restaurant.html?id=" + me.id);
+        el("logoutBtn").textContent = "Выйти из кабинета";
+      }
 
       el("accountInfo").innerHTML =
         "<span><b>Ресторан:</b> " + esc(me.name) + "</span>" +

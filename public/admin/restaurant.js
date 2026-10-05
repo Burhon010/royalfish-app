@@ -87,7 +87,9 @@
     restBody.innerHTML =
       '<p><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span> &nbsp; Регистрация: " + S.fmtDate(r.createdAt) +
       " · Оптовых заказов: " + r.ordersCount + "</p>" +
-      '<div class="adm-actions">' + quick + "</div>" +
+      '<div class="adm-actions">' + quick +
+        '<button type="button" class="btn-primary btn-enter" id="enterBtn">Зайти в кабинет ресторана</button></div>' +
+      '<p class="rest-hint-small">Откроется личный кабинет «' + esc(r.name) + '» так, как его видит сам ресторан: его каталог, цены и заказы.</p>' +
       '<form class="adm-form" id="restForm" novalidate>' +
         '<label class="field"><span class="field-label">Название</span><input type="text" id="rName" maxlength="100" value="' + esc(r.name) + '"></label>' +
         '<label class="field"><span class="field-label">Телефон</span><input type="text" id="rPhone" maxlength="40" value="' + esc(r.phone) + '"></label>' +
@@ -123,6 +125,21 @@
       b.addEventListener("click", function () {
         saveRestaurant(r.id, { status: b.getAttribute("data-s") });
       });
+    });
+
+    document.getElementById("enterBtn").addEventListener("click", function () {
+      // окно открываем сразу по клику (иначе браузер заблокирует всплывающее окно)
+      var w = window.open("", "_blank");
+      api("POST", "/api/admin/restaurants/" + r.id + "/enter")
+        .then(function () {
+          var url = "../portal.html?admin=" + r.id;
+          if (w) w.location.href = url;
+          else window.location.href = url;
+        })
+        .catch(function (err) {
+          if (w) w.close();
+          S.showToast(err.message, true);
+        });
     });
 
     Array.prototype.forEach.call(restBody.querySelectorAll(".vis-input"), function (cb) {

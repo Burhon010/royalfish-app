@@ -16,6 +16,7 @@ async function loadPartner(req, res) {
     res.status(401).json({ error: "Аккаунт не найден." });
     return null;
   }
+  req.impersonated = !!data.imp;
   return restaurant;
 }
 

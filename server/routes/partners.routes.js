@@ -118,7 +118,7 @@ router.post("/logout", (req, res) => {
 
 /* GET /api/partners/me — доступен в любом статусе (покажет "ожидает одобрения") */
 router.get("/me", requirePartner, (req, res) => {
-  res.json(publicProfile(req.restaurant));
+  res.json({ ...publicProfile(req.restaurant), impersonated: !!req.impersonated });
 });
 
 /* GET /api/partners/catalog — каталог с ИТОГОВЫМИ ценами этого ресторана */

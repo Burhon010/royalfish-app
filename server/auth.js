@@ -62,8 +62,16 @@ function createSessionToken(adminId, username) {
   return sign({ sub: adminId, username, exp: Date.now() + TOKEN_TTL_MS });
 }
 
-function createPartnerToken(restaurantId) {
-  return sign({ sub: restaurantId, role: "partner", exp: Date.now() + TOKEN_TTL_MS }, "partner");
+// imp: true — вход владельца (администратора) в кабинет ресторана; такая
+// сессия короче и помечается в токене, чтобы кабинет показал плашку.
+const IMPERSONATE_TTL_MS = 2 * 60 * 60 * 1000;
+
+function createPartnerToken(restaurantId, opts) {
+  const imp = !!(opts && opts.imp);
+  return sign(
+    { sub: restaurantId, role: "partner", imp, exp: Date.now() + (imp ? IMPERSONATE_TTL_MS : TOKEN_TTL_MS) },
+    "partner"
+  );
 }
 
 function verifyPartnerToken(token) {
@@ -71,4 +79,4 @@ function verifyPartnerToken(token) {
   return data && data.role === "partner" ? data : null;
 }
 
-module.exports = { createSessionToken, verify, createPartnerToken, verifyPartnerToken, TOKEN_TTL_MS };
+module.exports = { createSessionToken, verify, createPartnerToken, verifyPartnerToken, TOKEN_TTL_MS, IMPERSONATE_TTL_MS };
