@@ -200,9 +200,16 @@ async function updateAdminPassword(id, passwordHash) {
   await pool.query("UPDATE admins SET password_hash = $1 WHERE id = $2", [passwordHash, id]);
 }
 
+async function updateAdminCredentials(id, { username, passwordHash }) {
+  if (username) await pool.query("UPDATE admins SET username = $1 WHERE id = $2", [username, id]);
+  if (passwordHash) await pool.query("UPDATE admins SET password_hash = $1 WHERE id = $2", [passwordHash, id]);
+}
+
 async function seedAdminIfNeeded(username, password) {
-  const existing = await getAdminByUsername(username);
-  if (!existing) {
+  // Создаём стартового админа только в пустой базе — иначе после смены
+  // логина в панели при перезапуске появился бы лишний "admin" из .env.
+  const { rows: countRows } = await pool.query("SELECT COUNT(*)::int AS n FROM admins");
+  if (countRows[0].n === 0) {
     const hash = bcrypt.hashSync(password, 12);
     await pool.query(
       "INSERT INTO admins (username, password_hash) VALUES ($1, $2)",
@@ -638,6 +645,7 @@ module.exports = {
   getAdminByUsername,
   getAdminById,
   updateAdminPassword,
+  updateAdminCredentials,
   seedAdminIfNeeded,
   getAllProducts,
   getRetailProducts,

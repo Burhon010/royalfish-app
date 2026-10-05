@@ -23,7 +23,7 @@
       <a href="dashboard.html" class="link-btn">Товары</a>
       <a href="orders.html" class="link-btn">Заказы</a>
       <span class="admin-user" id="adminUser"></span>
-      <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
+      <button class="link-btn" id="changePasswordBtn" type="button">Логин и пароль</button>
       <button class="btn-outline" id="logoutBtn" type="button">Выйти</button>
     </div>
   </div>
@@ -64,7 +64,7 @@
 <div class="modal-overlay" id="passwordModalOverlay" hidden>
   <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
     <div class="modal-head">
-      <h2 id="passwordModalTitle">Сменить пароль</h2>
+      <h2 id="passwordModalTitle">Логин и пароль</h2>
       <button class="modal-close" id="passwordModalClose" type="button" aria-label="Закрыть">×</button>
     </div>
     <form id="passwordForm" class="product-form">
@@ -73,13 +73,17 @@
         <input type="password" id="currentPassword" autocomplete="current-password" required>
       </label>
       <label class="field">
-        <span class="field-label">Новый пароль (минимум 8 символов)</span>
-        <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
+        <span class="field-label">Новый логин (необязательно)</span>
+        <input type="text" id="newUsername" autocomplete="username" minlength="3" maxlength="40">
+      </label>
+      <label class="field">
+        <span class="field-label">Новый пароль (необязательно, минимум 8 символов)</span>
+        <input type="password" id="newPassword" autocomplete="new-password" minlength="8">
       </label>
       <p class="form-error" id="passwordFormError" hidden></p>
       <div class="modal-actions">
         <button type="button" class="btn-outline" id="passwordCancelBtn">Отмена</button>
-        <button type="submit" class="btn-primary">Сохранить пароль</button>
+        <button type="submit" class="btn-primary">Сохранить</button>
       </div>
     </form>
   </div>

@@ -340,12 +340,13 @@
 
     var currentPassword = document.getElementById("currentPassword").value;
     var newPassword = document.getElementById("newPassword").value;
+    var newUsername = document.getElementById("newUsername").value.trim();
 
     fetch("/api/auth/change-password", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword }),
+      body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword, newUsername: newUsername }),
     })
       .then(function (res) {
         return res.json().then(function (data) {
@@ -353,9 +354,10 @@
           return data;
         });
       })
-      .then(function () {
+      .then(function (data) {
         pwOverlay.hidden = true;
-        showToast("Пароль изменён");
+        if (adminUser && data.username) adminUser.textContent = data.username;
+        showToast("Данные для входа изменены");
       })
       .catch(function (err) {
         pwError.textContent = err.message;

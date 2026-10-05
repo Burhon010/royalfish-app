@@ -87,12 +87,19 @@ router.get("/me", requireAuth, (req, res) => {
 router.post("/change-password", requireAuth, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body || {};
+    const newUsername = String((req.body && req.body.newUsername) || "").trim();
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: "Заполните оба поля." });
+    if (!currentPassword) {
+      return res.status(400).json({ error: "Введите текущий пароль." });
     }
-    if (newPassword.length < 8) {
+    if (!newPassword && !newUsername) {
+      return res.status(400).json({ error: "Укажите новый логин или новый пароль." });
+    }
+    if (newPassword && newPassword.length < 8) {
       return res.status(400).json({ error: "Новый пароль должен быть не короче 8 символов." });
+    }
+    if (newUsername && (newUsername.length < 3 || newUsername.length > 40)) {
+      return res.status(400).json({ error: "Логин должен быть от 3 до 40 символов." });
     }
 
     const admin = await db.getAdminById(req.admin.sub);
@@ -100,10 +107,28 @@ router.post("/change-password", requireAuth, async (req, res, next) => {
       return res.status(401).json({ error: "Текущий пароль указан неверно." });
     }
 
-    const hash = bcrypt.hashSync(newPassword, 12);
-    await db.updateAdminPassword(admin.id, hash);
+    if (newUsername && newUsername !== admin.username) {
+      const taken = await db.getAdminByUsername(newUsername);
+      if (taken && taken.id !== admin.id) {
+        return res.status(400).json({ error: "Такой логин уже занят." });
+      }
+    }
 
-    res.json({ ok: true });
+    const finalUsername = newUsername && newUsername !== admin.username ? newUsername : null;
+    const hash = newPassword ? bcrypt.hashSync(newPassword, 12) : null;
+    await db.updateAdminCredentials(admin.id, { username: finalUsername, passwordHash: hash });
+
+    // В токене сессии зашит логин — выдаём новый, чтобы не разлогинило.
+    const username = finalUsername || admin.username;
+    res.cookie("rf_session", createSessionToken(admin.id, username), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: TOKEN_TTL_MS,
+      path: "/",
+    });
+
+    res.json({ ok: true, username });
   } catch (err) {
     next(err);
   }
