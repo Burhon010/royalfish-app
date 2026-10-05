@@ -2007,3 +2007,20 @@ body.cart-open {
 .map-link:hover {
   color: var(--ocean-light);
 }
+
+/* Минимальная сумма розничного заказа */
+.cart-min-note {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(201, 162, 77, 0.14);
+  color: #6b5217;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.cart-checkout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}

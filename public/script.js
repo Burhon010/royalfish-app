@@ -445,6 +445,8 @@
   var cartSummaryEl = document.getElementById("cartSummary");
   var cartTotalEl = document.getElementById("cartTotal");
   var cartCheckoutBtn = document.getElementById("cartCheckoutBtn");
+  var cartMinNote = document.getElementById("cartMinNote");
+  var MIN_ORDER_TOTAL = 400; // минимальная сумма розничного заказа, сомони (то же значение проверяет сервер)
   var cartPanelTitle = document.getElementById("cartPanelTitle");
 
   var viewItems = document.getElementById("cartViewItems");
@@ -524,6 +526,14 @@
     var total = cartTotal();
     cartTotalEl.textContent = formatPrice(total) + " сомони";
     checkoutTotalEl.textContent = formatPrice(total) + " сомони";
+
+    var short = MIN_ORDER_TOTAL - total;
+    cartCheckoutBtn.disabled = short > 0;
+    cartMinNote.hidden = short <= 0;
+    if (short > 0) {
+      cartMinNote.textContent =
+        "Минимальная сумма заказа — " + MIN_ORDER_TOTAL + " сомони. Добавьте товаров ещё на " + formatPrice(short) + " сомони.";
+    }
   }
 
   function openCart() {
@@ -590,6 +600,11 @@
       website: document.getElementById("checkoutWebsite").value,
     };
 
+    if (cartTotal() < MIN_ORDER_TOTAL) {
+      checkoutError.textContent = "Минимальная сумма заказа — " + MIN_ORDER_TOTAL + " сомони.";
+      checkoutError.hidden = false;
+      return;
+    }
     if (!payload.customerName || !payload.customerPhone || !payload.customerAddress) {
       checkoutError.textContent = "Укажите имя, номер телефона и адрес доставки.";
       checkoutError.hidden = false;

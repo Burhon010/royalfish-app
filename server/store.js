@@ -441,6 +441,7 @@ async function seedProductsIfEmpty(items) {
 
 const ORDER_STATUSES = ["new", "processing", "delivering", "completed"];
 const ORDER_TYPES = ["retail", "wholesale"];
+const MIN_RETAIL_ORDER_TOTAL = 400; // сомони — минимальная сумма розничного заказа
 
 // Номер заказа на экране = порядковый номер среди существующих заказов +
 // сдвиг. Сдвиг растёт, когда историю очищают "с продолжением нумерации",
@@ -555,6 +556,12 @@ async function createOrder({
     }
 
     total = Math.round(total * 100) / 100;
+
+    if (type === "retail" && total < MIN_RETAIL_ORDER_TOTAL) {
+      const err = new Error(`Минимальная сумма заказа — ${MIN_RETAIL_ORDER_TOTAL} сомони. Добавьте товаров ещё на ${MIN_RETAIL_ORDER_TOTAL - total} сомони.`);
+      err.statusCode = 400;
+      throw err;
+    }
 
     const orderRes = await client.query(
       `INSERT INTO orders (customer_name, customer_phone, customer_address, comment, total_amount, order_type, company_name)
