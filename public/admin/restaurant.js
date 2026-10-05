@@ -84,12 +84,18 @@
       quick = '<button type="button" class="btn-primary q-act" data-s="approved">Одобрить</button>';
     }
 
+    // разделы свёрнуты по умолчанию; при перерисовке запоминаем, что было открыто
+    var hadSections = !!document.getElementById("secData");
+    var openData = hadSections ? !!document.querySelector("#secData[open]") : false;
+    var openPrices = hadSections ? !!document.querySelector("#secPrices[open]") : window.location.hash === "#prices";
+
     restBody.innerHTML =
       '<p><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span> &nbsp; Регистрация: " + S.fmtDate(r.createdAt) +
       " · Оптовых заказов: " + r.ordersCount + "</p>" +
       '<div class="adm-actions">' + quick +
         '<button type="button" class="btn-primary btn-enter" id="enterBtn">Зайти в кабинет ресторана</button></div>' +
       '<p class="rest-hint-small">Откроется личный кабинет «' + esc(r.name) + '» так, как его видит сам ресторан: его каталог, цены и заказы.</p>' +
+      '<details class="rest-sec" id="secData"' + (openData ? " open" : "") + "><summary>Данные ресторана</summary>" +
       '<form class="adm-form" id="restForm" novalidate>' +
         '<label class="field"><span class="field-label">Название</span><input type="text" id="rName" maxlength="100" value="' + esc(r.name) + '"></label>' +
         '<label class="field"><span class="field-label">Телефон</span><input type="text" id="rPhone" maxlength="40" value="' + esc(r.phone) + '"></label>' +
@@ -100,14 +106,15 @@
         '<input type="text" id="rPassword" autocomplete="off" minlength="8"></label>' +
         '<p class="form-error field--full" id="rError" hidden></p>' +
         '<div class="field--full"><button type="submit" class="btn-primary">Сохранить данные</button></div>' +
-      "</form>" +
-      '<h3 class="adm-h3" id="restPricesTitle">Цены ресторана «' + esc(r.name) + '» (за блок)</h3>' +
+      "</form></details>" +
+      '<details class="rest-sec" id="secPrices"' + (openPrices ? " open" : "") + '><summary id="restPricesTitle">Цены и товары <small>(' +
+        r.prices.length + " · цена за блок)</small></summary>" +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
         "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
       "</tr></thead><tbody>" +
       (r.prices.length ? r.prices.map(function (p) { return priceRow(r, p); }).join("") :
         '<tr><td colspan="7">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
-      "</tbody></table></div>";
+      "</tbody></table></div></details>";
 
     document.getElementById("restForm").addEventListener("submit", function (e) {
       e.preventDefault();
