@@ -46,16 +46,18 @@ router.post("/login", async (req, res, next) => {
     }
 
     const { username, password } = req.body || {};
-    if (!username || !password) {
-      return res.status(400).json({ error: "Введите логин и пароль." });
+    if (!password) {
+      return res.status(400).json({ error: "Введите пароль." });
     }
 
-    const admin = await db.getAdminByUsername(username);
+    // Вход только по паролю: админ в системе один. Логин, если его всё же
+    // прислали (старые клиенты), по-прежнему учитывается.
+    const admin = username ? await db.getAdminByUsername(username) : await db.getFirstAdmin();
     const ok = admin && bcrypt.compareSync(password, admin.password_hash);
 
     if (!ok) {
       registerAttempt(ip);
-      return res.status(401).json({ error: "Неверный логин или пароль." });
+      return res.status(401).json({ error: "Неверный пароль." });
     }
 
     clearAttempts(ip);

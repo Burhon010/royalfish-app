@@ -191,6 +191,11 @@ async function getAdminByUsername(username) {
   return rows[0] || null;
 }
 
+async function getFirstAdmin() {
+  const { rows } = await pool.query("SELECT * FROM admins ORDER BY id LIMIT 1");
+  return rows[0] || null;
+}
+
 async function getAdminById(id) {
   const { rows } = await pool.query("SELECT * FROM admins WHERE id = $1", [id]);
   return rows[0] || null;
@@ -644,6 +649,7 @@ module.exports = {
   initSchema,
   getAdminByUsername,
   getAdminById,
+  getFirstAdmin,
   updateAdminPassword,
   updateAdminCredentials,
   seedAdminIfNeeded,

@@ -19,11 +19,10 @@
     e.preventDefault();
     errorBox.hidden = true;
 
-    var username = document.getElementById("username").value.trim();
     var password = document.getElementById("password").value;
 
-    if (!username || !password) {
-      showError("Введите логин и пароль.");
+    if (!password) {
+      showError("Введите пароль.");
       return;
     }
 
@@ -34,7 +33,7 @@
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username, password: password }),
+      body: JSON.stringify({ password: password }),
     })
       .then(function (res) {
         return res.json().then(function (data) {
