@@ -989,10 +989,11 @@ button, input, select{ font-family: inherit; }
 }
 .rest-sec > summary::-webkit-details-marker{ display: none; }
 .rest-sec > summary::after{
-  content: "+"; font-family: var(--font-body); font-weight: 700; font-size: 22px;
-  color: var(--ocean); line-height: 1;
+  content: ""; flex: none; width: 9px; height: 9px; margin: -4px 4px 0 0;
+  border-right: 2px solid var(--ocean); border-bottom: 2px solid var(--ocean);
+  transform: rotate(45deg); transition: transform .2s, margin .2s;
 }
-.rest-sec[open] > summary::after{ content: "\2212"; }
+.rest-sec[open] > summary::after{ transform: rotate(225deg); margin: 4px 4px 0 0; }
 .rest-sec > summary:hover{ background: var(--paper); }
 .rest-sec > summary small{ font-family: var(--font-body); font-size: 13px; color: var(--ink-soft); font-weight: 500; margin-left: 6px; }
 .rest-sec[open] > summary{ border-bottom: 1px solid var(--line); }
