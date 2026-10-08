@@ -165,6 +165,7 @@
     document.getElementById("deleteRestBtn").addEventListener("click", function () {
       var msg = "Удалить ресторан «" + r.name + "»?\n\nАккаунт, индивидуальные цены и настройки товаров будут удалены. Оптовые заказы останутся в истории. Это действие нельзя отменить.";
       if (!window.confirm(msg)) return;
+      if (!window.confirm("Вы точно уверены? Ресторан «" + r.name + "» будет удалён безвозвратно.")) return;
       api("DELETE", "/api/admin/restaurants/" + r.id)
         .then(function () { window.location.href = "restaurants.html"; })
         .catch(function (err) { S.showToast(err.message, true); });
