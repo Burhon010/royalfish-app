@@ -223,6 +223,7 @@
 
   function renderCatalog() {
     var grid = el("catalogGrid");
+    grid.classList.toggle("is-manage", impersonated);
     var list = catalog.filter(function (p) {
       return (activeCat === "all" || p.category === activeCat) &&
         (!searchQuery || p.name.toLowerCase().indexOf(searchQuery) !== -1);
@@ -237,7 +238,7 @@
       return;
     }
     var frag = document.createDocumentFragment();
-    list.forEach(function (p) { frag.appendChild(impersonated ? buildManageCard(p) : buildCard(p)); });
+    list.forEach(function (p) { frag.appendChild(impersonated ? buildManageRow(p) : buildCard(p)); });
     grid.appendChild(frag);
   }
 
@@ -283,35 +284,46 @@
     });
   }
 
-  function buildManageCard(p) {
+  function categoryName(slug) {
+    for (var i = 0; i < categories.length; i++) {
+      if (categories[i].slug === slug) return categories[i].name;
+    }
+    return slug;
+  }
+
+  // Строка товара в режиме администратора — как в главной админке:
+  // фото, название, цена, переключатель публикации и кнопка «изменить».
+  function buildManageRow(p) {
     var m = p._m;
-    var art = document.createElement("article");
-    art.className = "portal-card" + (m.hidden ? " is-unpublished" : "");
-    var media = p.image
-      ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
-      : "";
-    art.innerHTML =
-      '<div class="portal-card-media">' + media + "</div>" +
-      '<div class="portal-card-body">' +
-        '<h3 class="portal-card-name">' + esc(p.name) + "</h3>" +
-        '<p class="portal-card-weight">' + esc(p.weight) + "</p>" +
-        '<span class="portal-block-note">1 блок = ' + p.unitsPerBlock + " шт.</span>" +
-        '<div class="portal-price">' + money(m.finalPrice) + " <small>сомони / блок (для ресторана)</small></div>" +
-        '<div class="manage-meta">База ' + money(m.basePrice) + " · Группа " + (m.groupPrice === null ? "—" : money(m.groupPrice)) + "</div>" +
-        '<div class="portal-card-actions">' +
-          '<label class="pub-switch"><input type="checkbox" class="pub-input"' + (m.hidden ? "" : " checked") + '> <span>' +
-            (m.hidden ? "Не опубликован" : "Опубликован") + "</span></label>" +
-          '<label class="manage-label">Индивидуальная цена за блок' +
-            '<input type="number" min="0" step="0.01" class="manage-price" value="' + (m.ownPrice === null ? "" : m.ownPrice) + '" placeholder="' + m.finalPrice + '"></label>' +
-          '<div class="manage-btns">' +
-            '<button type="button" class="btn-add-cart manage-save">Сохранить цену</button>' +
-            '<button type="button" class="p-btn p-btn--ghost manage-clear"' + (m.ownPrice === null ? " disabled" : "") + ">Сбросить</button>" +
-          "</div>" +
-        "</div>" +
+    var perUnit = m.unitsPerBlock > 0 ? m.finalPrice / m.unitsPerBlock : m.finalPrice;
+    var row = document.createElement("div");
+    row.className = "mrow" + (m.hidden ? " is-hidden" : "");
+    row.setAttribute("data-id", p.id);
+    var thumb = p.image
+      ? '<div class="mrow-thumb"><img src="' + esc(p.image) + '" alt="" loading="lazy"></div>'
+      : '<div class="mrow-thumb is-empty">Нет фото</div>';
+    row.innerHTML =
+      thumb +
+      '<div class="mrow-main">' +
+        '<p class="mrow-name">' + esc(p.name) + "</p>" +
+        '<p class="mrow-meta">' + esc(categoryName(p.category)) + " · " + esc(p.weight) + "</p>" +
+      "</div>" +
+      '<div class="mrow-price">' +
+        '<span class="mrow-final">' + money(perUnit) + " смн/ед.</span>" +
+        '<span class="mrow-badge">мин. ' + p.unitsPerBlock + " шт.</span>" +
+        (m.ownPrice !== null ? '<span class="mrow-badge mrow-badge--own">индивид.</span>' : "") +
+      "</div>" +
+      '<label class="mrow-toggle">' +
+        '<span class="mrow-toggle-label">Опубликован</span>' +
+        '<span class="mswitch"><input type="checkbox" class="pub-input"' + (m.hidden ? "" : " checked") + '>' +
+          '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>' +
+      "</label>" +
+      '<div class="mrow-actions">' +
+        '<button type="button" class="mrow-btn manage-edit" title="Цена для ресторана" aria-label="Изменить цену">&#9998;</button>' +
       "</div>";
 
     var base = "/api/admin/restaurants/" + profile.id;
-    art.querySelector(".pub-input").addEventListener("change", function (e) {
+    row.querySelector(".pub-input").addEventListener("change", function (e) {
       var visible = e.target.checked;
       adminApi("PUT", base + "/products/" + p.id, { visible: visible })
         .then(function () {
@@ -320,19 +332,46 @@
         })
         .catch(function (err) { e.target.checked = !visible; showToast(err.message, true); });
     });
-    art.querySelector(".manage-save").addEventListener("click", function () {
-      var v = art.querySelector(".manage-price").value;
+    row.querySelector(".manage-edit").addEventListener("click", function () { openPriceModal(p); });
+    return row;
+  }
+
+  // Окно изменения цены товара для конкретного ресторана.
+  var priceOverlay = el("priceOverlay");
+  function closePriceModal() { priceOverlay.hidden = true; }
+  el("priceClose").addEventListener("click", closePriceModal);
+  priceOverlay.addEventListener("click", function (e) { if (e.target === priceOverlay) closePriceModal(); });
+
+  function openPriceModal(p) {
+    var m = p._m;
+    var base = "/api/admin/restaurants/" + profile.id;
+    el("priceTitle").textContent = p.name;
+    el("priceBody").innerHTML =
+      '<p class="manage-meta">' + esc(p.weight) + " · блок = " + p.unitsPerBlock + " шт.</p>" +
+      '<p class="manage-meta">Базовая цена блока: <b>' + money(m.basePrice) + "</b> · Цена группы: <b>" +
+        (m.groupPrice === null ? "—" : money(m.groupPrice)) + "</b></p>" +
+      '<p class="manage-meta">Сейчас для ресторана: <b>' + money(m.finalPrice) + "</b> сомони за блок</p>" +
+      '<label class="manage-label">Индивидуальная цена за блок, сомони' +
+        '<input type="number" min="0" step="0.01" class="manage-price" value="' + (m.ownPrice === null ? "" : m.ownPrice) + '" placeholder="' + m.finalPrice + '"></label>' +
+      '<div class="manage-btns">' +
+        '<button type="button" class="p-btn manage-save">Сохранить цену</button>' +
+        '<button type="button" class="p-btn p-btn--ghost manage-clear"' + (m.ownPrice === null ? " disabled" : "") + ">Сбросить</button>" +
+      "</div>";
+    var body = el("priceBody");
+    body.querySelector(".manage-save").addEventListener("click", function () {
+      var v = body.querySelector(".manage-price").value;
       if (v === "") { showToast("Введите цену или нажмите «Сбросить».", true); return; }
       adminApi("PUT", base + "/prices/" + p.id, { price: Number(v) })
-        .then(function () { showToast("Цена сохранена"); return refreshManage(); })
+        .then(function () { closePriceModal(); showToast("Цена сохранена"); return refreshManage(); })
         .catch(function (err) { showToast(err.message, true); });
     });
-    art.querySelector(".manage-clear").addEventListener("click", function () {
+    body.querySelector(".manage-clear").addEventListener("click", function () {
       adminApi("DELETE", base + "/prices/" + p.id)
-        .then(function () { showToast("Возвращена цена группы / базовая"); return refreshManage(); })
+        .then(function () { closePriceModal(); showToast("Возвращена цена группы / базовая"); return refreshManage(); })
         .catch(function (err) { showToast(err.message, true); });
     });
-    return art;
+    priceOverlay.hidden = false;
+    body.querySelector(".manage-price").focus();
   }
 
   function startAdminMode(me) {

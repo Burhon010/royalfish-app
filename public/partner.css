@@ -967,3 +967,103 @@
   flex: 1;
   width: auto;
 }
+
+/* Режим администратора: список товаров ресторана (как в главной админке) */
+.portal-grid.is-manage { display: flex; flex-direction: column; gap: 12px; }
+.mrow {
+  display: grid;
+  grid-template-columns: 64px 1.6fr 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  box-shadow: var(--shadow-sm);
+}
+.mrow.is-hidden .mrow-thumb,
+.mrow.is-hidden .mrow-main { opacity: 0.5; }
+.mrow-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.mrow-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mrow-thumb.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.mrow-name { font-weight: 700; font-size: 15px; margin: 0 0 3px; }
+.mrow-meta { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
+.mrow-price { font-family: var(--font-mono); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.mrow-final { font-weight: 700; color: var(--ocean); font-size: 15px; }
+.mrow-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ocean-deeper);
+  background: var(--gold-light);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.mrow-badge--own { background: #d8ecf3; color: var(--ocean); }
+.mrow-toggle { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.mrow-toggle-label { font-size: 10.5px; font-weight: 700; color: var(--ink-soft); text-align: center; }
+.mswitch { position: relative; display: inline-flex; width: 42px; height: 24px; flex-shrink: 0; }
+.mswitch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.mswitch-track { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: background 0.2s ease; }
+.mswitch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+.mswitch input:checked + .mswitch-track { background: var(--ocean); }
+.mswitch input:checked + .mswitch-track .mswitch-thumb { transform: translateX(18px); }
+.mswitch input:focus-visible + .mswitch-track { outline: 2px solid var(--ocean); outline-offset: 2px; }
+.mrow-actions { display: flex; gap: 8px; }
+.mrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mrow-btn:hover { border-color: var(--ocean); color: var(--ocean); }
+.p-modal--narrow { max-width: 460px; }
+.p-modal--narrow .manage-meta { margin: 0 0 6px; }
+.p-modal--narrow .manage-label { margin-top: 12px; }
+.p-modal--narrow .manage-btns { margin-top: 14px; }
+@media (max-width: 760px) {
+  .mrow {
+    grid-template-columns: 56px 1fr auto;
+    grid-template-areas:
+      "thumb main main"
+      "price price price"
+      "toggle . actions";
+    row-gap: 10px;
+    padding: 12px;
+  }
+  .mrow-thumb { grid-area: thumb; width: 56px; height: 56px; }
+  .mrow-main { grid-area: main; }
+  .mrow-price { grid-area: price; }
+  .mrow-toggle { grid-area: toggle; flex-direction: row; gap: 10px; }
+  .mrow-actions { grid-area: actions; }
+}

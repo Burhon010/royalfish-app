@@ -105,6 +105,17 @@
       </div>
     </div>
 
+    <!-- Цена товара для ресторана (режим администратора) -->
+    <div class="p-overlay" id="priceOverlay" hidden>
+      <div class="p-modal p-modal--narrow" role="dialog" aria-modal="true" aria-labelledby="priceTitle">
+        <div class="p-modal-head">
+          <h2 id="priceTitle">Цена</h2>
+          <button type="button" class="p-close" id="priceClose" aria-label="Закрыть">&times;</button>
+        </div>
+        <div id="priceBody"></div>
+      </div>
+    </div>
+
     <div class="p-toast" id="toast" hidden></div>
 
     <script src="portal.js"></script>
