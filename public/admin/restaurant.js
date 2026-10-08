@@ -94,7 +94,6 @@
       " · Оптовых заказов: " + r.ordersCount + "</p>" +
       '<div class="adm-actions">' + quick +
         '<button type="button" class="btn-primary btn-enter" id="enterBtn">Зайти в кабинет ресторана</button></div>' +
-      '<p class="rest-hint-small">Откроется личный кабинет «' + esc(r.name) + '» так, как его видит сам ресторан: его каталог, цены и заказы.</p>' +
       '<details class="rest-sec" id="secData"' + (openData ? " open" : "") + "><summary>Данные ресторана</summary>" +
       '<form class="adm-form" id="restForm" novalidate>' +
         '<label class="field"><span class="field-label">Название</span><input type="text" id="rName" maxlength="100" value="' + esc(r.name) + '"></label>' +
@@ -107,8 +106,7 @@
         '<p class="form-error field--full" id="rError" hidden></p>' +
         '<div class="field--full"><button type="submit" class="btn-primary">Сохранить данные</button></div>' +
       "</form></details>" +
-      '<details class="rest-sec" id="secPrices"' + (openPrices ? " open" : "") + '><summary id="restPricesTitle">Цены и товары <small>(' +
-        r.prices.length + " · цена за блок)</small></summary>" +
+      '<details class="rest-sec" id="secPrices"' + (openPrices ? " open" : "") + '><summary id="restPricesTitle">Цены и товары</summary>' +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
         "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
       "</tr></thead><tbody>" +
