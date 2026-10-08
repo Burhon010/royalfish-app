@@ -65,10 +65,25 @@
         '<p class="rest-row-meta">Группа: ' + (r.priceGroupName ? esc(r.priceGroupName) : "—") + "</p></div>" +
         '<div class="rest-row-right">' + r.ordersCount + " опт. заказ(ов)</div>" +
         '<div><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span></div>" +
-        '<div><button type="button" class="btn-primary rest-prices-btn">Цены</button></div>';
+        '<div><button type="button" class="btn-primary rest-portal-btn">Зайти в портал ' + esc(r.name) + "</button></div>";
       var url = "restaurant.html?id=" + r.id;
       row.addEventListener("click", function (e) {
-        window.location.href = e.target.closest(".rest-prices-btn") ? url + "#prices" : url;
+        if (!e.target.closest(".rest-portal-btn")) {
+          window.location.href = url;
+          return;
+        }
+        // окно открываем сразу по клику, чтобы браузер не заблокировал его
+        var w = window.open("", "_blank");
+        api("POST", "/api/admin/restaurants/" + r.id + "/enter")
+          .then(function () {
+            var target = "../portal.html?admin=" + r.id;
+            if (w) w.location.href = target;
+            else window.location.href = target;
+          })
+          .catch(function (err) {
+            if (w) w.close();
+            S.showToast(err.message, true);
+          });
       });
       row.addEventListener("keydown", function (e) {
         if (e.key === "Enter") window.location.href = url;
