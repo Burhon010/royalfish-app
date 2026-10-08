@@ -378,11 +378,12 @@
     el("welcomeTitle").textContent = "Управление: " + me.name;
     el("welcomeSub").textContent = "Вы владелец Royal Fish: публикуйте товары для этого ресторана и меняйте его цены. Ресторан увидит изменения сразу.";
     document.querySelector('.portal-tab[data-tab="catalog"]').textContent = "Товары и цены";
+    // заказы ресторанов администратор видит в разделе «Опт. заказы»
+    document.querySelector('.portal-tab[data-tab="orders"]').hidden = true;
     el("portalApp").hidden = false;
     return Promise.all([
       loadManageCatalog(),
       fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
-      me.status === "approved" ? loadOrders().catch(function () {}) : Promise.resolve(),
     ]).then(function (res) {
       categories = res[1];
       renderCategoryPills();
