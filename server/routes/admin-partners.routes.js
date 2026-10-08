@@ -153,6 +153,17 @@ restaurantsRouter.delete("/:id/prices/:productId", async (req, res, next) => {
   }
 });
 
+restaurantsRouter.post("/:id/reset-prices", async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    if (!id || !(await partners.getRestaurantById(id))) return res.status(404).json({ error: "Ресторан не найден." });
+    await partners.resetRestaurantPrices(id);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Вход владельца в кабинет конкретного ресторана ("зайти как ресторан").
 // Доступно только администратору (requireAuth на всём роутере). Выдаёт
 // короткую (2 ч) сессию ресторана с пометкой imp — кабинет покажет плашку

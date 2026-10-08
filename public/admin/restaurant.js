@@ -42,11 +42,6 @@
       });
   }
 
-  function groupOptions(selectedId) {
-    return '<option value="">— без группы —</option>' + groups.map(function (g) {
-      return '<option value="' + g.id + '"' + (g.id === selectedId ? " selected" : "") + ">" + esc(g.name) + "</option>";
-    }).join("");
-  }
   function statusOptions(current) {
     return Object.keys(STATUS).map(function (s) {
       return '<option value="' + s + '"' + (s === current ? " selected" : "") + ">" + STATUS[s] + "</option>";
@@ -105,7 +100,8 @@
         '<label class="field"><span class="field-label">Телефон</span><input type="text" id="rPhone" maxlength="40" value="' + esc(r.phone) + '"></label>' +
         '<label class="field field--full"><span class="field-label">Адрес</span><input type="text" id="rAddress" maxlength="300" value="' + esc(r.address) + '"></label>' +
         '<label class="field"><span class="field-label">Статус</span><select id="rStatus">' + statusOptions(r.status) + "</select></label>" +
-        '<label class="field"><span class="field-label">Группа цен</span><select id="rGroup">' + groupOptions(r.priceGroupId) + "</select></label>" +
+        '<div class="field"><span class="field-label">Цены</span>' +
+          '<button type="button" class="btn-outline" id="resetPricesBtn">Сделать цены по умолчанию</button></div>' +
         '<div class="field field--full"><span class="field-label">Текущий пароль ресторана</span>' +
           (r.password
             ? '<div class="pw-reveal"><code id="rPwShown">••••••••</code> ' +
@@ -132,7 +128,6 @@
         phone: document.getElementById("rPhone").value,
         address: document.getElementById("rAddress").value,
         status: document.getElementById("rStatus").value,
-        priceGroupId: document.getElementById("rGroup").value || null,
         newPassword: document.getElementById("rPassword").value || undefined,
       });
     });
@@ -144,6 +139,17 @@
       restBody.classList.toggle("is-collapsed", collapsed);
       document.getElementById("restBodyInner").hidden = collapsed;
       this.setAttribute("aria-expanded", String(!collapsed));
+    });
+
+    document.getElementById("resetPricesBtn").addEventListener("click", function () {
+      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
+      if (!window.confirm(msg)) return;
+      api("POST", "/api/admin/restaurants/" + r.id + "/reset-prices")
+        .then(function () {
+          S.showToast("Цены возвращены по умолчанию");
+          return load(false);
+        })
+        .catch(function (err) { S.showToast(err.message, true); });
     });
 
     var pwToggle = document.getElementById("rPwToggle");
