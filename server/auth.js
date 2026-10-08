@@ -23,6 +23,30 @@ function secretFor(purpose) {
   return purpose ? SECRET + ":" + purpose : SECRET;
 }
 
+// Обратимое шифрование (AES-256-GCM) — чтобы администратор мог напомнить
+// ресторану его пароль. Ключ берётся из SESSION_SECRET.
+function vaultKey() {
+  return crypto.createHash("sha256").update(secretFor("pwvault")).digest();
+}
+
+function encryptSecret(text) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", vaultKey(), iv);
+  const enc = Buffer.concat([cipher.update(String(text), "utf8"), cipher.final()]);
+  return [iv, cipher.getAuthTag(), enc].map((b) => b.toString("base64url")).join(".");
+}
+
+function decryptSecret(value) {
+  try {
+    const [iv, tag, enc] = String(value).split(".").map((s) => Buffer.from(s, "base64url"));
+    const decipher = crypto.createDecipheriv("aes-256-gcm", vaultKey(), iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8");
+  } catch (_) {
+    return null;
+  }
+}
+
 function sign(payloadObj, purpose) {
   const payload = base64url(JSON.stringify(payloadObj));
   const signature = crypto
@@ -79,4 +103,4 @@ function verifyPartnerToken(token) {
   return data && data.role === "partner" ? data : null;
 }
 
-module.exports = { createSessionToken, verify, createPartnerToken, verifyPartnerToken, TOKEN_TTL_MS, IMPERSONATE_TTL_MS };
+module.exports = { encryptSecret, decryptSecret, createSessionToken, verify, createPartnerToken, verifyPartnerToken, TOKEN_TTL_MS, IMPERSONATE_TTL_MS };

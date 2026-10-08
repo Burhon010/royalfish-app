@@ -102,6 +102,12 @@
         '<label class="field field--full"><span class="field-label">Адрес</span><input type="text" id="rAddress" maxlength="300" value="' + esc(r.address) + '"></label>' +
         '<label class="field"><span class="field-label">Статус</span><select id="rStatus">' + statusOptions(r.status) + "</select></label>" +
         '<label class="field"><span class="field-label">Группа цен</span><select id="rGroup">' + groupOptions(r.priceGroupId) + "</select></label>" +
+        '<div class="field field--full"><span class="field-label">Текущий пароль ресторана</span>' +
+          (r.password
+            ? '<div class="pw-reveal"><code id="rPwShown">••••••••</code> ' +
+              '<button type="button" class="adm-small-btn" id="rPwToggle">Показать</button></div>'
+            : '<div class="pw-reveal"><small>Не сохранён (ресторан зарегистрирован раньше). Задайте новый пароль ниже — он будет виден здесь.</small></div>') +
+        "</div>" +
         '<label class="field field--full"><span class="field-label">Новый пароль (необязательно, минимум 8 символов)</span>' +
         '<input type="text" id="rPassword" autocomplete="off" minlength="8"></label>' +
         '<p class="form-error field--full" id="rError" hidden></p>' +
@@ -126,6 +132,16 @@
         newPassword: document.getElementById("rPassword").value || undefined,
       });
     });
+
+    var pwToggle = document.getElementById("rPwToggle");
+    if (pwToggle) {
+      var pwShown = false;
+      pwToggle.addEventListener("click", function () {
+        pwShown = !pwShown;
+        document.getElementById("rPwShown").textContent = pwShown ? r.password : "••••••••";
+        pwToggle.textContent = pwShown ? "Скрыть" : "Показать";
+      });
+    }
 
     Array.prototype.forEach.call(restBody.querySelectorAll(".q-act"), function (b) {
       b.addEventListener("click", function () {

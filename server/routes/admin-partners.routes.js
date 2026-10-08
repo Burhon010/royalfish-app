@@ -56,7 +56,7 @@ restaurantsRouter.get("/:id", async (req, res, next) => {
     const r = id && (await partners.getRestaurantById(id));
     if (!r) return res.status(404).json({ error: "Ресторан не найден." });
     const prices = await partners.getRestaurantPriceTable(r);
-    res.json({ ...serializeRestaurant(r), prices });
+    res.json({ ...serializeRestaurant(r), password: partners.getRestaurantPassword(r), prices });
   } catch (err) {
     next(err);
   }

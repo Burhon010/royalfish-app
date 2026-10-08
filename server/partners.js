@@ -19,6 +19,7 @@
 
 const bcrypt = require("bcryptjs");
 const { pool } = require("./store");
+const { encryptSecret, decryptSecret } = require("./auth");
 
 const RESTAURANT_STATUSES = ["pending", "approved", "rejected", "blocked"];
 const WHOLESALE_ORDER_STATUSES = [
@@ -72,6 +73,7 @@ async function initPartnerSchema() {
       created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS password_enc TEXT;
     CREATE UNIQUE INDEX IF NOT EXISTS restaurants_name_lower_idx ON restaurants (lower(name));
 
     CREATE TABLE IF NOT EXISTS restaurant_prices (
@@ -135,9 +137,9 @@ async function registerRestaurant({ name, phone, address, password }) {
   const hash = bcrypt.hashSync(password, 12);
   try {
     const { rows } = await pool.query(
-      `INSERT INTO restaurants (name, phone, address, password_hash)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [name, phone, address, hash]
+      `INSERT INTO restaurants (name, phone, address, password_hash, password_enc)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [name, phone, address, hash, encryptSecret(password)]
     );
     return rows[0];
   } catch (err) {
@@ -180,6 +182,12 @@ async function listRestaurants() {
 // Удаление ресторана: его цены, скрытые товары и аккаунт удаляются, а оптовые
 // заказы остаются в истории (restaurant_id становится NULL, название и
 // контакты хранятся в самом заказе).
+// Пароль, который ресторан задал при регистрации (или администратор позже).
+// null — если он не сохранён (аккаунты, созданные до этой функции).
+function getRestaurantPassword(r) {
+  return r && r.password_enc ? decryptSecret(r.password_enc) : null;
+}
+
 async function deleteRestaurant(id) {
   await pool.query("DELETE FROM restaurants WHERE id = $1", [id]);
 }
@@ -194,7 +202,10 @@ async function updateRestaurant(id, { name, phone, address, status, priceGroupId
   if (address !== undefined) push("address", address);
   if (status !== undefined) push("status", status);
   if (priceGroupId !== undefined) push("price_group_id", priceGroupId);
-  if (newPassword) push("password_hash", bcrypt.hashSync(newPassword, 12));
+  if (newPassword) {
+    push("password_hash", bcrypt.hashSync(newPassword, 12));
+    push("password_enc", encryptSecret(newPassword));
+  }
   if (!sets.length) return getRestaurantById(id);
 
   vals.push(id);
@@ -585,6 +596,7 @@ module.exports = {
   listRestaurants,
   updateRestaurant,
   deleteRestaurant,
+  getRestaurantPassword,
   listPriceGroups,
   createPriceGroup,
   renamePriceGroup,

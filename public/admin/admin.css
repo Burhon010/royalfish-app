@@ -998,3 +998,6 @@ button, input, select{ font-family: inherit; }
 .rest-sec[open] > summary{ border-bottom: 1px solid var(--line); }
 .rest-sec > .adm-form,
 .rest-sec > .adm-table-wrap{ padding: 14px 18px 18px; margin: 0; }
+
+.pw-reveal { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; }
+.pw-reveal code { font-size: 1.05rem; padding: 6px 10px; background: #f1f5f9; border-radius: 6px; user-select: all; word-break: break-all; }
