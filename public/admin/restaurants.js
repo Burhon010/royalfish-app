@@ -41,6 +41,13 @@
       });
   }
 
+  function ordersLabel(n) {
+    var m10 = n % 10, m100 = n % 100;
+    var word = m10 === 1 && m100 !== 11 ? "заказ"
+      : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? "заказа" : "заказов";
+    return n + " " + word;
+  }
+
   function renderList() {
     var visible = restaurants;
     listEl.innerHTML = "";
@@ -63,7 +70,7 @@
         '<p class="rest-row-meta">' + esc(r.phone) + " · " + esc(r.address) + "</p></div>" +
         '<div><p class="rest-row-meta">Регистрация: ' + S.fmtDate(r.createdAt) + "</p>" +
         '<p class="rest-row-meta">Группа: ' + (r.priceGroupName ? esc(r.priceGroupName) : "—") + "</p></div>" +
-        '<div class="rest-row-right">' + r.ordersCount + " опт. заказ(ов)</div>" +
+        '<div class="rest-row-right">' + ordersLabel(r.ordersCount) + "</div>" +
         '<div><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span></div>" +
         '<div><button type="button" class="btn-primary rest-portal-btn">Зайти в портал ' + esc(r.name) + "</button></div>";
       var url = "restaurant.html?id=" + r.id;
