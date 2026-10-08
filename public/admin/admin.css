@@ -1001,3 +1001,24 @@ button, input, select{ font-family: inherit; }
 
 .pw-reveal { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; }
 .pw-reveal code { font-size: 1.05rem; padding: 6px 10px; background: #f1f5f9; border-radius: 6px; user-select: all; word-break: break-all; }
+
+/* Карточка ресторана: заголовок со стрелкой сворачивает всё содержимое */
+.rest-head{
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  background: none; border: 0; padding: 0 0 14px; margin: 0 0 16px; cursor: pointer; text-align: left;
+  border-bottom: 1px solid var(--line); font: inherit; color: inherit;
+}
+.rest-head-name{ font-family: var(--font-display); font-weight: 500; font-size: 28px; line-height: 1.2; }
+.rest-head-arrow{
+  flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.rest-head-arrow::before{
+  content: ""; width: 9px; height: 9px; margin-top: 4px; border-left: 2px solid var(--ocean); border-top: 2px solid var(--ocean);
+  transform: rotate(45deg); transition: transform .2s;
+}
+.rest-head[aria-expanded="false"] .rest-head-arrow::before{ transform: rotate(225deg); margin-top: -4px; }
+.rest-head:hover .rest-head-arrow{ background: var(--paper); }
+.rest-page.is-collapsed{ padding-top: 14px; padding-bottom: 14px; }
+.rest-page.is-collapsed .rest-head{ margin: 0; padding: 0; border-bottom: 0; }
+@media (max-width: 760px){ .rest-head-name{ font-size: 22px; } }

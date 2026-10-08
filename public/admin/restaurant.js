@@ -12,6 +12,7 @@
   };
 
   var groups = [];
+  var collapsed = false;
   var restaurantId = Number(new URLSearchParams(window.location.search).get("id"));
   var restBody = document.getElementById("restPage");
 
@@ -90,6 +91,9 @@
     var openPrices = hadSections ? !!document.querySelector("#secPrices[open]") : window.location.hash === "#prices";
 
     restBody.innerHTML =
+      '<button type="button" class="rest-head" id="restHead" aria-expanded="' + (!collapsed) + '">' +
+        '<span class="rest-head-name">' + esc(r.name) + '</span><span class="rest-head-arrow" aria-hidden="true"></span></button>' +
+      '<div class="rest-body" id="restBodyInner"' + (collapsed ? " hidden" : "") + '>' +
       '<p><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span> &nbsp; Регистрация: " + S.fmtDate(r.createdAt) +
       " · Оптовых заказов: " + r.ordersCount + "</p>" +
       '<div class="adm-actions">' + quick +
@@ -119,7 +123,7 @@
       "</tr></thead><tbody>" +
       (r.prices.length ? r.prices.map(function (p) { return priceRow(r, p); }).join("") :
         '<tr><td colspan="7">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
-      "</tbody></table></div></details>";
+      "</tbody></table></div></details></div>";
 
     document.getElementById("restForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -131,6 +135,15 @@
         priceGroupId: document.getElementById("rGroup").value || null,
         newPassword: document.getElementById("rPassword").value || undefined,
       });
+    });
+
+    restBody.classList.toggle("is-collapsed", collapsed);
+    document.getElementById("restPageTitle").hidden = true;
+    document.getElementById("restHead").addEventListener("click", function () {
+      collapsed = !collapsed;
+      restBody.classList.toggle("is-collapsed", collapsed);
+      document.getElementById("restBodyInner").hidden = collapsed;
+      this.setAttribute("aria-expanded", String(!collapsed));
     });
 
     var pwToggle = document.getElementById("rPwToggle");
