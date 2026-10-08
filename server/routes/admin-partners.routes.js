@@ -62,6 +62,17 @@ restaurantsRouter.get("/:id", async (req, res, next) => {
   }
 });
 
+restaurantsRouter.delete("/:id", async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    if (!id || !(await partners.getRestaurantById(id))) return res.status(404).json({ error: "Ресторан не найден." });
+    await partners.deleteRestaurant(id);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 restaurantsRouter.patch("/:id", async (req, res, next) => {
   try {
     const id = parseId(req.params.id);

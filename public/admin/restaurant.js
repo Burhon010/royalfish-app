@@ -93,7 +93,8 @@
       '<p><span class="adm-badge st-' + r.status + '">' + STATUS[r.status] + "</span> &nbsp; Регистрация: " + S.fmtDate(r.createdAt) +
       " · Оптовых заказов: " + r.ordersCount + "</p>" +
       '<div class="adm-actions">' + quick +
-        '<button type="button" class="btn-primary btn-enter" id="enterBtn">Зайти в кабинет ресторана</button></div>' +
+        '<button type="button" class="btn-primary btn-enter" id="enterBtn">Зайти в кабинет ресторана</button>' +
+        '<button type="button" class="btn-outline btn-danger" id="deleteRestBtn">Удалить ресторан</button></div>' +
       '<details class="rest-sec" id="secData"' + (openData ? " open" : "") + "><summary>Данные ресторана</summary>" +
       '<form class="adm-form" id="restForm" novalidate>' +
         '<label class="field"><span class="field-label">Название</span><input type="text" id="rName" maxlength="100" value="' + esc(r.name) + '"></label>' +
@@ -130,6 +131,14 @@
       b.addEventListener("click", function () {
         saveRestaurant(r.id, { status: b.getAttribute("data-s") });
       });
+    });
+
+    document.getElementById("deleteRestBtn").addEventListener("click", function () {
+      var msg = "Удалить ресторан «" + r.name + "»?\n\nАккаунт, индивидуальные цены и настройки товаров будут удалены. Оптовые заказы останутся в истории. Это действие нельзя отменить.";
+      if (!window.confirm(msg)) return;
+      api("DELETE", "/api/admin/restaurants/" + r.id)
+        .then(function () { window.location.href = "restaurants.html"; })
+        .catch(function (err) { S.showToast(err.message, true); });
     });
 
     document.getElementById("enterBtn").addEventListener("click", function () {

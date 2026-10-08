@@ -177,6 +177,13 @@ async function listRestaurants() {
   return rows;
 }
 
+// Удаление ресторана: его цены, скрытые товары и аккаунт удаляются, а оптовые
+// заказы остаются в истории (restaurant_id становится NULL, название и
+// контакты хранятся в самом заказе).
+async function deleteRestaurant(id) {
+  await pool.query("DELETE FROM restaurants WHERE id = $1", [id]);
+}
+
 async function updateRestaurant(id, { name, phone, address, status, priceGroupId, newPassword }) {
   const sets = [];
   const vals = [];
@@ -577,6 +584,7 @@ module.exports = {
   getRestaurantById,
   listRestaurants,
   updateRestaurant,
+  deleteRestaurant,
   listPriceGroups,
   createPriceGroup,
   renamePriceGroup,
