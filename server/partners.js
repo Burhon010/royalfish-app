@@ -374,7 +374,7 @@ async function deleteGroupPrice(groupId, productId) {
 async function getCatalogForRestaurant(restaurant) {
   const { rows } = await pool.query(
     `SELECT p.id, p.name, p.category, p.weight, p.description, p.image_path,
-            p.wholesale_price, p.wholesale_min_qty,
+            p.wholesale_price, p.wholesale_min_qty, p.is_new, p.in_stock,
             gp.price AS group_price, rp.price AS own_price
      FROM products p
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
@@ -396,6 +396,8 @@ async function getCatalogForRestaurant(restaurant) {
       image: p.image_path,
       unitsPerBlock: p.wholesale_min_qty,
       pricePerBlock: price,
+      isNew: !!p.is_new,
+      inStock: !!p.in_stock,
     };
   });
 }

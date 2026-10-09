@@ -178,8 +178,10 @@
     art.innerHTML =
       '<div class="portal-card-media">' + media + "</div>" +
       '<div class="portal-card-body">' +
-        '<h3 class="portal-card-name">' + esc(p.name) + "</h3>" +
-        '<p class="portal-card-weight">' + esc(p.weight) + "</p>" +
+        '<h3 class="portal-card-name">' + esc(p.name) +
+          (p.isNew ? ' <span class="portal-tag portal-tag--new">Новинка</span>' : "") + "</h3>" +
+        '<p class="portal-card-weight">' + esc(p.weight) +
+          (p.inStock === false ? ' · <span class="portal-tag portal-tag--out">Нет в наличии</span>' : "") + "</p>" +
         '<span class="portal-block-note">1 блок = ' + p.unitsPerBlock + " шт.</span>" +
         '<div class="portal-price">' + money(p.pricePerBlock) + " <small>сомони / блок</small></div>" +
         '<div class="portal-card-actions">' +
@@ -265,11 +267,16 @@
   }
 
   function loadManageCatalog() {
-    return adminApi("GET", "/api/admin/restaurants/" + profile.id).then(function (r) {
-      catalog = r.prices.map(function (p) {
+    return Promise.all([
+      adminApi("GET", "/api/admin/restaurants/" + profile.id),
+      adminApi("GET", "/api/admin/products"),
+    ]).then(function (res) {
+      var full = {};
+      res[1].forEach(function (x) { full[x.id] = x; });
+      catalog = res[0].prices.map(function (p) {
         return {
           id: p.productId, name: p.name, category: p.category, weight: p.weight, image: p.image,
-          unitsPerBlock: p.unitsPerBlock, pricePerBlock: p.finalPrice, _m: p,
+          unitsPerBlock: p.unitsPerBlock, pricePerBlock: p.finalPrice, _m: p, _prod: full[p.productId] || null,
         };
       });
     });
@@ -282,6 +289,34 @@
       renderCatalog();
       window.scrollTo(0, y);
     });
+  }
+
+  // PUT /api/admin/products/:id — полная замена полей товара, поэтому
+  // пересылаем все поля (как quickUpdate в главной админке).
+  function quickUpdateProduct(prod, changes) {
+    var fd = new FormData();
+    fd.append("name", prod.name);
+    fd.append("category", prod.category);
+    fd.append("weight", prod.weight);
+    fd.append("description", prod.description || "");
+    fd.append("price", prod.price);
+    fd.append("discountPercent", prod.discountPercent);
+    fd.append("isNew", "isNew" in changes ? changes.isNew : prod.isNew);
+    fd.append("inStock", "inStock" in changes ? changes.inStock : prod.inStock);
+    if (prod.wholesalePrice !== null && prod.wholesalePrice !== undefined) fd.append("wholesalePrice", prod.wholesalePrice);
+    fd.append("wholesaleMinQty", prod.wholesaleMinQty || 1);
+    fd.append("availableRetail", prod.availableRetail);
+    fd.append("availableWholesale", prod.availableWholesale);
+    return fetch("/api/admin/products/" + prod.id, { method: "PUT", credentials: "same-origin", body: fd })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (res.status === 401) { window.location.href = "admin/login.html"; throw new Error("unauthorized"); }
+          if (!res.ok) throw new Error(data.error || "Не удалось сохранить изменения.");
+          showToast("Изменения сохранены");
+        });
+      })
+      .catch(function (err) { if (err.message !== "unauthorized") showToast(err.message, true); })
+      .then(function () { return refreshManage(); });
   }
 
   function categoryName(slug) {
@@ -313,6 +348,14 @@
         '<span class="mrow-badge">мин. ' + p.unitsPerBlock + " шт.</span>" +
         (m.ownPrice !== null ? '<span class="mrow-badge mrow-badge--own">индивид.</span>' : "") +
       "</div>" +
+      (p._prod
+        ? '<label class="mrow-toggle"><span class="mrow-toggle-label">Новинка</span>' +
+            '<span class="mswitch"><input type="checkbox" class="toggle-new"' + (p._prod.isNew ? " checked" : "") + '>' +
+            '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span></label>' +
+          '<label class="mrow-toggle"><span class="mrow-toggle-label">В наличии</span>' +
+            '<span class="mswitch"><input type="checkbox" class="toggle-stock"' + (p._prod.inStock ? " checked" : "") + '>' +
+            '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span></label>'
+        : "") +
       '<label class="mrow-toggle">' +
         '<span class="mrow-toggle-label">Опубликован</span>' +
         '<span class="mswitch"><input type="checkbox" class="pub-input"' + (m.hidden ? "" : " checked") + '>' +
@@ -332,6 +375,14 @@
         })
         .catch(function (err) { e.target.checked = !visible; showToast(err.message, true); });
     });
+    if (p._prod) {
+      row.querySelector(".toggle-new").addEventListener("change", function (e) {
+        quickUpdateProduct(p._prod, { isNew: e.target.checked });
+      });
+      row.querySelector(".toggle-stock").addEventListener("change", function (e) {
+        quickUpdateProduct(p._prod, { inStock: e.target.checked });
+      });
+    }
     row.querySelector(".manage-edit").addEventListener("click", function () { openPriceModal(p); });
     return row;
   }
