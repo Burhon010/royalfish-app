@@ -136,7 +136,8 @@
     catalog.forEach(function (p) { used[p.category] = true; });
     var html = '<button class="filter-pill" data-filter="all" role="tab" aria-selected="false">Все</button>';
     categories.forEach(function (c) {
-      if (!used[c.slug]) return;
+      // у ресторана — только категории с его товарами; администратору — все существующие
+      if (!used[c.slug] && !impersonated) return;
       html += '<button class="filter-pill" data-filter="' + esc(c.slug) + '" role="tab" aria-selected="false">' + esc(c.name) + "</button>";
     });
     var row = el("catFilterRow");
