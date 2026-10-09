@@ -703,11 +703,8 @@
       el("portalApp").hidden = false;
       loadCart();
 
-      return Promise.all([
-        api("GET", "/api/partners/catalog"),
-        fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
-        loadOrders(),
-      ]).then(function (res) {
+      var lastCatalogLoad = Date.now();
+      function applyCatalog(res) {
         catalog = res[0];
         categories = res[1];
         // убираем из корзины товары, которых больше нет в каталоге
@@ -716,7 +713,25 @@
         renderCategoryPills();
         renderCatalog();
         renderCartBar();
+        lastCatalogLoad = Date.now();
+      }
+
+      // Открытая вкладка подхватывает новые товары и категории, когда ресторан
+      // возвращается на неё (владелец мог опубликовать их в это время).
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState !== "visible" || Date.now() - lastCatalogLoad < 15000) return;
+        if (!cartOverlay.hidden) return;
+        Promise.all([
+          api("GET", "/api/partners/catalog"),
+          fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+        ]).then(applyCatalog).catch(function () {});
       });
+
+      return Promise.all([
+        api("GET", "/api/partners/catalog"),
+        fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+        loadOrders(),
+      ]).then(applyCatalog);
     })
     .catch(function (err) {
       if (err.message === "unauthorized") return;
