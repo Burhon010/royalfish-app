@@ -85,6 +85,7 @@ async function initPartnerSchema() {
     ALTER TABLE restaurant_prices ADD COLUMN IF NOT EXISTS discount_percent NUMERIC NOT NULL DEFAULT 0
       CHECK (discount_percent >= 0 AND discount_percent <= 90);
     ALTER TABLE restaurant_prices ALTER COLUMN price DROP NOT NULL;
+    ALTER TABLE restaurant_prices ADD COLUMN IF NOT EXISTS min_qty INTEGER CHECK (min_qty IS NULL OR min_qty >= 1);
 
     -- Товары, скрытые владельцем для конкретного ресторана (не видны в его
     -- каталоге и не доступны для заказа).
@@ -284,16 +285,25 @@ function baseBlockPrice(p) {
 // Цена блока для ресторана: индивидуальная → цена группы → базовая, затем
 // индивидуальная скидка ресторана (в %) на этот товар.
 function resolveBlockPrice(p) {
-  const base = baseBlockPrice(p);
+  const defaultUnits = Number(p.wholesale_min_qty || 1);
+  const units = p.own_min_qty ? Number(p.own_min_qty) : defaultUnits;
+  const base = baseBlockPrice(p); // блок при стандартной партии
   const group = p.group_price === null || p.group_price === undefined ? null : round2(p.group_price);
   const own = p.own_price === null || p.own_price === undefined ? null : round2(p.own_price);
   const discount = Number(p.own_discount || 0);
-  const before = own !== null ? own : group !== null ? group : base;
+  // цена блока по умолчанию (группа или база) пересчитывается на партию ресторана
+  // пропорционально штукам; индивидуальная цена блока задаётся уже под его партию
+  const defaultBlock = group !== null ? group : base;
+  const defaultForUnits = units === defaultUnits ? defaultBlock : round2((defaultBlock / defaultUnits) * units);
+  const before = own !== null ? own : defaultForUnits;
   return {
     base,
     group,
     own,
     discount,
+    units,
+    defaultUnits,
+    ownMinQty: p.own_min_qty ? Number(p.own_min_qty) : null,
     before,
     final: discount > 0 ? round2(before * (1 - discount / 100)) : before,
   };
@@ -304,7 +314,7 @@ function resolveBlockPrice(p) {
 async function getRestaurantPriceTable(restaurant) {
   const { rows } = await pool.query(
     `SELECT p.id, p.name, p.weight, p.category, p.image_path, p.wholesale_price, p.wholesale_min_qty,
-            gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount,
+            gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount, rp.min_qty AS own_min_qty,
             (hp.product_id IS NOT NULL) AS hidden
      FROM products p
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
@@ -323,7 +333,9 @@ async function getRestaurantPriceTable(restaurant) {
       image: p.image_path,
       name: p.name,
       weight: p.weight,
-      unitsPerBlock: p.wholesale_min_qty,
+      unitsPerBlock: r.units,
+      defaultUnitsPerBlock: r.defaultUnits,
+      ownMinQty: r.ownMinQty,
       basePrice: r.base,
       groupPrice: r.group,
       ownPrice: r.own,
@@ -358,21 +370,24 @@ async function getGroupPriceTable(groupId) {
 // если не осталось ни цены, ни скидки, запись удаляется.
 async function setRestaurantDeal(restaurantId, productId, patch) {
   const { rows } = await pool.query(
-    "SELECT price, discount_percent FROM restaurant_prices WHERE restaurant_id = $1 AND product_id = $2",
+    "SELECT price, discount_percent, min_qty FROM restaurant_prices WHERE restaurant_id = $1 AND product_id = $2",
     [restaurantId, productId]
   );
   let price = rows.length && rows[0].price !== null ? Number(rows[0].price) : null;
   let discount = rows.length ? Number(rows[0].discount_percent) : 0;
+  let minQty = rows.length && rows[0].min_qty !== null ? Number(rows[0].min_qty) : null;
   if (patch.price !== undefined) price = patch.price;
   if (patch.discountPercent !== undefined) discount = patch.discountPercent;
-  if (price === null && discount === 0) {
+  if (patch.minQty !== undefined) minQty = patch.minQty;
+  if (price === null && discount === 0 && minQty === null) {
     await pool.query("DELETE FROM restaurant_prices WHERE restaurant_id = $1 AND product_id = $2", [restaurantId, productId]);
     return;
   }
   await pool.query(
-    `INSERT INTO restaurant_prices (restaurant_id, product_id, price, discount_percent) VALUES ($1,$2,$3,$4)
-     ON CONFLICT (restaurant_id, product_id) DO UPDATE SET price = EXCLUDED.price, discount_percent = EXCLUDED.discount_percent`,
-    [restaurantId, productId, price, discount]
+    `INSERT INTO restaurant_prices (restaurant_id, product_id, price, discount_percent, min_qty) VALUES ($1,$2,$3,$4,$5)
+     ON CONFLICT (restaurant_id, product_id) DO UPDATE
+       SET price = EXCLUDED.price, discount_percent = EXCLUDED.discount_percent, min_qty = EXCLUDED.min_qty`,
+    [restaurantId, productId, price, discount, minQty]
   );
 }
 async function setRestaurantPrice(restaurantId, productId, price) {
@@ -414,7 +429,7 @@ async function getCatalogForRestaurant(restaurant) {
   const { rows } = await pool.query(
     `SELECT p.id, p.name, p.category, p.weight, p.description, p.image_path,
             p.wholesale_price, p.wholesale_min_qty, p.is_new, p.in_stock,
-            gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount
+            gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount, rp.min_qty AS own_min_qty
      FROM products p
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
      LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $1
@@ -432,7 +447,7 @@ async function getCatalogForRestaurant(restaurant) {
       weight: p.weight,
       description: p.description,
       image: p.image_path,
-      unitsPerBlock: p.wholesale_min_qty,
+      unitsPerBlock: r.units,
       pricePerBlock: r.final,
       discountPercent: r.discount,
       oldPricePerBlock: r.discount > 0 ? r.before : null,
@@ -453,7 +468,7 @@ async function createWholesaleOrder(restaurant, items, comment) {
     const ids = items.map((i) => i.productId);
     const { rows } = await client.query(
       `SELECT p.id, p.name, p.wholesale_price, p.wholesale_min_qty, p.available_wholesale,
-              gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount,
+              gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount, rp.min_qty AS own_min_qty,
               (hp.product_id IS NOT NULL) AS hidden
        FROM products p
        LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $3
@@ -472,11 +487,12 @@ async function createWholesaleOrder(restaurant, items, comment) {
         err.statusCode = 400;
         throw err;
       }
-      const price = resolveBlockPrice(p).final;
+      const rb = resolveBlockPrice(p);
+      const price = rb.final;
       resolved.push({
         product_id: p.id,
         product_name: p.name,
-        units_per_block: p.wholesale_min_qty,
+        units_per_block: rb.units,
         price_per_block: price,
         ordered_blocks: it.blocks,
       });

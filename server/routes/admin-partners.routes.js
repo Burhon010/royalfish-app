@@ -150,8 +150,20 @@ restaurantsRouter.put("/:id/prices/:productId", async (req, res, next) => {
       if (!Number.isFinite(d) || d < 0 || d > 90) return res.status(400).json({ error: "Скидка должна быть от 0 до 90 %." });
       patch.discountPercent = Math.round(d * 100) / 100;
     }
-    if (patch.price === undefined && patch.discountPercent === undefined) {
-      return res.status(400).json({ error: "Укажите цену или скидку." });
+    // minQty: своя минимальная партия (штук в блоке) для этого ресторана; null — как у товара
+    if (body.minQty !== undefined) {
+      if (body.minQty === null || body.minQty === "") {
+        patch.minQty = null;
+      } else {
+        const q = Number(body.minQty);
+        if (!Number.isInteger(q) || q < 1 || q > 100000) {
+          return res.status(400).json({ error: "Минимальная партия — целое число от 1." });
+        }
+        patch.minQty = q;
+      }
+    }
+    if (patch.price === undefined && patch.discountPercent === undefined && patch.minQty === undefined) {
+      return res.status(400).json({ error: "Укажите цену, скидку или минимальную партию." });
     }
     if (!(await partners.getRestaurantById(id))) return res.status(404).json({ error: "Ресторан не найден." });
     await partners.setRestaurantDeal(id, productId, patch);

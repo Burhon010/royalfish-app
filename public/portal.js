@@ -398,34 +398,53 @@
     return row;
   }
 
-  // Условия ресторана на товар: своя оптовая цена за единицу и своя скидка.
-  // Меняется только этот ресторан — сам товар и другие рестораны не затрагиваются.
+  // Условия ресторана на товар: своя оптовая цена, своя минимальная партия
+  // и своя скидка. Меняется только этот ресторан — сам товар и другие рестораны
+  // не затрагиваются.
   var pfOverlay = el("productOverlay");
   var pfForm = el("pfForm");
   var pfCurrent = null;
 
   function round2(n) { return Math.round(n * 100) / 100; }
-  // цена блока по умолчанию (цена группы или базовая)
+  // цена блока по умолчанию (цена группы или базовая) — для стандартной партии
   function defaultBlock(m) { return m.groupPrice !== null ? m.groupPrice : m.basePrice; }
+  function defaultUnits(p) { return p._m.defaultUnitsPerBlock || p.unitsPerBlock; }
+  // партия, введённая в окне (если поле пустое или неверное — стандартная)
+  function curUnits() {
+    var q = Number(el("pfMinQty").value);
+    return Number.isInteger(q) && q >= 1 ? q : defaultUnits(pfCurrent);
+  }
+  // цена блока по умолчанию, пересчитанная на партию ресторана
+  function defaultBlockFor(p, units) {
+    var du = defaultUnits(p);
+    return units === du ? defaultBlock(p._m) : round2((defaultBlock(p._m) / du) * units);
+  }
 
   function pfCompute() {
     var p = pfCurrent;
     if (!p) return;
-    var units = p.unitsPerBlock;
+    var units = curUnits();
     var own = el("pfOwnPrice").value.trim();
-    var before = own !== "" ? round2(Number(own) || 0) : defaultBlock(p._m);
+    var before = own !== "" ? round2(Number(own) || 0) : defaultBlockFor(p, units);
     var d = Number(el("pfDiscount").value) || 0;
     el("pfComputed").textContent = money(round2(before * (1 - d / 100))) + " сомони (блок " + units + " шт.)";
   }
   // цена за единицу и цена за блок — одна и та же индивидуальная цена в разных единицах
   el("pfOwnUnit").addEventListener("input", function () {
     var v = this.value.trim();
-    el("pfOwnPrice").value = v === "" || !pfCurrent ? "" : round2(Number(v) * pfCurrent.unitsPerBlock);
+    el("pfOwnPrice").value = v === "" || !pfCurrent ? "" : round2(Number(v) * curUnits());
     pfCompute();
   });
   el("pfOwnPrice").addEventListener("input", function () {
     var v = this.value.trim();
-    el("pfOwnUnit").value = v === "" || !pfCurrent ? "" : round2(Number(v) / pfCurrent.unitsPerBlock);
+    el("pfOwnUnit").value = v === "" || !pfCurrent ? "" : round2(Number(v) / curUnits());
+    pfCompute();
+  });
+  // при смене партии цена за единицу остаётся прежней, пересчитывается цена блока
+  el("pfMinQty").addEventListener("input", function () {
+    if (pfCurrent && el("pfOwnUnit").value.trim() !== "") {
+      el("pfOwnPrice").value = round2(Number(el("pfOwnUnit").value) * curUnits());
+    }
     pfCompute();
   });
   el("pfDiscount").addEventListener("input", pfCompute);
@@ -437,18 +456,20 @@
 
   function openProductEditor(p) {
     var m = p._m;
-    var units = p.unitsPerBlock;
+    var du = defaultUnits(p);
     pfCurrent = p;
     el("pfError").hidden = true;
     el("pfName").textContent = p.name + " · " + p.weight;
     var thumb = el("pfThumb");
     if (p.image) { thumb.src = p.image; thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
-    var defUnit = round2(defaultBlock(m) / units);
-    el("pfPriceInfo").textContent = "Блок = " + units + " шт. Цена по умолчанию: " + money(defUnit) + " смн/ед. (блок " + money(defaultBlock(m)) + ")" +
-      " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони за блок.";
+    var defUnit = round2(defaultBlock(m) / du);
+    el("pfPriceInfo").textContent = "Стандартный блок = " + du + " шт. Цена по умолчанию: " + money(defUnit) + " смн/ед. (блок " + money(defaultBlock(m)) + ")" +
+      " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони за блок " + p.unitsPerBlock + " шт.";
+    el("pfMinQty").value = p.unitsPerBlock;
+    el("pfMinQty").placeholder = String(du);
     el("pfOwnUnit").placeholder = money(defUnit) + " (по умолчанию)";
     el("pfOwnPrice").placeholder = money(defaultBlock(m)) + " (по умолчанию)";
-    el("pfOwnUnit").value = m.ownPrice === null ? "" : round2(m.ownPrice / units);
+    el("pfOwnUnit").value = m.ownPrice === null ? "" : round2(m.ownPrice / p.unitsPerBlock);
     el("pfOwnPrice").value = m.ownPrice === null ? "" : m.ownPrice;
     el("pfDiscount").value = m.discountPercent || 0;
     pfCompute();
@@ -463,21 +484,17 @@
     var own = el("pfOwnPrice").value.trim();
     var disc = el("pfDiscount").value.trim();
     var discNum = disc === "" ? 0 : Number(disc);
+    var qtyRaw = el("pfMinQty").value.trim();
     var errBox = el("pfError");
     errBox.hidden = true;
-    if (own !== "" && !(Number(own) > 0)) {
-      errBox.textContent = "Укажите цену больше нуля или оставьте поле пустым.";
-      errBox.hidden = false;
-      return;
-    }
-    if (!isFinite(discNum) || discNum < 0 || discNum > 90) {
-      errBox.textContent = "Скидка должна быть от 0 до 90 %.";
-      errBox.hidden = false;
-      return;
-    }
+    function fail(msg) { errBox.textContent = msg; errBox.hidden = false; }
+    var qty = qtyRaw === "" ? defaultUnits(p) : Number(qtyRaw);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 100000) return fail("Минимальная партия — целое число от 1.");
+    if (own !== "" && !(Number(own) > 0)) return fail("Укажите цену больше нуля или оставьте поле пустым.");
+    if (!isFinite(discNum) || discNum < 0 || discNum > 90) return fail("Скидка должна быть от 0 до 90 %.");
     // цена, совпадающая с ценой по умолчанию, отдельно не хранится
     var blockPrice = own === "" ? null : round2(Number(own));
-    if (blockPrice !== null && blockPrice === round2(defaultBlock(p._m))) blockPrice = null;
+    if (blockPrice !== null && blockPrice === defaultBlockFor(p, qty)) blockPrice = null;
 
     var saveBtn = el("pfSave");
     saveBtn.disabled = true;
@@ -485,6 +502,7 @@
     adminApi("PUT", "/api/admin/restaurants/" + profile.id + "/prices/" + p.id, {
       price: blockPrice,
       discountPercent: discNum,
+      minQty: qty === defaultUnits(p) ? null : qty,
     })
       .then(function () {
         closeProductEditor();
@@ -492,9 +510,7 @@
         return refreshManage();
       })
       .catch(function (err) {
-        if (err.message === "unauthorized") return;
-        errBox.textContent = err.message;
-        errBox.hidden = false;
+        if (err.message !== "unauthorized") fail(err.message);
       })
       .then(function () {
         saveBtn.disabled = false;

@@ -62,7 +62,7 @@
       '<td class="num"><b>' + money(p.finalPrice) + "</b></td>" +
       "<td>" +
         '<button type="button" class="adm-small-btn save-price" data-id="' + p.productId + '">Сохранить</button> ' +
-        '<button type="button" class="adm-small-btn danger clear-price" data-id="' + p.productId + '"' + (p.ownPrice === null && !p.discountPercent ? " disabled" : "") + ">Сбросить</button>" +
+        '<button type="button" class="adm-small-btn danger clear-price" data-id="' + p.productId + '"' + (p.ownPrice === null && !p.discountPercent && !p.ownMinQty ? " disabled" : "") + ">Сбросить</button>" +
       "</td></tr>";
   }
 
@@ -144,7 +144,7 @@
     });
 
     document.getElementById("resetPricesBtn").addEventListener("click", function () {
-      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены и скидки будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
+      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены, скидки и минимальные партии будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
       if (!window.confirm(msg)) return;
       api("POST", "/api/admin/restaurants/" + r.id + "/reset-prices")
         .then(function () {
