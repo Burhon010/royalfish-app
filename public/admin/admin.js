@@ -509,7 +509,7 @@
       fieldInStock.value = "true";
       fieldWholesaleMinQty.value = 1;
       fieldAvailableRetail.checked = true;
-      fieldAvailableWholesale.checked = false;
+      fieldAvailableWholesale.checked = true;
       setPhotoPreview(null);
     }
 
