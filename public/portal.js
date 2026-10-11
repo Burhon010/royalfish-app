@@ -367,25 +367,10 @@
             '<span class="mswitch"><input type="checkbox" class="toggle-stock"' + (p._prod.inStock ? " checked" : "") + '>' +
             '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span></label>'
         : "") +
-      '<label class="mrow-toggle">' +
-        '<span class="mrow-toggle-label">Опубликован</span>' +
-        '<span class="mswitch"><input type="checkbox" class="pub-input"' + (m.hidden ? "" : " checked") + '>' +
-          '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>' +
-      "</label>" +
       '<div class="mrow-actions">' +
         '<button type="button" class="mrow-btn manage-edit" title="Цена и скидка для ресторана" aria-label="Цена и скидка для ресторана">&#9998;</button>' +
       "</div>";
 
-    var base = "/api/admin/restaurants/" + profile.id;
-    row.querySelector(".pub-input").addEventListener("change", function (e) {
-      var visible = e.target.checked;
-      adminApi("PUT", base + "/products/" + p.id, { visible: visible })
-        .then(function () {
-          showToast(visible ? "Товар опубликован для ресторана" : "Товар скрыт от ресторана");
-          return refreshManage();
-        })
-        .catch(function (err) { e.target.checked = !visible; showToast(err.message, true); });
-    });
     if (p._prod) {
       row.querySelector(".toggle-new").addEventListener("change", function (e) {
         quickToggleProduct(p._prod, { isNew: e.target.checked });
