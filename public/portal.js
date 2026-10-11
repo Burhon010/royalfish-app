@@ -436,8 +436,6 @@
     if (prod) {
       el("pfWholesalePrice").value = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : prod.wholesalePrice;
       el("pfWholesaleMinQty").value = prod.wholesaleMinQty || 1;
-      el("pfAvailableRetail").checked = !!prod.availableRetail;
-      el("pfAvailableWholesale").checked = !!prod.availableWholesale;
     }
     var thumb = el("pfThumb");
     if (p.image) { thumb.src = p.image; thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
@@ -475,14 +473,7 @@
     if (prod) {
       var wp = el("pfWholesalePrice").value.trim();
       var wq = el("pfWholesaleMinQty").value.trim() || "1";
-      var ar = el("pfAvailableRetail").checked;
-      var aw = el("pfAvailableWholesale").checked;
-      if (!ar && !aw) {
-        errBox.textContent = "Товар должен быть доступен хотя бы в одном канале — рознице или опте.";
-        errBox.hidden = false;
-        return;
-      }
-      if (aw && !wp) {
+      if (prod.availableWholesale && !wp) {
         errBox.textContent = "Чтобы включить товар в опт, укажите оптовую цену.";
         errBox.hidden = false;
         return;
@@ -493,9 +484,8 @@
         return;
       }
       var oldWp = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : String(Number(prod.wholesalePrice));
-      if ((wp === "" ? "" : String(Number(wp))) !== oldWp || Number(wq) !== Number(prod.wholesaleMinQty || 1) ||
-          ar !== !!prod.availableRetail || aw !== !!prod.availableWholesale) {
-        wholesaleChanges = { wholesalePrice: wp, wholesaleMinQty: wq, availableRetail: ar, availableWholesale: aw };
+      if ((wp === "" ? "" : String(Number(wp))) !== oldWp || Number(wq) !== Number(prod.wholesaleMinQty || 1)) {
+        wholesaleChanges = { wholesalePrice: wp, wholesaleMinQty: wq };
       }
     }
 
