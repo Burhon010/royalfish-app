@@ -298,7 +298,7 @@
 
   // PUT /api/admin/products/:id — полная замена полей товара, поэтому
   // пересылаем все поля (как quickUpdate в главной админке).
-  function quickUpdateProduct(prod, changes) {
+  function saveProductFields(prod, changes) {
     var fd = new FormData();
     fd.append("name", prod.name);
     fd.append("category", prod.category);
@@ -308,18 +308,22 @@
     fd.append("discountPercent", prod.discountPercent);
     fd.append("isNew", "isNew" in changes ? changes.isNew : prod.isNew);
     fd.append("inStock", "inStock" in changes ? changes.inStock : prod.inStock);
-    if (prod.wholesalePrice !== null && prod.wholesalePrice !== undefined) fd.append("wholesalePrice", prod.wholesalePrice);
-    fd.append("wholesaleMinQty", prod.wholesaleMinQty || 1);
-    fd.append("availableRetail", prod.availableRetail);
-    fd.append("availableWholesale", prod.availableWholesale);
+    var wp = "wholesalePrice" in changes ? changes.wholesalePrice : prod.wholesalePrice;
+    if (wp !== null && wp !== undefined && wp !== "") fd.append("wholesalePrice", wp);
+    fd.append("wholesaleMinQty", "wholesaleMinQty" in changes ? changes.wholesaleMinQty : (prod.wholesaleMinQty || 1));
+    fd.append("availableRetail", "availableRetail" in changes ? changes.availableRetail : prod.availableRetail);
+    fd.append("availableWholesale", "availableWholesale" in changes ? changes.availableWholesale : prod.availableWholesale);
     return fetch("/api/admin/products/" + prod.id, { method: "PUT", credentials: "same-origin", body: fd })
       .then(function (res) {
         return res.json().catch(function () { return {}; }).then(function (data) {
           if (res.status === 401) { window.location.href = "admin/login.html"; throw new Error("unauthorized"); }
           if (!res.ok) throw new Error(data.error || "Не удалось сохранить изменения.");
-          showToast("Изменения сохранены");
         });
-      })
+      });
+  }
+  function quickToggleProduct(prod, changes) {
+    return saveProductFields(prod, changes)
+      .then(function () { showToast("Изменения сохранены"); })
       .catch(function (err) { if (err.message !== "unauthorized") showToast(err.message, true); })
       .then(function () { return refreshManage(); });
   }
@@ -384,18 +388,18 @@
     });
     if (p._prod) {
       row.querySelector(".toggle-new").addEventListener("change", function (e) {
-        quickUpdateProduct(p._prod, { isNew: e.target.checked });
+        quickToggleProduct(p._prod, { isNew: e.target.checked });
       });
       row.querySelector(".toggle-stock").addEventListener("change", function (e) {
-        quickUpdateProduct(p._prod, { inStock: e.target.checked });
+        quickToggleProduct(p._prod, { inStock: e.target.checked });
       });
     }
     row.querySelector(".manage-edit").addEventListener("click", function () { openProductEditor(p); });
     return row;
   }
 
-  // Индивидуальные условия ресторана на товар: своя цена блока и своя скидка.
-  // Сам товар (название, фото, розничные и оптовые данные) правится в главной админке.
+  // Оптовая карточка товара (общая для всех) + индивидуальные условия ресторана:
+  // своя цена блока и своя скидка. Название, фото и розничные данные — в главной админке.
   var pfOverlay = el("productOverlay");
   var pfForm = el("pfForm");
   var pfCurrent = null;
@@ -405,12 +409,17 @@
     if (!p) return;
     var m = p._m;
     var own = el("pfOwnPrice").value.trim();
-    var before = own !== "" ? Number(own) || 0 : (m.groupPrice !== null ? m.groupPrice : m.basePrice);
+    var wp = Number(el("pfWholesalePrice").value);
+    var wq = Number(el("pfWholesaleMinQty").value) || 1;
+    var base = el("pfWholesaleBox").hidden || !(wp > 0) ? m.basePrice : Math.round(wp * wq * 100) / 100;
+    var before = own !== "" ? Number(own) || 0 : (m.groupPrice !== null ? m.groupPrice : base);
     var d = Number(el("pfDiscount").value) || 0;
     el("pfComputed").textContent = money(Math.round(before * (1 - d / 100) * 100) / 100) + " сомони";
   }
   el("pfOwnPrice").addEventListener("input", pfCompute);
   el("pfDiscount").addEventListener("input", pfCompute);
+  el("pfWholesalePrice").addEventListener("input", pfCompute);
+  el("pfWholesaleMinQty").addEventListener("input", pfCompute);
 
   function closeProductEditor() { pfOverlay.hidden = true; pfCurrent = null; }
   el("pfClose").addEventListener("click", closeProductEditor);
@@ -422,6 +431,14 @@
     pfCurrent = p;
     el("pfError").hidden = true;
     el("pfName").textContent = p.name + " · " + p.weight;
+    var prod = p._prod;
+    el("pfWholesaleBox").hidden = !prod;
+    if (prod) {
+      el("pfWholesalePrice").value = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : prod.wholesalePrice;
+      el("pfWholesaleMinQty").value = prod.wholesaleMinQty || 1;
+      el("pfAvailableRetail").checked = !!prod.availableRetail;
+      el("pfAvailableWholesale").checked = !!prod.availableWholesale;
+    }
     var thumb = el("pfThumb");
     if (p.image) { thumb.src = p.image; thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
     el("pfPriceInfo").textContent = "Блок = " + p.unitsPerBlock + " шт. Базовая цена блока: " + money(m.basePrice) +
@@ -452,16 +469,49 @@
       errBox.hidden = false;
       return;
     }
+    // оптовая карточка товара (общая для всех ресторанов)
+    var prod = p._prod;
+    var wholesaleChanges = null;
+    if (prod) {
+      var wp = el("pfWholesalePrice").value.trim();
+      var wq = el("pfWholesaleMinQty").value.trim() || "1";
+      var ar = el("pfAvailableRetail").checked;
+      var aw = el("pfAvailableWholesale").checked;
+      if (!ar && !aw) {
+        errBox.textContent = "Товар должен быть доступен хотя бы в одном канале — рознице или опте.";
+        errBox.hidden = false;
+        return;
+      }
+      if (aw && !wp) {
+        errBox.textContent = "Чтобы включить товар в опт, укажите оптовую цену.";
+        errBox.hidden = false;
+        return;
+      }
+      if (!(Number(wq) >= 1) || Math.floor(Number(wq)) !== Number(wq)) {
+        errBox.textContent = "Минимальная партия — целое число от 1.";
+        errBox.hidden = false;
+        return;
+      }
+      var oldWp = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : String(Number(prod.wholesalePrice));
+      if ((wp === "" ? "" : String(Number(wp))) !== oldWp || Number(wq) !== Number(prod.wholesaleMinQty || 1) ||
+          ar !== !!prod.availableRetail || aw !== !!prod.availableWholesale) {
+        wholesaleChanges = { wholesalePrice: wp, wholesaleMinQty: wq, availableRetail: ar, availableWholesale: aw };
+      }
+    }
+
     var saveBtn = el("pfSave");
     saveBtn.disabled = true;
     saveBtn.textContent = "Сохраняем…";
-    adminApi("PUT", "/api/admin/restaurants/" + profile.id + "/prices/" + p.id, {
-      price: own === "" ? null : Number(own),
-      discountPercent: discNum,
-    })
+    (wholesaleChanges ? saveProductFields(prod, wholesaleChanges) : Promise.resolve())
+      .then(function () {
+        return adminApi("PUT", "/api/admin/restaurants/" + profile.id + "/prices/" + p.id, {
+          price: own === "" ? null : Number(own),
+          discountPercent: discNum,
+        });
+      })
       .then(function () {
         closeProductEditor();
-        showToast("Цена и скидка сохранены");
+        showToast("Сохранено");
         return refreshManage();
       })
       .catch(function (err) {

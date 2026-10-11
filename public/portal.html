@@ -107,9 +107,9 @@
 
     <!-- Индивидуальные условия ресторана на товар (режим администратора) -->
     <div class="p-overlay" id="productOverlay" hidden>
-      <div class="p-modal p-modal--narrow" role="dialog" aria-modal="true" aria-labelledby="pfTitle">
+      <div class="p-modal p-modal--mid" role="dialog" aria-modal="true" aria-labelledby="pfTitle">
         <div class="p-modal-head">
-          <h2 id="pfTitle">Цена для ресторана</h2>
+          <h2 id="pfTitle">Оптовая карточка и цена</h2>
           <button type="button" class="p-close" id="pfClose" aria-label="Закрыть">&times;</button>
         </div>
         <form id="pfForm" class="pform pf-form" novalidate>
@@ -120,13 +120,28 @@
               <p class="pf-note" id="pfPriceInfo"></p>
             </div>
           </div>
-          <label class="field"><span>Индивидуальная цена за блок, сомони <em>(пусто — цена по умолчанию)</em></span>
-            <input type="number" id="pfOwnPrice" min="0" step="0.01" class="manage-price" placeholder="по умолчанию" />
-          </label>
-          <label class="field"><span>Скидка для этого ресторана, %</span>
-            <input type="number" id="pfDiscount" min="0" max="90" step="1" value="0" />
-          </label>
+          <div class="pf-grid pf-section" id="pfWholesaleBox">
+            <p class="pf-section-title">Оптовая карточка (раздел «Для ресторанов»)</p>
+            <label class="field"><span>Оптовая цена, сомони <em>(за ед.)</em></span><input type="number" id="pfWholesalePrice" min="0" step="0.01" placeholder="не задана" /></label>
+            <label class="field"><span>Минимальная партия, шт</span><input type="number" id="pfWholesaleMinQty" min="1" step="1" value="1" /></label>
+            <label class="field pf-switchfield"><span>Показывать в рознице</span>
+              <span class="mswitch"><input type="checkbox" id="pfAvailableRetail" /><span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>
+            </label>
+            <label class="field pf-switchfield"><span>Показывать в опте</span>
+              <span class="mswitch"><input type="checkbox" id="pfAvailableWholesale" /><span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>
+            </label>
+          </div>
+
+          <div class="pf-section pf-restaurant">
+            <p class="pf-section-title">Цена для этого ресторана</p>
+            <label class="field"><span>Индивидуальная цена за блок, сомони <em>(пусто — цена по умолчанию)</em></span>
+              <input type="number" id="pfOwnPrice" min="0" step="0.01" class="manage-price" placeholder="по умолчанию" />
+            </label>
+            <label class="field"><span>Скидка для этого ресторана, %</span>
+              <input type="number" id="pfDiscount" min="0" max="90" step="1" value="0" />
+            </label>
           <div class="field"><span>Итоговая цена за блок</span><p class="pf-computed" id="pfComputed">—</p></div>
+          </div>
           <p class="pform-msg is-error" id="pfError" hidden></p>
           <div class="pf-actions">
             <button type="button" class="p-btn p-btn--ghost" id="pfCancel">Отмена</button>

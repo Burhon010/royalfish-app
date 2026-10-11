@@ -1090,3 +1090,15 @@
 .mrow-old { font-size: 12.5px; color: var(--ink-soft); text-decoration: line-through; }
 .mrow-badge--disc { background: #dff3e6; color: #1f7a45; }
 .portal-price-old { font-size: 0.7em; color: var(--ink-soft); font-weight: 500; }
+
+/* Оптовая карточка в окне товара */
+.p-modal--mid { max-width: 580px; }
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.pf-section { border-top: 1px dashed var(--line); padding-top: 16px; }
+.pf-restaurant { display: grid; gap: 14px; }
+.pf-section-title { grid-column: 1 / -1; margin: 0; font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+.pform .pf-switchfield { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.pform .mswitch input { width: 100%; padding: 0; }
+@media (max-width: 560px) {
+  .pf-grid { grid-template-columns: 1fr; }
+}
