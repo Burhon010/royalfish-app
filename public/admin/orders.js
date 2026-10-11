@@ -86,14 +86,27 @@
   function loadOrders() {
     listStatus.hidden = false;
     listStatus.textContent = "Загружаем заказы…";
-    fetch("/api/admin/orders", { credentials: "same-origin" })
-      .then(function (res) {
+    Promise.all([
+      fetch("/api/admin/orders", { credentials: "same-origin" }).then(function (res) {
         if (res.status === 401) throw new Error("unauthorized");
         if (!res.ok) throw new Error("Ошибка сети");
         return res.json();
-      })
-      .then(function (data) {
-        orders = data;
+      }),
+      // заказы ресторанов-партнёров (оптовый портал) — в том же списке
+      fetch("/api/admin/wholesale-orders", { credentials: "same-origin" }).then(function (res) {
+        if (res.status === 401) throw new Error("unauthorized");
+        return res.ok ? res.json() : [];
+      }).catch(function (err) {
+        if (err.message === "unauthorized") throw err;
+        return [];
+      }),
+    ])
+      .then(function (res) {
+        var portal = res[1].map(portalToRow);
+        orders = res[0].concat(portal).sort(function (a, b) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        renderTabCounts();
         renderList();
       })
       .catch(function (err) {
@@ -106,6 +119,62 @@
       });
   }
 
+  // Заказ ресторана (оптовый портал) приводим к виду строки общего списка.
+  var PORTAL_STATUS = {
+    awaiting: "Ожидает подтверждения",
+    confirmed: "Подтверждён",
+    rejected: "Отклонён",
+    processing: "В обработке",
+    ready: "Готов к выдаче / доставке",
+    completed: "Выполнен",
+    cancelled: "Отменён",
+  };
+  function portalToRow(o) {
+    return {
+      portal: true,
+      id: o.id,
+      number: o.number,
+      orderType: "wholesale",
+      status: o.status,
+      createdAt: o.createdAt,
+      restaurantName: o.restaurantName,
+      restaurantPhone: o.restaurantPhone,
+      totals: o.totals,
+      itemsCount: o.items.length,
+    };
+  }
+  // к какой группе фильтра относится статус
+  function statusGroup(o) {
+    if (!o.portal) return o.status;
+    if (o.status === "awaiting") return "new";
+    if (o.status === "completed") return "completed";
+    if (o.status === "rejected" || o.status === "cancelled") return "cancelled";
+    return "processing";
+  }
+  function isNewOrder(o) { return statusGroup(o) === "new"; }
+
+  // счётчики новых заказов на вкладках
+  function renderTabCounts() {
+    var counts = { all: 0, retail: 0, wholesale: 0 };
+    orders.forEach(function (o) {
+      if (!isNewOrder(o)) return;
+      counts.all++;
+      counts[o.orderType === "wholesale" ? "wholesale" : "retail"]++;
+    });
+    typeTabs.forEach(function (tab) {
+      var key = tab.getAttribute("data-type");
+      if (!tab.getAttribute("data-label")) tab.setAttribute("data-label", tab.textContent);
+      tab.textContent = tab.getAttribute("data-label");
+      if (counts[key] > 0) {
+        var badge = document.createElement("span");
+        badge.className = "tab-count";
+        badge.textContent = counts[key];
+        tab.appendChild(document.createTextNode(" "));
+        tab.appendChild(badge);
+      }
+    });
+  }
+
   function renderList() {
     orderList.innerHTML = "";
 
@@ -113,7 +182,7 @@
       return activeType === "all" || o.orderType === activeType;
     });
     var visible = byType.filter(function (o) {
-      return activeFilter === "all" || o.status === activeFilter;
+      return activeFilter === "all" || statusGroup(o) === activeFilter;
     });
 
     if (!orders.length) {
@@ -192,7 +261,53 @@
     }).join("");
   }
 
+  function portalStatusOptions(cur) {
+    return Object.keys(PORTAL_STATUS).map(function (st) {
+      return '<option value="' + st + '"' + (st === cur ? " selected" : "") + ">" + PORTAL_STATUS[st] + "</option>";
+    }).join("");
+  }
+
+  function buildPortalRow(o) {
+    var t = o.totals;
+    var row = document.createElement("div");
+    row.className = "order-row is-wholesale";
+    row.setAttribute("data-id", "p" + o.id);
+    row.innerHTML =
+      '<div class="order-row-main">' +
+        '<p class="order-row-id">Заказ ' + escapeHtml(o.number) + ' <span class="order-type-badge">Опт · ресторан</span></p>' +
+        '<p class="order-row-customer">' + escapeHtml(o.restaurantName) + " · " + escapeHtml(o.restaurantPhone) + "</p>" +
+        '<p class="order-row-meta">' + t.orderedBlocks + " бл. · " + t.orderedUnits + " шт. · " + formatDate(o.createdAt) + "</p>" +
+      "</div>" +
+      '<div class="order-row-total">' + formatPrice(t.orderedTotal) + " смн</div>" +
+      '<div class="order-row-status">' +
+        '<select class="status-select status-' + statusGroup(o) + '">' + portalStatusOptions(o.status) + "</select>" +
+      "</div>" +
+      '<div class="order-row-actions">' +
+        '<button type="button" class="icon-btn view-btn" title="Подробнее">&#128065;</button>' +
+      "</div>";
+    var select = row.querySelector(".status-select");
+    select.addEventListener("change", function () {
+      var prev = o.status;
+      AdminShared.api("PATCH", "/api/admin/wholesale-orders/" + o.id, { status: select.value })
+        .then(function (updated) {
+          o.status = updated.status;
+          select.className = "status-select status-" + statusGroup(o);
+          showToast("Статус заказа обновлён");
+          renderTabCounts();
+          if (activeFilter !== "all") renderList();
+        })
+        .catch(function (err) {
+          select.value = prev;
+          showToast(err.message, true);
+        });
+    });
+    row.querySelector(".view-btn").addEventListener("click", function () { openPortalOrder(o.id); });
+    row.addEventListener("dblclick", function () { openPortalOrder(o.id); });
+    return row;
+  }
+
   function buildRow(o) {
+    if (o.portal) return buildPortalRow(o);
     var row = document.createElement("div");
     row.className = "order-row" + (o.orderType === "wholesale" ? " is-wholesale" : "");
     row.setAttribute("data-id", o.id);
@@ -337,6 +452,122 @@
       if (idx !== -1) orders[idx].status = detailSelect.value;
     });
   }
+
+  /* ---------------------------------------------------------
+     Заказ ресторана: подтверждение количества, статус, печать
+     --------------------------------------------------------- */
+  var S = window.AdminShared;
+  var woOverlay = document.getElementById("woModalOverlay");
+  var woBody = document.getElementById("woModalBody");
+
+  function printLink(o, mode, label) {
+    return '<a class="btn-outline adm-link-btn" target="_blank" rel="noopener" href="../print-order.html?id=' +
+      o.id + "&src=admin&mode=" + mode + '">' + label + "</a>";
+  }
+
+  function openPortalOrder(id) {
+    woBody.innerHTML = '<p class="list-status">Загружаем…</p>';
+    woOverlay.hidden = false;
+    S.api("GET", "/api/admin/wholesale-orders/" + id).then(renderPortalOrder).catch(function (err) {
+      woBody.innerHTML = '<p class="form-error">' + escapeHtml(err.message) + "</p>";
+    });
+  }
+
+  function renderPortalOrder(o) {
+    document.getElementById("woModalTitle").textContent = "Заказ " + o.number;
+    var t = o.totals;
+    var esc = S.esc, money = S.money;
+
+    var rows = o.items.map(function (it) {
+      return "<tr>" +
+        "<td>" + esc(it.productName) + "<br><small>блок = " + it.unitsPerBlock + " шт.</small></td>" +
+        '<td class="num">' + it.orderedBlocks + "</td>" +
+        '<td class="num">' + it.orderedUnits + "</td>" +
+        '<td class="num">' + money(it.pricePerBlock) + "</td>" +
+        '<td class="num">' + money(it.orderedSubtotal) + "</td>" +
+        '<td><input type="number" min="0" step="1" class="adm-inline-input conf-input" data-id="' + it.id + '" value="' +
+          (it.confirmedBlocks === null ? "" : it.confirmedBlocks) + '" placeholder="' + it.orderedBlocks + '"></td>' +
+        '<td class="num">' + (it.confirmedUnits === null ? "—" : it.confirmedUnits) + "</td>" +
+      "</tr>";
+    }).join("");
+
+    woBody.innerHTML =
+      '<p><span class="adm-badge st-' + o.status + '">' + PORTAL_STATUS[o.status] + "</span></p>" +
+      '<div class="adm-note"><b>' + esc(o.restaurantName) + "</b><br>Телефон: " + esc(o.restaurantPhone) +
+        "<br>Адрес: " + esc(o.restaurantAddress) + "<br>Дата: " + S.fmtDate(o.createdAt) +
+        (o.customerComment ? "<br>Комментарий ресторана: " + esc(o.customerComment) : "") + "</div>" +
+      '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
+        "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th><th>Подтверждено блоков</th><th>Штук</th>" +
+      "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td>Всего</td>" +
+        '<td class="num">' + t.orderedBlocks + '</td><td class="num">' + t.orderedUnits + "</td><td></td>" +
+        '<td class="num">' + money(t.orderedTotal) + '</td><td class="num">' + (t.hasConfirmed ? t.confirmedBlocks : "—") +
+        '</td><td class="num">' + (t.hasConfirmed ? t.confirmedUnits : "—") + "</td></tr></tfoot></table></div>" +
+      (t.hasConfirmed ? '<div class="adm-note">Подтверждённая сумма: <b>' + money(t.confirmedTotal) + " сомони</b></div>" : "") +
+      '<div class="adm-note">Заказанное количество сохраняется в истории и не меняется. Укажите в колонке «Подтверждено» фактическое число блоков (после звонка ресторану).</div>' +
+      '<div class="adm-form">' +
+        '<label class="field"><span class="field-label">Статус</span><select id="woStatus">' + portalStatusOptions(o.status) + "</select></label>" +
+        '<label class="field field--full"><span class="field-label">Комментарий администратора</span>' +
+        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Связались с рестораном. Согласовано 2 блока вместо 4.">' + esc(o.adminComment || "") + "</textarea></label>" +
+      "</div>" +
+      '<p class="form-error" id="woError" hidden></p>' +
+      '<div class="adm-actions">' +
+        '<button type="button" class="btn-primary" id="woConfirm">Подтвердить заказ</button>' +
+        '<button type="button" class="btn-outline" id="woSave">Сохранить</button>' +
+      "</div>" +
+      '<div class="adm-actions">' +
+        printLink(o, "pdf", "Скачать PDF") +
+        printLink(o, "print", "Распечатать") +
+        printLink(o, "warehouse", "Печать для склада") +
+      "</div>";
+
+    function collect(fillEmptyWithOrdered) {
+      var items = [];
+      Array.prototype.forEach.call(woBody.querySelectorAll(".conf-input"), function (inp) {
+        var id = Number(inp.getAttribute("data-id"));
+        if (inp.value !== "") {
+          items.push({ id: id, confirmedBlocks: Number(inp.value) });
+        } else if (fillEmptyWithOrdered) {
+          var it = o.items.filter(function (x) { return x.id === id; })[0];
+          items.push({ id: id, confirmedBlocks: it.orderedBlocks });
+        }
+      });
+      return items;
+    }
+
+    function save(payload, okMsg) {
+      var errBox = document.getElementById("woError");
+      errBox.hidden = true;
+      S.api("PATCH", "/api/admin/wholesale-orders/" + o.id, payload)
+        .then(function (updated) {
+          showToast(okMsg);
+          loadOrders();
+          renderPortalOrder(updated);
+        })
+        .catch(function (err) {
+          errBox.textContent = err.message;
+          errBox.hidden = false;
+        });
+    }
+
+    document.getElementById("woSave").addEventListener("click", function () {
+      save({
+        status: document.getElementById("woStatus").value,
+        adminComment: document.getElementById("woComment").value,
+        items: collect(false),
+      }, "Заказ сохранён");
+    });
+    // «Подтвердить»: пустые поля «подтверждено» заполняются заказанным количеством
+    document.getElementById("woConfirm").addEventListener("click", function () {
+      save({
+        status: "confirmed",
+        adminComment: document.getElementById("woComment").value,
+        items: collect(true),
+      }, "Заказ подтверждён");
+    });
+  }
+
+  document.getElementById("woModalClose").addEventListener("click", function () { woOverlay.hidden = true; });
+  woOverlay.addEventListener("click", function (e) { if (e.target === woOverlay) woOverlay.hidden = true; });
 
   document.getElementById("orderModalClose").addEventListener("click", function () {
     overlay.hidden = true;

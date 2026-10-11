@@ -3,95 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Оптовые заказы — панель управления Royal Fish</title>
+<meta http-equiv="refresh" content="0; url=orders.html">
 <meta name="robots" content="noindex, nofollow">
-<link rel="icon" href="../assets/logo-circle-480.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,460;9..144,560&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css">
+<title>Заказы — панель управления Royal Fish</title>
 </head>
-<body class="admin-page">
-
-<header class="admin-header">
-  <div class="admin-header-inner">
-    <a href="../index.html" class="admin-brand">
-      <img src="../assets/logo-circle-480.png" alt="Royal Fish" width="40" height="40">
-      <span>Royal Fish <em>· панель управления</em></span>
-    </a>
-    <div class="admin-header-actions">
-      <a href="dashboard.html" class="link-btn">Товары</a>
-      <a href="orders.html" class="link-btn">Заказы</a>
-      <a href="wholesale-orders.html" class="link-btn is-active" aria-current="page">Опт. заказы</a>
-      <a href="restaurants.html" class="link-btn">Рестораны</a>
-      <a href="promo.html" class="link-btn">Реклама</a>
-      <span class="admin-user" id="adminUser"></span>
-      <button class="link-btn" id="changePasswordBtn" type="button">Сменить пароль</button>
-      <button class="btn-outline" id="logoutBtn" type="button">Выйти</button>
-    </div>
-  </div>
-</header>
-
-<main class="admin-main">
-  <div class="admin-toolbar">
-    <div class="filter-row" id="statusFilterRow">
-      <button class="filter-pill is-active" data-filter="all">Все</button>
-      <button class="filter-pill" data-filter="awaiting">Ожидают подтверждения</button>
-      <button class="filter-pill" data-filter="confirmed">Подтверждены</button>
-      <button class="filter-pill" data-filter="processing">В обработке</button>
-      <button class="filter-pill" data-filter="ready">Готовы</button>
-      <button class="filter-pill" data-filter="completed">Выполнены</button>
-      <button class="filter-pill" data-filter="rejected">Отклонены</button>
-      <button class="filter-pill" data-filter="cancelled">Отменены</button>
-    </div>
-  </div>
-
-  <p class="admin-hint">Заказы ресторанов-партнёров. Наличие не блокирует заказ: проверьте остатки, свяжитесь с рестораном и укажите подтверждённое количество блоков.</p>
-
-  <p class="toast" id="toast" hidden></p>
-
-  <div class="rest-list" id="woList">
-    <p class="list-status" id="listStatus">Загружаем заказы…</p>
-  </div>
-</main>
-
-<!-- ============ ОКНО: ОПТОВЫЙ ЗАКАЗ ============ -->
-<div class="modal-overlay" id="woModalOverlay" hidden>
-  <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="woModalTitle">
-    <div class="modal-head">
-      <h2 id="woModalTitle">Заказ</h2>
-      <button class="modal-close" id="woModalClose" type="button" aria-label="Закрыть">×</button>
-    </div>
-    <div class="adm-pad" id="woModalBody"></div>
-  </div>
-</div>
-
-<!-- ============ МОДАЛЬНОЕ ОКНО: СМЕНА ПАРОЛЯ ============ -->
-<div class="modal-overlay" id="passwordModalOverlay" hidden>
-  <div class="modal modal--small" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
-    <div class="modal-head">
-      <h2 id="passwordModalTitle">Сменить пароль</h2>
-      <button class="modal-close" id="passwordModalClose" type="button" aria-label="Закрыть">×</button>
-    </div>
-    <form id="passwordForm" class="product-form">
-      <label class="field">
-        <span class="field-label">Текущий пароль</span>
-        <input type="password" id="currentPassword" autocomplete="current-password" required>
-      </label>
-      <label class="field">
-        <span class="field-label">Новый пароль (минимум 8 символов)</span>
-        <input type="password" id="newPassword" autocomplete="new-password" minlength="8" required>
-      </label>
-      <p class="form-error" id="passwordFormError" hidden></p>
-      <div class="modal-actions">
-        <button type="button" class="btn-outline" id="passwordCancelBtn">Отмена</button>
-        <button type="submit" class="btn-primary">Сохранить пароль</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script src="admin-shared.js"></script>
-<script src="wholesale-orders.js"></script>
+<body>
+<p><a href="orders.html">Перейти к заказам</a></p>
 </body>
 </html>

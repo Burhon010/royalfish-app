@@ -1,5 +1,6 @@
 const express = require("express");
 const db = require("../db");
+const partners = require("../partners");
 const requireAuth = require("../middleware/requireAuth");
 
 const router = express.Router();
@@ -56,7 +57,9 @@ router.post("/clear", async (req, res, next) => {
       return res.status(400).json({ error: "Неизвестный режим очистки." });
     }
     const result = await db.clearOrders(mode);
-    res.json({ ok: true, deleted: result.deleted });
+    // оптовые заказы ресторанов тоже входят в общий список заказов
+    const wholesaleDeleted = await partners.clearWholesaleOrders(mode);
+    res.json({ ok: true, deleted: result.deleted + wholesaleDeleted });
   } catch (err) {
     next(err);
   }

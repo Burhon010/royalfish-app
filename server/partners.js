@@ -611,6 +611,17 @@ async function listWholesaleOrders({ restaurantId, status } = {}) {
 
 // Администратор: смена статуса, комментарий и подтверждённые количества.
 // ordered_blocks никогда не перезаписывается — история "заказано" сохраняется.
+// Очистка истории оптовых заказов ресторанов (кнопки «Очистить историю» в разделе
+// заказов). reset — следующий заказ получит номер RF-000001.
+async function clearWholesaleOrders(mode) {
+  const { rows } = await pool.query("SELECT COUNT(*)::int AS n FROM wholesale_orders");
+  await pool.query("DELETE FROM wholesale_orders");
+  if (mode === "reset") {
+    await pool.query("SELECT setval(pg_get_serial_sequence('wholesale_orders','id'), 1, false)");
+  }
+  return rows[0].n;
+}
+
 async function updateWholesaleOrderAdmin(id, { status, adminComment, confirmedItems }) {
   const client = await pool.connect();
   try {
@@ -679,4 +690,5 @@ module.exports = {
   getWholesaleOrder,
   listWholesaleOrders,
   updateWholesaleOrderAdmin,
+  clearWholesaleOrders,
 };
