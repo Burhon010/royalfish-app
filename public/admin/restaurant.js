@@ -2,7 +2,7 @@
   "use strict";
 
   var S = window.AdminShared;
-  var esc = S.esc, money = S.money, api = S.api;
+  var esc = S.esc, api = S.api;
 
   var STATUS = {
     pending: "На рассмотрении",
@@ -11,7 +11,6 @@
     blocked: "Заблокирован",
   };
 
-  var groups = [];
   var collapsed = false;
   var restaurantId = Number(new URLSearchParams(window.location.search).get("id"));
   var restBody = document.getElementById("restPage");
@@ -21,21 +20,12 @@
       restBody.innerHTML = '<p class="form-error">Ресторан не указан. <a href="restaurants.html">Вернуться к списку</a></p>';
       return;
     }
-    api("GET", "/api/admin/price-groups").then(function (g) {
-      groups = g;
-      return load(window.location.hash === "#prices");
-    });
+    load();
   });
 
-  function load(scrollToPrices) {
+  function load() {
     return api("GET", "/api/admin/restaurants/" + restaurantId)
-      .then(function (r) {
-        renderRestaurant(r);
-        if (scrollToPrices) {
-          var h = document.getElementById("restPricesTitle");
-          if (h) h.scrollIntoView();
-        }
-      })
+      .then(renderRestaurant)
       .catch(function (err) {
         if (err.message === "unauthorized") return;
         restBody.innerHTML = '<p class="form-error">' + esc(err.message) + ' <a href="restaurants.html">Вернуться к списку</a></p>';
@@ -46,24 +36,6 @@
     return Object.keys(STATUS).map(function (s) {
       return '<option value="' + s + '"' + (s === current ? " selected" : "") + ">" + STATUS[s] + "</option>";
     }).join("");
-  }
-
-  function priceRow(r, p) {
-    return '<tr class="' + (p.hidden ? "row-hidden" : "") + '">' +
-      '<td><label class="vis-toggle"><input type="checkbox" class="vis-input" data-id="' + p.productId + '"' +
-        (p.hidden ? "" : " checked") + "> <span>" + (p.hidden ? "скрыт" : "виден") + "</span></label></td>" +
-      "<td>" + esc(p.name) + "<br><small>" + esc(p.weight) + " · блок " + p.unitsPerBlock + " шт.</small></td>" +
-      '<td class="num">' + money(p.basePrice) + "</td>" +
-      '<td class="num">' + (p.groupPrice === null ? "—" : money(p.groupPrice)) + "</td>" +
-      '<td><input type="number" min="0" step="0.01" class="adm-inline-input own-input" data-id="' + p.productId + '" value="' +
-        (p.ownPrice === null ? "" : p.ownPrice) + '" placeholder="—"></td>' +
-      '<td><input type="number" min="0" max="90" step="1" class="adm-inline-input disc-input" data-id="' + p.productId + '" value="' +
-        (p.discountPercent || 0) + '"></td>' +
-      '<td class="num"><b>' + money(p.finalPrice) + "</b></td>" +
-      "<td>" +
-        '<button type="button" class="adm-small-btn save-price" data-id="' + p.productId + '">Сохранить</button> ' +
-        '<button type="button" class="adm-small-btn danger clear-price" data-id="' + p.productId + '"' + (p.ownPrice === null && !p.discountPercent && !p.ownMinQty ? " disabled" : "") + ">Сбросить</button>" +
-      "</td></tr>";
   }
 
   function renderRestaurant(r) {
@@ -82,10 +54,9 @@
       quick = '<button type="button" class="btn-primary q-act" data-s="approved">Одобрить</button>';
     }
 
-    // разделы свёрнуты по умолчанию; при перерисовке запоминаем, что было открыто
-    var hadSections = !!document.getElementById("secData");
-    var openData = hadSections ? !!document.querySelector("#secData[open]") : false;
-    var openPrices = hadSections ? !!document.querySelector("#secPrices[open]") : window.location.hash === "#prices";
+    // раздел свёрнут по умолчанию; при перерисовке запоминаем, что было открыто
+    var hadSection = !!document.getElementById("secData");
+    var openData = hadSection ? !!document.querySelector("#secData[open]") : false;
 
     restBody.innerHTML =
       '<button type="button" class="rest-head" id="restHead" aria-expanded="' + (!collapsed) + '">' +
@@ -114,14 +85,7 @@
         '<input type="text" id="rPassword" autocomplete="off" minlength="8"></label>' +
         '<p class="form-error field--full" id="rError" hidden></p>' +
         '<div class="field--full"><button type="submit" class="btn-primary">Сохранить данные</button></div>' +
-      "</form></details>" +
-      '<details class="rest-sec" id="secPrices"' + (openPrices ? " open" : "") + '><summary id="restPricesTitle">Цены и товары</summary>' +
-      '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
-        "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Скидка, %</th><th>Итоговая</th><th></th>" +
-      "</tr></thead><tbody>" +
-      (r.prices.length ? r.prices.map(function (p) { return priceRow(r, p); }).join("") :
-        '<tr><td colspan="8">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
-      "</tbody></table></div></details></div>";
+      "</form></details></div>";
 
     document.getElementById("restForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -144,12 +108,12 @@
     });
 
     document.getElementById("resetPricesBtn").addEventListener("click", function () {
-      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены, скидки и минимальные партии будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
+      var msg = "Вернуть ресторану «" + r.name + "» всё по умолчанию?\n\nВсе индивидуальные цены, скидки и минимальные партии будут сброшены, скрытые товары снова станут видны, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
       if (!window.confirm(msg)) return;
       api("POST", "/api/admin/restaurants/" + r.id + "/reset-prices")
         .then(function () {
           S.showToast("Цены возвращены по умолчанию");
-          return load(false);
+          return load();
         })
         .catch(function (err) { S.showToast(err.message, true); });
     });
@@ -193,52 +157,6 @@
           S.showToast(err.message, true);
         });
     });
-
-    Array.prototype.forEach.call(restBody.querySelectorAll(".vis-input"), function (cb) {
-      cb.addEventListener("change", function () {
-        var visible = cb.checked;
-        api("PUT", "/api/admin/restaurants/" + r.id + "/products/" + cb.getAttribute("data-id"), { visible: visible })
-          .then(function () {
-            S.showToast(visible ? "Товар снова виден ресторану" : "Товар скрыт для ресторана");
-            load(true);
-          })
-          .catch(function (err) {
-            cb.checked = !visible;
-            S.showToast(err.message, true);
-          });
-      });
-    });
-
-    Array.prototype.forEach.call(restBody.querySelectorAll(".save-price"), function (b) {
-      b.addEventListener("click", function () {
-        var id = b.getAttribute("data-id");
-        var input = restBody.querySelector('.own-input[data-id="' + id + '"]');
-        var disc = restBody.querySelector('.disc-input[data-id="' + id + '"]');
-        if (input.value === "" && (disc.value === "" || Number(disc.value) === 0)) {
-          S.showToast("Введите цену или скидку, либо нажмите «Сбросить».", true);
-          return;
-        }
-        api("PUT", "/api/admin/restaurants/" + r.id + "/prices/" + id, {
-          price: input.value === "" ? null : Number(input.value),
-          discountPercent: disc.value === "" ? 0 : Number(disc.value),
-        })
-          .then(function () {
-            S.showToast("Индивидуальные условия сохранены");
-            load(true);
-          })
-          .catch(function (err) { S.showToast(err.message, true); });
-      });
-    });
-    Array.prototype.forEach.call(restBody.querySelectorAll(".clear-price"), function (b) {
-      b.addEventListener("click", function () {
-        api("DELETE", "/api/admin/restaurants/" + r.id + "/prices/" + b.getAttribute("data-id"))
-          .then(function () {
-            S.showToast("Возвращены цены по умолчанию");
-            load(true);
-          })
-          .catch(function (err) { S.showToast(err.message, true); });
-      });
-    });
   }
 
   function saveRestaurant(id, changes) {
@@ -247,7 +165,7 @@
     api("PATCH", "/api/admin/restaurants/" + id, changes)
       .then(function () {
         S.showToast("Сохранено");
-        return api("GET", "/api/admin/price-groups").then(function (g) { groups = g; return load(false); });
+        return load();
       })
       .catch(function (err) {
         if (errBox) {

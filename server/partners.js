@@ -396,10 +396,12 @@ async function setRestaurantPrice(restaurantId, productId, price) {
 async function deleteRestaurantPrice(restaurantId, productId) {
   await pool.query("DELETE FROM restaurant_prices WHERE restaurant_id = $1 AND product_id = $2", [restaurantId, productId]);
 }
-// Цены ресторана «по умолчанию»: убираем все индивидуальные цены и группу,
-// остаются оптовые цены из каталога. Скрытые товары не трогаем.
+// Условия ресторана «по умолчанию»: убираем индивидуальные цены, скидки, свои
+// партии и группу цен, скрытые товары снова становятся видны — остаётся обычный
+// оптовый каталог.
 async function resetRestaurantPrices(restaurantId) {
   await pool.query("DELETE FROM restaurant_prices WHERE restaurant_id = $1", [restaurantId]);
+  await pool.query("DELETE FROM restaurant_hidden_products WHERE restaurant_id = $1", [restaurantId]);
   await pool.query("UPDATE restaurants SET price_group_id = NULL, updated_at = now() WHERE id = $1", [restaurantId]);
 }
 async function setProductHidden(restaurantId, productId, hidden) {
