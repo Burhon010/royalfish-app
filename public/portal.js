@@ -413,11 +413,21 @@
     if (!p) return;
     var units = p.unitsPerBlock;
     var own = el("pfOwnPrice").value.trim();
-    var before = own !== "" ? round2((Number(own) || 0) * units) : defaultBlock(p._m);
+    var before = own !== "" ? round2(Number(own) || 0) : defaultBlock(p._m);
     var d = Number(el("pfDiscount").value) || 0;
     el("pfComputed").textContent = money(round2(before * (1 - d / 100))) + " сомони (блок " + units + " шт.)";
   }
-  el("pfOwnPrice").addEventListener("input", pfCompute);
+  // цена за единицу и цена за блок — одна и та же индивидуальная цена в разных единицах
+  el("pfOwnUnit").addEventListener("input", function () {
+    var v = this.value.trim();
+    el("pfOwnPrice").value = v === "" || !pfCurrent ? "" : round2(Number(v) * pfCurrent.unitsPerBlock);
+    pfCompute();
+  });
+  el("pfOwnPrice").addEventListener("input", function () {
+    var v = this.value.trim();
+    el("pfOwnUnit").value = v === "" || !pfCurrent ? "" : round2(Number(v) / pfCurrent.unitsPerBlock);
+    pfCompute();
+  });
   el("pfDiscount").addEventListener("input", pfCompute);
 
   function closeProductEditor() { pfOverlay.hidden = true; pfCurrent = null; }
@@ -436,8 +446,10 @@
     var defUnit = round2(defaultBlock(m) / units);
     el("pfPriceInfo").textContent = "Блок = " + units + " шт. Цена по умолчанию: " + money(defUnit) + " смн/ед. (блок " + money(defaultBlock(m)) + ")" +
       " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони за блок.";
-    el("pfOwnPrice").placeholder = money(defUnit) + " (по умолчанию)";
-    el("pfOwnPrice").value = m.ownPrice === null ? "" : round2(m.ownPrice / units);
+    el("pfOwnUnit").placeholder = money(defUnit) + " (по умолчанию)";
+    el("pfOwnPrice").placeholder = money(defaultBlock(m)) + " (по умолчанию)";
+    el("pfOwnUnit").value = m.ownPrice === null ? "" : round2(m.ownPrice / units);
+    el("pfOwnPrice").value = m.ownPrice === null ? "" : m.ownPrice;
     el("pfDiscount").value = m.discountPercent || 0;
     pfCompute();
     pfOverlay.hidden = false;
@@ -448,7 +460,6 @@
     e.preventDefault();
     if (!pfCurrent) return;
     var p = pfCurrent;
-    var units = p.unitsPerBlock;
     var own = el("pfOwnPrice").value.trim();
     var disc = el("pfDiscount").value.trim();
     var discNum = disc === "" ? 0 : Number(disc);
@@ -465,7 +476,7 @@
       return;
     }
     // цена, совпадающая с ценой по умолчанию, отдельно не хранится
-    var blockPrice = own === "" ? null : round2(Number(own) * units);
+    var blockPrice = own === "" ? null : round2(Number(own));
     if (blockPrice !== null && blockPrice === round2(defaultBlock(p._m))) blockPrice = null;
 
     var saveBtn = el("pfSave");
