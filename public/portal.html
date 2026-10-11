@@ -105,14 +105,71 @@
       </div>
     </div>
 
-    <!-- Цена товара для ресторана (режим администратора) -->
-    <div class="p-overlay" id="priceOverlay" hidden>
-      <div class="p-modal p-modal--narrow" role="dialog" aria-modal="true" aria-labelledby="priceTitle">
+    <!-- Редактирование товара (режим администратора) — как в главной админке -->
+    <div class="p-overlay" id="productOverlay" hidden>
+      <div class="p-modal p-modal--wide" role="dialog" aria-modal="true" aria-labelledby="pfTitle">
         <div class="p-modal-head">
-          <h2 id="priceTitle">Цена</h2>
-          <button type="button" class="p-close" id="priceClose" aria-label="Закрыть">&times;</button>
+          <h2 id="pfTitle">Редактировать товар</h2>
+          <button type="button" class="p-close" id="pfClose" aria-label="Закрыть">&times;</button>
         </div>
-        <div id="priceBody"></div>
+        <form id="pfForm" class="pform pf-form" novalidate>
+          <div class="pf-photo">
+            <div class="pf-photo-preview">
+              <span id="pfPhotoEmpty">Нет фото</span>
+              <img id="pfPhotoImg" alt="" hidden />
+            </div>
+            <div class="pf-photo-actions">
+              <label class="p-btn p-btn--ghost pf-upload">
+                Загрузить / заменить фото
+                <input type="file" id="pfPhotoInput" accept="image/jpeg,image/png,image/webp" hidden />
+              </label>
+              <button type="button" class="pf-link-danger" id="pfPhotoRemove" hidden>Удалить фото</button>
+            </div>
+            <p class="pf-note">JPG, PNG или WEBP, до 4 МБ.</p>
+          </div>
+
+          <div class="pf-grid">
+            <label class="field pf-wide"><span>Название товара</span><input type="text" id="pfName" maxlength="120" /></label>
+            <label class="field"><span>Категория</span><select id="pfCategory"></select></label>
+            <label class="field"><span>Вес (например, 500 г или 1 кг)</span><input type="text" id="pfWeight" maxlength="40" /></label>
+            <label class="field pf-wide"><span>Описание <em>(для оптового каталога)</em></span><textarea id="pfDescription" maxlength="1000" rows="2"></textarea></label>
+            <label class="field"><span>Розничная цена, сомони</span><input type="number" id="pfPrice" min="0" step="0.01" /></label>
+            <label class="field"><span>Скидка, %</span><input type="number" id="pfDiscount" min="0" max="90" step="1" value="0" /></label>
+            <div class="field"><span>Розничная цена после скидки</span><p class="pf-computed" id="pfComputed">—</p></div>
+            <label class="field pf-switchfield"><span>Метка «Новинка»</span>
+              <span class="mswitch"><input type="checkbox" id="pfIsNew" /><span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>
+            </label>
+            <label class="field"><span>Наличие</span>
+              <select id="pfInStock"><option value="true">В наличии</option><option value="false">Нет в наличии</option></select>
+            </label>
+          </div>
+
+          <div class="pf-grid pf-section">
+            <p class="pf-section-title">Оптовая карточка (раздел «Для ресторанов»)</p>
+            <label class="field"><span>Оптовая цена, сомони <em>(за ед.)</em></span><input type="number" id="pfWholesalePrice" min="0" step="0.01" placeholder="не задана" /></label>
+            <label class="field"><span>Минимальная партия, шт</span><input type="number" id="pfWholesaleMinQty" min="1" step="1" value="1" /></label>
+            <label class="field pf-switchfield"><span>Показывать в рознице</span>
+              <span class="mswitch"><input type="checkbox" id="pfAvailableRetail" checked /><span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>
+            </label>
+            <label class="field pf-switchfield"><span>Показывать в опте</span>
+              <span class="mswitch"><input type="checkbox" id="pfAvailableWholesale" /><span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>
+            </label>
+          </div>
+
+          <div class="pf-grid pf-section">
+            <p class="pf-section-title">Цена для этого ресторана</p>
+            <p class="pf-note pf-wide" id="pfPriceInfo"></p>
+            <label class="field pf-wide"><span>Индивидуальная цена за блок, сомони <em>(пусто — цена по умолчанию)</em></span>
+              <input type="number" id="pfOwnPrice" min="0" step="0.01" class="manage-price" placeholder="по умолчанию" />
+            </label>
+          </div>
+
+          <p class="pform-msg is-error" id="pfError" hidden></p>
+          <div class="pf-actions">
+            <button type="button" class="p-btn p-btn--ghost" id="pfCancel">Отмена</button>
+            <button type="submit" class="p-btn" id="pfSave">Сохранить</button>
+          </div>
+        </form>
       </div>
     </div>
 

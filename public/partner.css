@@ -1076,3 +1076,33 @@
 }
 .portal-tag--new { background: var(--gold-light); color: #21170a; }
 .portal-tag--out { background: var(--danger-bg); color: var(--danger); }
+
+/* Редактор товара в режиме администратора */
+.p-modal--wide { max-width: 640px; }
+.pf-form { gap: 18px; }
+.pf-photo { display: grid; grid-template-columns: 100px 1fr; gap: 10px 16px; align-items: center; }
+.pf-photo-preview {
+  width: 100px; height: 100px; border-radius: 12px; overflow: hidden;
+  background: var(--paper); border: 1px dashed var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--ink-soft);
+}
+.pf-photo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pf-photo-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.pf-upload { cursor: pointer; }
+.pf-link-danger { border: none; background: none; color: var(--danger); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; padding: 0; }
+.pf-note { grid-column: 1 / -1; margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.pf-wide { grid-column: 1 / -1; }
+.pf-section { border-top: 1px dashed var(--line); padding-top: 16px; }
+.pf-section-title { grid-column: 1 / -1; margin: 0; font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+.pform .pf-grid .field > span em { font-style: italic; font-weight: 500; color: var(--ink-soft); }
+.pf-computed { margin: 0; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--paper); font-weight: 700; color: var(--ocean); }
+.pform .pf-switchfield { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.pform .mswitch input { width: 100%; padding: 0; }
+.pf-actions { display: flex; justify-content: flex-end; gap: 10px; }
+@media (max-width: 560px) {
+  .pf-grid { grid-template-columns: 1fr; }
+  .pf-photo { grid-template-columns: 84px 1fr; }
+  .pf-photo-preview { width: 84px; height: 84px; }
+}

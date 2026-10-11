@@ -384,47 +384,170 @@
         quickUpdateProduct(p._prod, { inStock: e.target.checked });
       });
     }
-    row.querySelector(".manage-edit").addEventListener("click", function () { openPriceModal(p); });
+    row.querySelector(".manage-edit").addEventListener("click", function () { openProductEditor(p); });
     return row;
   }
 
-  // Окно изменения цены товара для конкретного ресторана.
-  var priceOverlay = el("priceOverlay");
-  function closePriceModal() { priceOverlay.hidden = true; }
-  el("priceClose").addEventListener("click", closePriceModal);
-  priceOverlay.addEventListener("click", function (e) { if (e.target === priceOverlay) closePriceModal(); });
+  // Полный редактор товара — как в главной админке (общий для всех: розница,
+  // опт и все рестораны) + индивидуальная цена для этого ресторана.
+  var pfOverlay = el("productOverlay");
+  var pfForm = el("pfForm");
+  var pfCurrent = null;
+  var pfRemoveImage = false;
 
-  function openPriceModal(p) {
-    var m = p._m;
-    var base = "/api/admin/restaurants/" + profile.id;
-    el("priceTitle").textContent = p.name;
-    el("priceBody").innerHTML =
-      '<p class="manage-meta">' + esc(p.weight) + " · блок = " + p.unitsPerBlock + " шт.</p>" +
-      '<p class="manage-meta">Базовая цена блока: <b>' + money(m.basePrice) + "</b> · Цена группы: <b>" +
-        (m.groupPrice === null ? "—" : money(m.groupPrice)) + "</b></p>" +
-      '<p class="manage-meta">Сейчас для ресторана: <b>' + money(m.finalPrice) + "</b> сомони за блок</p>" +
-      '<label class="manage-label">Индивидуальная цена за блок, сомони' +
-        '<input type="number" min="0" step="0.01" class="manage-price" value="' + (m.ownPrice === null ? "" : m.ownPrice) + '" placeholder="' + m.finalPrice + '"></label>' +
-      '<div class="manage-btns">' +
-        '<button type="button" class="p-btn manage-save">Сохранить цену</button>' +
-        '<button type="button" class="p-btn p-btn--ghost manage-clear"' + (m.ownPrice === null ? " disabled" : "") + ">Сбросить</button>" +
-      "</div>";
-    var body = el("priceBody");
-    body.querySelector(".manage-save").addEventListener("click", function () {
-      var v = body.querySelector(".manage-price").value;
-      if (v === "") { showToast("Введите цену или нажмите «Сбросить».", true); return; }
-      adminApi("PUT", base + "/prices/" + p.id, { price: Number(v) })
-        .then(function () { closePriceModal(); showToast("Цена сохранена"); return refreshManage(); })
-        .catch(function (err) { showToast(err.message, true); });
-    });
-    body.querySelector(".manage-clear").addEventListener("click", function () {
-      adminApi("DELETE", base + "/prices/" + p.id)
-        .then(function () { closePriceModal(); showToast("Возвращена цена группы / базовая"); return refreshManage(); })
-        .catch(function (err) { showToast(err.message, true); });
-    });
-    priceOverlay.hidden = false;
-    body.querySelector(".manage-price").focus();
+  function cloudUrl(url, width) {
+    if (!url || url.indexOf("res.cloudinary.com") === -1 || url.indexOf("/upload/") === -1) return url;
+    return url.replace("/upload/", "/upload/f_auto,q_auto,w_" + width + "/");
   }
+  function pfComputed() {
+    var price = Number(el("pfPrice").value) || 0;
+    var discount = Number(el("pfDiscount").value) || 0;
+    el("pfComputed").textContent = money(Math.round(price * (1 - discount / 100) * 100) / 100) + " сомони";
+  }
+  el("pfPrice").addEventListener("input", pfComputed);
+  el("pfDiscount").addEventListener("input", pfComputed);
+
+  function pfPhoto(url) {
+    var img = el("pfPhotoImg");
+    if (url) {
+      img.src = cloudUrl(url, 200);
+      img.hidden = false;
+      el("pfPhotoEmpty").hidden = true;
+      el("pfPhotoRemove").hidden = false;
+    } else {
+      img.hidden = true;
+      img.removeAttribute("src");
+      el("pfPhotoEmpty").hidden = false;
+      el("pfPhotoRemove").hidden = true;
+    }
+  }
+  el("pfPhotoInput").addEventListener("change", function () {
+    var file = this.files[0];
+    if (!file) return;
+    pfRemoveImage = false;
+    var reader = new FileReader();
+    reader.onload = function (e) { pfPhoto(e.target.result); };
+    reader.readAsDataURL(file);
+  });
+  el("pfPhotoRemove").addEventListener("click", function () {
+    el("pfPhotoInput").value = "";
+    pfRemoveImage = true;
+    pfPhoto(null);
+  });
+
+  function closeProductEditor() { pfOverlay.hidden = true; pfCurrent = null; }
+  el("pfClose").addEventListener("click", closeProductEditor);
+  el("pfCancel").addEventListener("click", closeProductEditor);
+  pfOverlay.addEventListener("click", function (e) { if (e.target === pfOverlay) closeProductEditor(); });
+
+  function openProductEditor(p) {
+    var prod = p._prod;
+    var m = p._m;
+    if (!prod) { showToast("Не удалось загрузить данные товара. Обновите страницу.", true); return; }
+    pfCurrent = p;
+    pfRemoveImage = false;
+    el("pfError").hidden = true;
+    el("pfPhotoInput").value = "";
+
+    var sel = el("pfCategory");
+    var opts = categories.map(function (c) { return { slug: c.slug, name: c.name }; });
+    if (!opts.some(function (c) { return c.slug === prod.category; })) opts.push({ slug: prod.category, name: prod.category });
+    sel.innerHTML = opts.map(function (c) {
+      return '<option value="' + esc(c.slug) + '">' + esc(c.name) + "</option>";
+    }).join("");
+
+    el("pfName").value = prod.name;
+    sel.value = prod.category;
+    el("pfWeight").value = prod.weight;
+    el("pfDescription").value = prod.description || "";
+    el("pfPrice").value = prod.price;
+    el("pfDiscount").value = prod.discountPercent;
+    el("pfIsNew").checked = !!prod.isNew;
+    el("pfInStock").value = prod.inStock ? "true" : "false";
+    el("pfWholesalePrice").value = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : prod.wholesalePrice;
+    el("pfWholesaleMinQty").value = prod.wholesaleMinQty || 1;
+    el("pfAvailableRetail").checked = !!prod.availableRetail;
+    el("pfAvailableWholesale").checked = !!prod.availableWholesale;
+    pfPhoto(prod.image);
+    pfComputed();
+
+    el("pfPriceInfo").textContent = "Блок = " + p.unitsPerBlock + " шт. Базовая цена блока: " + money(m.basePrice) +
+      " · Цена группы: " + (m.groupPrice === null ? "—" : money(m.groupPrice)) + " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони.";
+    el("pfOwnPrice").value = m.ownPrice === null ? "" : m.ownPrice;
+
+    el("pfTitle").textContent = "Редактировать товар";
+    pfOverlay.hidden = false;
+    el("pfName").focus();
+  }
+
+  function pfShowError(msg) {
+    el("pfError").textContent = msg;
+    el("pfError").hidden = false;
+  }
+
+  pfForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!pfCurrent) return;
+    el("pfError").hidden = true;
+    var p = pfCurrent;
+    var m = p._m;
+    var name = el("pfName").value.trim();
+    var weight = el("pfWeight").value.trim();
+    var price = el("pfPrice").value;
+    if (!name || !weight || price === "") return pfShowError("Заполните название, вес и розничную цену.");
+    if (!el("pfAvailableRetail").checked && !el("pfAvailableWholesale").checked) {
+      return pfShowError("Товар должен быть доступен хотя бы в одном канале — рознице или опте.");
+    }
+    if (el("pfAvailableWholesale").checked && !el("pfWholesalePrice").value) {
+      return pfShowError("Чтобы включить товар в опт, укажите оптовую цену.");
+    }
+
+    var fd = new FormData();
+    fd.append("name", name);
+    fd.append("category", el("pfCategory").value);
+    fd.append("weight", weight);
+    fd.append("description", el("pfDescription").value.trim());
+    fd.append("price", price);
+    fd.append("discountPercent", el("pfDiscount").value || 0);
+    fd.append("isNew", el("pfIsNew").checked);
+    fd.append("inStock", el("pfInStock").value === "true");
+    if (el("pfWholesalePrice").value) fd.append("wholesalePrice", el("pfWholesalePrice").value);
+    fd.append("wholesaleMinQty", el("pfWholesaleMinQty").value || 1);
+    fd.append("availableRetail", el("pfAvailableRetail").checked);
+    fd.append("availableWholesale", el("pfAvailableWholesale").checked);
+    var file = el("pfPhotoInput").files[0];
+    if (file) fd.append("image", file);
+    else if (pfRemoveImage) fd.append("removeImage", "true");
+
+    var own = el("pfOwnPrice").value.trim();
+    var base = "/api/admin/restaurants/" + profile.id;
+    var saveBtn = el("pfSave");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Сохраняем…";
+
+    fetch("/api/admin/products/" + p.id, { method: "PUT", credentials: "same-origin", body: fd })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (res.status === 401) { window.location.href = "admin/login.html"; throw new Error("unauthorized"); }
+          if (!res.ok) throw new Error(data.error || "Не удалось сохранить товар.");
+        });
+      })
+      .then(function () {
+        // индивидуальная цена ресторана: пусто — вернуть по умолчанию
+        if (own === "" && m.ownPrice !== null) return adminApi("DELETE", base + "/prices/" + p.id);
+        if (own !== "" && Number(own) !== m.ownPrice) return adminApi("PUT", base + "/prices/" + p.id, { price: Number(own) });
+      })
+      .then(function () {
+        closeProductEditor();
+        showToast("Товар сохранён");
+        return refreshManage();
+      })
+      .catch(function (err) { if (err.message !== "unauthorized") pfShowError(err.message); })
+      .then(function () {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Сохранить";
+      });
+  });
 
   function startAdminMode(me) {
     el("welcomeTitle").textContent = "Управление: " + me.name;
