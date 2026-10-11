@@ -542,25 +542,26 @@
     var rows = lines.map(function (l) {
       var p = l.product, b = l.item.blocks;
       return "<tr>" +
-        "<td>" + esc(p.name) + "<br><small>" + esc(p.weight) + "</small></td>" +
-        '<td><div class="qty-stepper qty-stepper--sm">' +
+        '<td class="c-name">' + esc(p.name) + "<br><small>" + esc(p.weight) + "</small></td>" +
+        '<td class="c-qty"><div class="qty-stepper qty-stepper--sm">' +
           '<button type="button" class="qty-btn" data-a="dec" data-id="' + p.id + '">&minus;</button>' +
           '<span class="qty-value">' + b + "</span>" +
           '<button type="button" class="qty-btn" data-a="inc" data-id="' + p.id + '">+</button>' +
         "</div></td>" +
-        '<td class="num">' + (b * p.unitsPerBlock) + "</td>" +
-        '<td class="num">' + money(p.pricePerBlock) + "</td>" +
-        '<td class="num">' + money(b * p.pricePerBlock) + "</td>" +
-        '<td><button type="button" class="p-close" data-a="del" data-id="' + p.id + '" aria-label="Убрать">&times;</button></td>' +
+        '<td class="num c-units" data-label="Штук">' + (b * p.unitsPerBlock) + "</td>" +
+        '<td class="num c-price" data-label="Цена за блок">' + money(p.pricePerBlock) + "</td>" +
+        '<td class="num c-sum">' + money(b * p.pricePerBlock) + "</td>" +
+        '<td class="c-del"><button type="button" class="p-close" data-a="del" data-id="' + p.id + '" aria-label="Убрать">&times;</button></td>' +
       "</tr>";
     }).join("");
 
     cartBody.innerHTML =
-      '<div class="p-table-wrap"><table class="p-table"><thead><tr>' +
+      '<div class="p-table-wrap"><table class="p-table p-table--cards p-table--cart"><thead><tr>' +
         "<th>Товар</th><th>Блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th><th></th>" +
       "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr>" +
-        "<td>Всего</td><td class=\"num\">" + t.blocks + "</td><td class=\"num\">" + t.units + "</td><td></td>" +
-        '<td class="num">' + money(t.sum) + "</td><td></td></tr></tfoot></table></div>" +
+        '<td class="f-label">Всего<span class="f-mobile"> · ' + t.blocks + " " + blocksWord(t.blocks) + " · " + t.units + " шт.</span></td>" +
+        '<td class="num f-hide">' + t.blocks + '</td><td class="num f-hide">' + t.units + '</td><td class="f-hide"></td>' +
+        '<td class="num f-sum">' + money(t.sum) + '</td><td class="f-hide"></td></tr></tfoot></table></div>' +
       '<div class="p-note">Наличие товара не ограничивает заказ: сотрудник Royal Fish проверит фактическое количество и свяжется с вами, если что-то нужно уточнить.</div>' +
       '<div class="p-info"><span><b>Доставка / адрес:</b> ' + esc(profile.address) + "</span><span><b>Телефон:</b> " + esc(profile.phone) + "</span></div>" +
       '<form class="pform" id="orderForm" novalidate>' +
@@ -632,21 +633,22 @@
     var t = o.totals;
     var showConf = t.hasConfirmed;
     var rows = o.items.map(function (it) {
-      return "<tr><td>" + esc(it.productName) + "</td>" +
-        '<td class="num">' + it.orderedBlocks + "</td>" +
-        '<td class="num">' + it.orderedUnits + "</td>" +
-        '<td class="num">' + money(it.pricePerBlock) + "</td>" +
-        '<td class="num">' + money(it.orderedSubtotal) + "</td>" +
-        (showConf ? '<td class="num">' + (it.confirmedBlocks === null ? "—" : it.confirmedBlocks) + "</td>" : "") +
+      return '<tr><td class="c-name">' + esc(it.productName) + "</td>" +
+        '<td class="num c-blocks" data-label="Блоков">' + it.orderedBlocks + "</td>" +
+        '<td class="num c-units" data-label="Штук">' + it.orderedUnits + "</td>" +
+        '<td class="num c-price" data-label="Цена за блок">' + money(it.pricePerBlock) + "</td>" +
+        '<td class="num c-sum">' + money(it.orderedSubtotal) + "</td>" +
+        (showConf ? '<td class="num c-conf" data-label="Подтверждено блоков">' + (it.confirmedBlocks === null ? "—" : it.confirmedBlocks) + "</td>" : "") +
       "</tr>";
     }).join("");
-    return '<div class="p-table-wrap"><table class="p-table"><thead><tr>' +
+    return '<div class="p-table-wrap"><table class="p-table p-table--cards p-table--order' + (showConf ? " has-conf" : "") + '"><thead><tr>' +
       "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th>" +
       (showConf ? "<th>Подтверждено блоков</th>" : "") +
-      "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td>Всего</td>" +
-      '<td class="num">' + t.orderedBlocks + '</td><td class="num">' + t.orderedUnits + "</td><td></td>" +
-      '<td class="num">' + money(t.orderedTotal) + "</td>" +
-      (showConf ? '<td class="num">' + t.confirmedBlocks + "</td>" : "") +
+      "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr>" +
+      '<td class="f-label">Всего<span class="f-mobile"> · ' + t.orderedBlocks + " " + blocksWord(t.orderedBlocks) + " · " + t.orderedUnits + " шт.</span></td>" +
+      '<td class="num f-hide">' + t.orderedBlocks + '</td><td class="num f-hide">' + t.orderedUnits + '</td><td class="f-hide"></td>' +
+      '<td class="num f-sum">' + money(t.orderedTotal) + "</td>" +
+      (showConf ? '<td class="num f-hide">' + t.confirmedBlocks + "</td>" : "") +
       "</tr></tfoot></table></div>" +
       (showConf
         ? '<div class="p-note">Подтверждено сотрудником: <b>' + t.confirmedBlocks + " " + blocksWord(t.confirmedBlocks) +

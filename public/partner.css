@@ -1102,3 +1102,99 @@
 @media (max-width: 560px) {
   .pf-grid { grid-template-columns: 1fr; }
 }
+
+/* Таблицы заказа и корзины на телефоне: вместо широкой таблицы — карточки,
+   чтобы ничего не обрезалось */
+.f-mobile { display: none; }
+@media (max-width: 640px) {
+  .p-table-wrap { overflow-x: visible; }
+  .p-table--cards,
+  .p-table--cards tbody,
+  .p-table--cards tfoot { display: block; width: 100%; }
+  .p-table--cards thead { display: none; }
+
+  .p-table--cards tbody tr {
+    display: grid;
+    gap: 6px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+  }
+  .p-table--cards td {
+    padding: 0;
+    border: 0;
+    text-align: left;
+    font-size: 14px;
+    min-width: 0;
+  }
+  .p-table--cards td[data-label]::before {
+    content: attr(data-label) ": ";
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .p-table--cards .c-name { grid-area: name; font-weight: 700; font-size: 15px; }
+  .p-table--cards .c-name small { font-weight: 500; color: var(--ink-soft); }
+  .p-table--cards .c-sum { grid-area: sum; text-align: right; font-weight: 800; font-size: 16px; color: var(--ocean); }
+  .p-table--cards .c-sum::after { content: " сомони"; font-weight: 600; font-size: 12.5px; }
+  .p-table--cards .c-units { grid-area: units; }
+  .p-table--cards .c-price { grid-area: price; text-align: right; }
+
+  /* корзина */
+  .p-table--cart tbody tr {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name del"
+      "qty sum"
+      "units price";
+  }
+  .p-table--cart .c-qty { grid-area: qty; }
+  .p-table--cart .c-del { grid-area: del; align-self: start; }
+
+  /* заказ */
+  .p-table--order tbody tr {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name name"
+      "blocks units"
+      "price sum";
+  }
+  .p-table--order.has-conf tbody tr {
+    grid-template-areas:
+      "name name"
+      "blocks units"
+      "price sum"
+      "conf conf";
+  }
+  .p-table--order .c-blocks { grid-area: blocks; }
+  .p-table--order .c-units { text-align: right; }
+  .p-table--order .c-conf { grid-area: conf; }
+
+  /* итого */
+  .p-table--cards tfoot tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    padding: 12px 0 4px;
+    align-items: center;
+  }
+  .p-table--cards .f-hide { display: none; }
+  .p-table--cards .f-label { font-weight: 800; }
+  .p-table--cards .f-mobile { display: inline; font-weight: 600; color: var(--ink-soft); font-size: 13px; }
+  .p-table--cards .f-sum { text-align: right; font-size: 17px; font-weight: 800; color: var(--ocean); }
+  .p-table--cards .f-sum::after { content: " сомони"; font-weight: 600; font-size: 12.5px; }
+
+  /* нижняя панель корзины */
+  .portal-cartbar-inner { gap: 10px; }
+  .portal-cartbar-info { font-size: 13px; }
+  .portal-cartbar-info span { white-space: nowrap; }
+  .portal-cartbar-info strong { font-size: 16px; white-space: nowrap; }
+  .portal-cartbar .btn { padding-left: 14px; padding-right: 14px; font-size: 14px; white-space: normal; text-align: center; }
+}
+@media (max-width: 640px) {
+  .p-table--cart .c-del .p-close { width: 32px; height: 32px; font-size: 20px; }
+}
+@media (max-width: 640px) {
+  .p-table--cart .c-del { justify-self: end; }
+}
