@@ -57,10 +57,12 @@
       '<td class="num">' + (p.groupPrice === null ? "—" : money(p.groupPrice)) + "</td>" +
       '<td><input type="number" min="0" step="0.01" class="adm-inline-input own-input" data-id="' + p.productId + '" value="' +
         (p.ownPrice === null ? "" : p.ownPrice) + '" placeholder="—"></td>' +
+      '<td><input type="number" min="0" max="90" step="1" class="adm-inline-input disc-input" data-id="' + p.productId + '" value="' +
+        (p.discountPercent || 0) + '"></td>' +
       '<td class="num"><b>' + money(p.finalPrice) + "</b></td>" +
       "<td>" +
         '<button type="button" class="adm-small-btn save-price" data-id="' + p.productId + '">Сохранить</button> ' +
-        '<button type="button" class="adm-small-btn danger clear-price" data-id="' + p.productId + '"' + (p.ownPrice === null ? " disabled" : "") + ">Сбросить</button>" +
+        '<button type="button" class="adm-small-btn danger clear-price" data-id="' + p.productId + '"' + (p.ownPrice === null && !p.discountPercent ? " disabled" : "") + ">Сбросить</button>" +
       "</td></tr>";
   }
 
@@ -115,10 +117,10 @@
       "</form></details>" +
       '<details class="rest-sec" id="secPrices"' + (openPrices ? " open" : "") + '><summary id="restPricesTitle">Цены и товары</summary>' +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
-        "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Итоговая</th><th></th>" +
+        "<th>Для ресторана</th><th>Товар</th><th>Базовая</th><th>Группа</th><th>Индивидуальная</th><th>Скидка, %</th><th>Итоговая</th><th></th>" +
       "</tr></thead><tbody>" +
       (r.prices.length ? r.prices.map(function (p) { return priceRow(r, p); }).join("") :
-        '<tr><td colspan="7">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
+        '<tr><td colspan="8">Нет оптовых товаров. Включите «оптовый каталог» и оптовую цену у товара в разделе «Товары».</td></tr>') +
       "</tbody></table></div></details></div>";
 
     document.getElementById("restForm").addEventListener("submit", function (e) {
@@ -142,7 +144,7 @@
     });
 
     document.getElementById("resetPricesBtn").addEventListener("click", function () {
-      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
+      var msg = "Вернуть ресторану «" + r.name + "» цены по умолчанию?\n\nВсе индивидуальные цены и скидки будут сброшены, и ресторан увидит обычные оптовые цены из раздела «Опт. покупка».";
       if (!window.confirm(msg)) return;
       api("POST", "/api/admin/restaurants/" + r.id + "/reset-prices")
         .then(function () {
@@ -211,13 +213,17 @@
       b.addEventListener("click", function () {
         var id = b.getAttribute("data-id");
         var input = restBody.querySelector('.own-input[data-id="' + id + '"]');
-        if (input.value === "") {
-          S.showToast("Введите цену или нажмите «Сбросить».", true);
+        var disc = restBody.querySelector('.disc-input[data-id="' + id + '"]');
+        if (input.value === "" && (disc.value === "" || Number(disc.value) === 0)) {
+          S.showToast("Введите цену или скидку, либо нажмите «Сбросить».", true);
           return;
         }
-        api("PUT", "/api/admin/restaurants/" + r.id + "/prices/" + id, { price: Number(input.value) })
+        api("PUT", "/api/admin/restaurants/" + r.id + "/prices/" + id, {
+          price: input.value === "" ? null : Number(input.value),
+          discountPercent: disc.value === "" ? 0 : Number(disc.value),
+        })
           .then(function () {
-            S.showToast("Индивидуальная цена сохранена");
+            S.showToast("Индивидуальные условия сохранены");
             load(true);
           })
           .catch(function (err) { S.showToast(err.message, true); });
@@ -227,7 +233,7 @@
       b.addEventListener("click", function () {
         api("DELETE", "/api/admin/restaurants/" + r.id + "/prices/" + b.getAttribute("data-id"))
           .then(function () {
-            S.showToast("Возвращена цена группы");
+            S.showToast("Возвращены цены по умолчанию");
             load(true);
           })
           .catch(function (err) { S.showToast(err.message, true); });

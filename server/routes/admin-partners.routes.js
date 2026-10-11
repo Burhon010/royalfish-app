@@ -130,10 +130,31 @@ restaurantsRouter.put("/:id/prices/:productId", async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
     const productId = parseId(req.params.productId);
-    const price = parsePrice(req.body && req.body.price);
-    if (!id || !productId || price === null) return res.status(400).json({ error: "Укажите корректную цену." });
+    if (!id || !productId) return res.status(400).json({ error: "Некорректный запрос." });
+    const body = req.body || {};
+    const patch = {};
+
+    // price: число > 0 — индивидуальная цена блока; null / "" — убрать её
+    if (body.price !== undefined) {
+      if (body.price === null || body.price === "") {
+        patch.price = null;
+      } else {
+        const price = parsePrice(body.price);
+        if (price === null || price <= 0) return res.status(400).json({ error: "Укажите цену больше нуля или оставьте поле пустым." });
+        patch.price = price;
+      }
+    }
+    // discountPercent: 0–90 (процент скидки именно для этого ресторана)
+    if (body.discountPercent !== undefined) {
+      const d = Number(body.discountPercent === "" ? 0 : body.discountPercent);
+      if (!Number.isFinite(d) || d < 0 || d > 90) return res.status(400).json({ error: "Скидка должна быть от 0 до 90 %." });
+      patch.discountPercent = Math.round(d * 100) / 100;
+    }
+    if (patch.price === undefined && patch.discountPercent === undefined) {
+      return res.status(400).json({ error: "Укажите цену или скидку." });
+    }
     if (!(await partners.getRestaurantById(id))) return res.status(404).json({ error: "Ресторан не найден." });
-    await partners.setRestaurantPrice(id, productId, price);
+    await partners.setRestaurantDeal(id, productId, patch);
     res.json({ ok: true });
   } catch (err) {
     if (err.code === "23503") return res.status(400).json({ error: "Товар не найден." });

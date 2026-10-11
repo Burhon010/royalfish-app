@@ -184,7 +184,11 @@
         '<p class="portal-card-weight">' + esc(p.weight) +
           (p.inStock === false ? ' · <span class="portal-tag portal-tag--out">Нет в наличии</span>' : "") + "</p>" +
         '<span class="portal-block-note">1 блок = ' + p.unitsPerBlock + " шт.</span>" +
-        '<div class="portal-price">' + money(p.pricePerBlock) + " <small>сомони / блок</small></div>" +
+        '<div class="portal-price">' +
+          (p.discountPercent > 0 ? '<s class="portal-price-old">' + money(p.oldPricePerBlock) + "</s> " : "") +
+          money(p.pricePerBlock) + " <small>сомони / блок</small>" +
+          (p.discountPercent > 0 ? ' <span class="portal-tag portal-tag--new">-' + money(p.discountPercent) + "%</span>" : "") +
+        "</div>" +
         '<div class="portal-card-actions">' +
           '<div class="portal-card-calc">' + cardCalc(p, 0) + "</div>" +
           '<div class="qty-stepper">' +
@@ -345,8 +349,10 @@
         '<p class="mrow-meta">' + esc(categoryName(p.category)) + " · " + esc(p.weight) + "</p>" +
       "</div>" +
       '<div class="mrow-price">' +
+        (m.discountPercent > 0 ? '<span class="mrow-old">' + money(m.priceBeforeDiscount / m.unitsPerBlock) + "</span>" : "") +
         '<span class="mrow-final">' + money(perUnit) + " смн/ед.</span>" +
         '<span class="mrow-badge">мин. ' + p.unitsPerBlock + " шт.</span>" +
+        (m.discountPercent > 0 ? '<span class="mrow-badge mrow-badge--disc">-' + money(m.discountPercent) + "%</span>" : "") +
         (m.ownPrice !== null ? '<span class="mrow-badge mrow-badge--own">индивид.</span>' : "") +
       "</div>" +
       (p._prod
@@ -363,7 +369,7 @@
           '<span class="mswitch-track"><span class="mswitch-thumb"></span></span></span>' +
       "</label>" +
       '<div class="mrow-actions">' +
-        '<button type="button" class="mrow-btn manage-edit" title="Цена для ресторана" aria-label="Изменить цену">&#9998;</button>' +
+        '<button type="button" class="mrow-btn manage-edit" title="Цена и скидка для ресторана" aria-label="Цена и скидка для ресторана">&#9998;</button>' +
       "</div>";
 
     var base = "/api/admin/restaurants/" + profile.id;
@@ -388,52 +394,23 @@
     return row;
   }
 
-  // Полный редактор товара — как в главной админке (общий для всех: розница,
-  // опт и все рестораны) + индивидуальная цена для этого ресторана.
+  // Индивидуальные условия ресторана на товар: своя цена блока и своя скидка.
+  // Сам товар (название, фото, розничные и оптовые данные) правится в главной админке.
   var pfOverlay = el("productOverlay");
   var pfForm = el("pfForm");
   var pfCurrent = null;
-  var pfRemoveImage = false;
 
-  function cloudUrl(url, width) {
-    if (!url || url.indexOf("res.cloudinary.com") === -1 || url.indexOf("/upload/") === -1) return url;
-    return url.replace("/upload/", "/upload/f_auto,q_auto,w_" + width + "/");
+  function pfCompute() {
+    var p = pfCurrent;
+    if (!p) return;
+    var m = p._m;
+    var own = el("pfOwnPrice").value.trim();
+    var before = own !== "" ? Number(own) || 0 : (m.groupPrice !== null ? m.groupPrice : m.basePrice);
+    var d = Number(el("pfDiscount").value) || 0;
+    el("pfComputed").textContent = money(Math.round(before * (1 - d / 100) * 100) / 100) + " сомони";
   }
-  function pfComputed() {
-    var price = Number(el("pfPrice").value) || 0;
-    var discount = Number(el("pfDiscount").value) || 0;
-    el("pfComputed").textContent = money(Math.round(price * (1 - discount / 100) * 100) / 100) + " сомони";
-  }
-  el("pfPrice").addEventListener("input", pfComputed);
-  el("pfDiscount").addEventListener("input", pfComputed);
-
-  function pfPhoto(url) {
-    var img = el("pfPhotoImg");
-    if (url) {
-      img.src = cloudUrl(url, 200);
-      img.hidden = false;
-      el("pfPhotoEmpty").hidden = true;
-      el("pfPhotoRemove").hidden = false;
-    } else {
-      img.hidden = true;
-      img.removeAttribute("src");
-      el("pfPhotoEmpty").hidden = false;
-      el("pfPhotoRemove").hidden = true;
-    }
-  }
-  el("pfPhotoInput").addEventListener("change", function () {
-    var file = this.files[0];
-    if (!file) return;
-    pfRemoveImage = false;
-    var reader = new FileReader();
-    reader.onload = function (e) { pfPhoto(e.target.result); };
-    reader.readAsDataURL(file);
-  });
-  el("pfPhotoRemove").addEventListener("click", function () {
-    el("pfPhotoInput").value = "";
-    pfRemoveImage = true;
-    pfPhoto(null);
-  });
+  el("pfOwnPrice").addEventListener("input", pfCompute);
+  el("pfDiscount").addEventListener("input", pfCompute);
 
   function closeProductEditor() { pfOverlay.hidden = true; pfCurrent = null; }
   el("pfClose").addEventListener("click", closeProductEditor);
@@ -441,108 +418,57 @@
   pfOverlay.addEventListener("click", function (e) { if (e.target === pfOverlay) closeProductEditor(); });
 
   function openProductEditor(p) {
-    var prod = p._prod;
     var m = p._m;
-    if (!prod) { showToast("Не удалось загрузить данные товара. Обновите страницу.", true); return; }
     pfCurrent = p;
-    pfRemoveImage = false;
     el("pfError").hidden = true;
-    el("pfPhotoInput").value = "";
-
-    var sel = el("pfCategory");
-    var opts = categories.map(function (c) { return { slug: c.slug, name: c.name }; });
-    if (!opts.some(function (c) { return c.slug === prod.category; })) opts.push({ slug: prod.category, name: prod.category });
-    sel.innerHTML = opts.map(function (c) {
-      return '<option value="' + esc(c.slug) + '">' + esc(c.name) + "</option>";
-    }).join("");
-
-    el("pfName").value = prod.name;
-    sel.value = prod.category;
-    el("pfWeight").value = prod.weight;
-    el("pfDescription").value = prod.description || "";
-    el("pfPrice").value = prod.price;
-    el("pfDiscount").value = prod.discountPercent;
-    el("pfIsNew").checked = !!prod.isNew;
-    el("pfInStock").value = prod.inStock ? "true" : "false";
-    el("pfWholesalePrice").value = prod.wholesalePrice === null || prod.wholesalePrice === undefined ? "" : prod.wholesalePrice;
-    el("pfWholesaleMinQty").value = prod.wholesaleMinQty || 1;
-    el("pfAvailableRetail").checked = !!prod.availableRetail;
-    el("pfAvailableWholesale").checked = !!prod.availableWholesale;
-    pfPhoto(prod.image);
-    pfComputed();
-
+    el("pfName").textContent = p.name + " · " + p.weight;
+    var thumb = el("pfThumb");
+    if (p.image) { thumb.src = p.image; thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
     el("pfPriceInfo").textContent = "Блок = " + p.unitsPerBlock + " шт. Базовая цена блока: " + money(m.basePrice) +
       " · Цена группы: " + (m.groupPrice === null ? "—" : money(m.groupPrice)) + " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони.";
     el("pfOwnPrice").value = m.ownPrice === null ? "" : m.ownPrice;
-
-    el("pfTitle").textContent = "Редактировать товар";
+    el("pfDiscount").value = m.discountPercent || 0;
+    pfCompute();
     pfOverlay.hidden = false;
-    el("pfName").focus();
-  }
-
-  function pfShowError(msg) {
-    el("pfError").textContent = msg;
-    el("pfError").hidden = false;
+    el("pfOwnPrice").focus();
   }
 
   pfForm.addEventListener("submit", function (e) {
     e.preventDefault();
     if (!pfCurrent) return;
-    el("pfError").hidden = true;
     var p = pfCurrent;
-    var m = p._m;
-    var name = el("pfName").value.trim();
-    var weight = el("pfWeight").value.trim();
-    var price = el("pfPrice").value;
-    if (!name || !weight || price === "") return pfShowError("Заполните название, вес и розничную цену.");
-    if (!el("pfAvailableRetail").checked && !el("pfAvailableWholesale").checked) {
-      return pfShowError("Товар должен быть доступен хотя бы в одном канале — рознице или опте.");
-    }
-    if (el("pfAvailableWholesale").checked && !el("pfWholesalePrice").value) {
-      return pfShowError("Чтобы включить товар в опт, укажите оптовую цену.");
-    }
-
-    var fd = new FormData();
-    fd.append("name", name);
-    fd.append("category", el("pfCategory").value);
-    fd.append("weight", weight);
-    fd.append("description", el("pfDescription").value.trim());
-    fd.append("price", price);
-    fd.append("discountPercent", el("pfDiscount").value || 0);
-    fd.append("isNew", el("pfIsNew").checked);
-    fd.append("inStock", el("pfInStock").value === "true");
-    if (el("pfWholesalePrice").value) fd.append("wholesalePrice", el("pfWholesalePrice").value);
-    fd.append("wholesaleMinQty", el("pfWholesaleMinQty").value || 1);
-    fd.append("availableRetail", el("pfAvailableRetail").checked);
-    fd.append("availableWholesale", el("pfAvailableWholesale").checked);
-    var file = el("pfPhotoInput").files[0];
-    if (file) fd.append("image", file);
-    else if (pfRemoveImage) fd.append("removeImage", "true");
-
     var own = el("pfOwnPrice").value.trim();
-    var base = "/api/admin/restaurants/" + profile.id;
+    var disc = el("pfDiscount").value.trim();
+    var discNum = disc === "" ? 0 : Number(disc);
+    var errBox = el("pfError");
+    errBox.hidden = true;
+    if (own !== "" && !(Number(own) > 0)) {
+      errBox.textContent = "Укажите цену больше нуля или оставьте поле пустым.";
+      errBox.hidden = false;
+      return;
+    }
+    if (!isFinite(discNum) || discNum < 0 || discNum > 90) {
+      errBox.textContent = "Скидка должна быть от 0 до 90 %.";
+      errBox.hidden = false;
+      return;
+    }
     var saveBtn = el("pfSave");
     saveBtn.disabled = true;
     saveBtn.textContent = "Сохраняем…";
-
-    fetch("/api/admin/products/" + p.id, { method: "PUT", credentials: "same-origin", body: fd })
-      .then(function (res) {
-        return res.json().catch(function () { return {}; }).then(function (data) {
-          if (res.status === 401) { window.location.href = "admin/login.html"; throw new Error("unauthorized"); }
-          if (!res.ok) throw new Error(data.error || "Не удалось сохранить товар.");
-        });
-      })
-      .then(function () {
-        // индивидуальная цена ресторана: пусто — вернуть по умолчанию
-        if (own === "" && m.ownPrice !== null) return adminApi("DELETE", base + "/prices/" + p.id);
-        if (own !== "" && Number(own) !== m.ownPrice) return adminApi("PUT", base + "/prices/" + p.id, { price: Number(own) });
-      })
+    adminApi("PUT", "/api/admin/restaurants/" + profile.id + "/prices/" + p.id, {
+      price: own === "" ? null : Number(own),
+      discountPercent: discNum,
+    })
       .then(function () {
         closeProductEditor();
-        showToast("Товар сохранён");
+        showToast("Цена и скидка сохранены");
         return refreshManage();
       })
-      .catch(function (err) { if (err.message !== "unauthorized") pfShowError(err.message); })
+      .catch(function (err) {
+        if (err.message === "unauthorized") return;
+        errBox.textContent = err.message;
+        errBox.hidden = false;
+      })
       .then(function () {
         saveBtn.disabled = false;
         saveBtn.textContent = "Сохранить";
