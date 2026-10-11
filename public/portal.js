@@ -132,12 +132,9 @@
 
   /* ---------------- каталог ---------------- */
   function renderCategoryPills() {
-    var used = {};
-    catalog.forEach(function (p) { used[p.category] = true; });
     var html = '<button class="filter-pill" data-filter="all" role="tab" aria-selected="false">Все</button>';
     categories.forEach(function (c) {
-      // у ресторана — только категории с его товарами; администратору — все существующие
-      if (!used[c.slug] && !impersonated) return;
+      // показываем все существующие категории (в том числе пока пустые)
       html += '<button class="filter-pill" data-filter="' + esc(c.slug) + '" role="tab" aria-selected="false">' + esc(c.name) + "</button>";
     });
     var row = el("catFilterRow");
@@ -241,7 +238,7 @@
       return;
     }
     if (!list.length) {
-      grid.innerHTML = '<p class="p-empty">Ничего не найдено.</p>';
+      grid.innerHTML = '<p class="p-empty">' + (searchQuery ? "Ничего не найдено." : "В этой категории пока нет товаров.") + "</p>";
       return;
     }
     var frag = document.createDocumentFragment();
