@@ -513,8 +513,6 @@
         '<td class="num">' + money(t.orderedTotal) + "</td></tr></tfoot></table></div>" +
       '<div class="adm-form">' +
         '<label class="field"><span class="field-label">Статус</span><select id="woStatus">' + portalStatusOptions(o.status) + "</select></label>" +
-        '<label class="field field--full"><span class="field-label">Комментарий администратора</span>' +
-        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Заказ принят, привезём до 11:00. (ресторан увидит этот комментарий)">' + esc(o.adminComment || "") + "</textarea></label>" +
       "</div>" +
       '<p class="form-error" id="woError" hidden></p>' +
       '<div class="adm-actions">' +
@@ -546,20 +544,17 @@
     document.getElementById("woSave").addEventListener("click", function () {
       save({
         status: document.getElementById("woStatus").value,
-        adminComment: document.getElementById("woComment").value,
       }, "Заказ сохранён");
     });
     document.getElementById("woCancel").addEventListener("click", function () {
       if (!window.confirm("Отменить заказ " + o.number + "? Ресторан увидит, что заказ отменён.")) return;
       save({
         status: "cancelled",
-        adminComment: document.getElementById("woComment").value,
       }, "Заказ отменён");
     });
     document.getElementById("woConfirm").addEventListener("click", function () {
       save({
         status: "confirmed",
-        adminComment: document.getElementById("woComment").value,
       }, "Заказ подтверждён");
     });
   }
