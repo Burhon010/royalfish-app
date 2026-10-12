@@ -485,9 +485,6 @@
         '<td class="num">' + it.orderedUnits + "</td>" +
         '<td class="num">' + money(it.pricePerBlock) + "</td>" +
         '<td class="num">' + money(it.orderedSubtotal) + "</td>" +
-        '<td><input type="number" min="0" step="1" class="adm-inline-input conf-input" data-id="' + it.id + '" value="' +
-          (it.confirmedBlocks === null ? "" : it.confirmedBlocks) + '" placeholder="' + it.orderedBlocks + '"></td>' +
-        '<td class="num">' + (it.confirmedUnits === null ? "—" : it.confirmedUnits) + "</td>" +
       "</tr>";
     }).join("");
 
@@ -497,17 +494,14 @@
         "<br>Адрес: " + esc(o.restaurantAddress) + "<br>Дата: " + S.fmtDate(o.createdAt) +
         (o.customerComment ? "<br>Комментарий ресторана: " + esc(o.customerComment) : "") + "</div>" +
       '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
-        "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th><th>Подтверждено блоков</th><th>Штук</th>" +
+        "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th>" +
       "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td>Всего</td>" +
         '<td class="num">' + t.orderedBlocks + '</td><td class="num">' + t.orderedUnits + "</td><td></td>" +
-        '<td class="num">' + money(t.orderedTotal) + '</td><td class="num">' + (t.hasConfirmed ? t.confirmedBlocks : "—") +
-        '</td><td class="num">' + (t.hasConfirmed ? t.confirmedUnits : "—") + "</td></tr></tfoot></table></div>" +
-      (t.hasConfirmed ? '<div class="adm-note">Подтверждённая сумма: <b>' + money(t.confirmedTotal) + " сомони</b></div>" : "") +
-      '<div class="adm-note">Заказанное количество сохраняется в истории и не меняется. Укажите в колонке «Подтверждено» фактическое число блоков (после звонка ресторану).</div>' +
+        '<td class="num">' + money(t.orderedTotal) + "</td></tr></tfoot></table></div>" +
       '<div class="adm-form">' +
         '<label class="field"><span class="field-label">Статус</span><select id="woStatus">' + portalStatusOptions(o.status) + "</select></label>" +
         '<label class="field field--full"><span class="field-label">Комментарий администратора</span>' +
-        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Связались с рестораном. Согласовано 2 блока вместо 4.">' + esc(o.adminComment || "") + "</textarea></label>" +
+        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Связались с рестораном, доставим до 11:00.">' + esc(o.adminComment || "") + "</textarea></label>" +
       "</div>" +
       '<p class="form-error" id="woError" hidden></p>' +
       '<div class="adm-actions">' +
@@ -519,20 +513,6 @@
         printLink(o, "print", "Распечатать") +
         printLink(o, "warehouse", "Печать для склада") +
       "</div>";
-
-    function collect(fillEmptyWithOrdered) {
-      var items = [];
-      Array.prototype.forEach.call(woBody.querySelectorAll(".conf-input"), function (inp) {
-        var id = Number(inp.getAttribute("data-id"));
-        if (inp.value !== "") {
-          items.push({ id: id, confirmedBlocks: Number(inp.value) });
-        } else if (fillEmptyWithOrdered) {
-          var it = o.items.filter(function (x) { return x.id === id; })[0];
-          items.push({ id: id, confirmedBlocks: it.orderedBlocks });
-        }
-      });
-      return items;
-    }
 
     function save(payload, okMsg) {
       var errBox = document.getElementById("woError");
@@ -553,15 +533,12 @@
       save({
         status: document.getElementById("woStatus").value,
         adminComment: document.getElementById("woComment").value,
-        items: collect(false),
       }, "Заказ сохранён");
     });
-    // «Подтвердить»: пустые поля «подтверждено» заполняются заказанным количеством
     document.getElementById("woConfirm").addEventListener("click", function () {
       save({
         status: "confirmed",
         adminComment: document.getElementById("woComment").value,
-        items: collect(true),
       }, "Заказ подтверждён");
     });
   }
