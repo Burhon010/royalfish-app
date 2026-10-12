@@ -1198,3 +1198,32 @@
 @media (max-width: 640px) {
   .p-table--cart .c-del { justify-self: end; }
 }
+
+.portal-unitprice { margin: -4px 0 10px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+@media (max-width: 640px) {
+  .p-table--cart tbody tr {
+    grid-template-areas:
+      "name del"
+      "qty sum"
+      "units price"
+      "uprice uprice";
+  }
+  .p-table--order tbody tr {
+    grid-template-areas:
+      "name name"
+      "blocks units"
+      "price uprice"
+      "sum sum";
+  }
+  .p-table--order.has-conf tbody tr {
+    grid-template-areas:
+      "name name"
+      "blocks units"
+      "price uprice"
+      "sum sum"
+      "conf conf";
+  }
+  .p-table--cards .c-uprice { grid-area: uprice; }
+  .p-table--order .c-uprice { text-align: right; }
+  .p-table--order .c-sum { text-align: right; }
+}

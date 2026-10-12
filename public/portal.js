@@ -47,6 +47,9 @@
     var s = Number.isInteger(num) ? String(num) : num.toFixed(2).replace(".", ",");
     return s.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
+  function unitPrice(pricePerBlock, unitsPerBlock) {
+    return unitsPerBlock > 0 ? Math.round((pricePerBlock / unitsPerBlock) * 100) / 100 : pricePerBlock;
+  }
   function blocksWord(n) {
     var m10 = n % 10, m100 = n % 100;
     if (m10 === 1 && m100 !== 11) return "блок";
@@ -186,6 +189,7 @@
           money(p.pricePerBlock) + " <small>сомони / блок</small>" +
           (p.discountPercent > 0 ? ' <span class="portal-tag portal-tag--new">-' + money(p.discountPercent) + "%</span>" : "") +
         "</div>" +
+        '<div class="portal-unitprice">' + money(unitPrice(p.pricePerBlock, p.unitsPerBlock)) + " сомони / шт.</div>" +
         '<div class="portal-card-actions">' +
           '<div class="portal-card-calc">' + cardCalc(p, 0) + "</div>" +
           '<div class="qty-stepper">' +
@@ -550,6 +554,7 @@
         "</div></td>" +
         '<td class="num c-units" data-label="Штук">' + (b * p.unitsPerBlock) + "</td>" +
         '<td class="num c-price" data-label="Цена за блок">' + money(p.pricePerBlock) + "</td>" +
+        '<td class="num c-uprice" data-label="Цена за штуку">' + money(unitPrice(p.pricePerBlock, p.unitsPerBlock)) + "</td>" +
         '<td class="num c-sum">' + money(b * p.pricePerBlock) + "</td>" +
         '<td class="c-del"><button type="button" class="p-close" data-a="del" data-id="' + p.id + '" aria-label="Убрать">&times;</button></td>' +
       "</tr>";
@@ -557,10 +562,10 @@
 
     cartBody.innerHTML =
       '<div class="p-table-wrap"><table class="p-table p-table--cards p-table--cart"><thead><tr>' +
-        "<th>Товар</th><th>Блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th><th></th>" +
+        "<th>Товар</th><th>Блоков</th><th>Штук</th><th>Цена/блок</th><th>Цена/шт.</th><th>Сумма</th><th></th>" +
       "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr>" +
         '<td class="f-label">Всего<span class="f-mobile"> · ' + t.blocks + " " + blocksWord(t.blocks) + " · " + t.units + " шт.</span></td>" +
-        '<td class="num f-hide">' + t.blocks + '</td><td class="num f-hide">' + t.units + '</td><td class="f-hide"></td>' +
+        '<td class="num f-hide">' + t.blocks + '</td><td class="num f-hide">' + t.units + '</td><td class="f-hide"></td><td class="f-hide"></td>' +
         '<td class="num f-sum">' + money(t.sum) + '</td><td class="f-hide"></td></tr></tfoot></table></div>' +
       '<div class="p-note">Наличие товара не ограничивает заказ: сотрудник Royal Fish проверит фактическое количество и свяжется с вами, если что-то нужно уточнить.</div>' +
       '<div class="p-info"><span><b>Доставка / адрес:</b> ' + esc(profile.address) + "</span><span><b>Телефон:</b> " + esc(profile.phone) + "</span></div>" +
@@ -635,16 +640,17 @@
         '<td class="num c-blocks" data-label="Блоков">' + it.orderedBlocks + "</td>" +
         '<td class="num c-units" data-label="Штук">' + it.orderedUnits + "</td>" +
         '<td class="num c-price" data-label="Цена за блок">' + money(it.pricePerBlock) + "</td>" +
+        '<td class="num c-uprice" data-label="Цена за штуку">' + money(unitPrice(it.pricePerBlock, it.unitsPerBlock)) + "</td>" +
         '<td class="num c-sum">' + money(it.orderedSubtotal) + "</td>" +
         (showConf ? '<td class="num c-conf" data-label="Подтверждено блоков">' + (it.confirmedBlocks === null ? "—" : it.confirmedBlocks) + "</td>" : "") +
       "</tr>";
     }).join("");
     return '<div class="p-table-wrap"><table class="p-table p-table--cards p-table--order' + (showConf ? " has-conf" : "") + '"><thead><tr>' +
-      "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th>" +
+      "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Цена/шт.</th><th>Сумма</th>" +
       (showConf ? "<th>Подтверждено блоков</th>" : "") +
       "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr>" +
       '<td class="f-label">Всего<span class="f-mobile"> · ' + t.orderedBlocks + " " + blocksWord(t.orderedBlocks) + " · " + t.orderedUnits + " шт.</span></td>" +
-      '<td class="num f-hide">' + t.orderedBlocks + '</td><td class="num f-hide">' + t.orderedUnits + '</td><td class="f-hide"></td>' +
+      '<td class="num f-hide">' + t.orderedBlocks + '</td><td class="num f-hide">' + t.orderedUnits + '</td><td class="f-hide"></td><td class="f-hide"></td>' +
       '<td class="num f-sum">' + money(t.orderedTotal) + "</td>" +
       (showConf ? '<td class="num f-hide">' + t.confirmedBlocks + "</td>" : "") +
       "</tr></tfoot></table></div>" +
