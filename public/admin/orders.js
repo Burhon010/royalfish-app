@@ -129,6 +129,19 @@
     completed: "Выполнен",
     cancelled: "Отменён",
   };
+  // в списке выбора — только «Подтверждён» и «Отменён» (ресторан увидит их зелёным / красным);
+  // «Ожидает подтверждения» и прежние статусы показываются лишь у заказов, которые в них находятся
+  function portalSelectStatuses(current) {
+    var list = ["confirmed", "cancelled"];
+    if (list.indexOf(current) === -1) list.unshift(current);
+    return list;
+  }
+  // цвет выпадающего списка: зелёный — подтверждён, красный — отменён, жёлтый — ждёт
+  function portalClass(status) {
+    if (status === "confirmed" || status === "completed") return "completed";
+    if (status === "cancelled" || status === "rejected") return "new";
+    return "processing";
+  }
   function portalToRow(o) {
     return {
       portal: true,
@@ -147,7 +160,7 @@
   function statusGroup(o) {
     if (!o.portal) return o.status;
     if (o.status === "awaiting") return "new";
-    if (o.status === "completed") return "completed";
+    if (o.status === "confirmed" || o.status === "completed") return "completed";
     if (o.status === "rejected" || o.status === "cancelled") return "cancelled";
     return "processing";
   }
@@ -262,7 +275,7 @@
   }
 
   function portalStatusOptions(cur) {
-    return Object.keys(PORTAL_STATUS).map(function (st) {
+    return portalSelectStatuses(cur).map(function (st) {
       return '<option value="' + st + '"' + (st === cur ? " selected" : "") + ">" + PORTAL_STATUS[st] + "</option>";
     }).join("");
   }
@@ -280,7 +293,7 @@
       "</div>" +
       '<div class="order-row-total">' + formatPrice(t.orderedTotal) + " смн</div>" +
       '<div class="order-row-status">' +
-        '<select class="status-select status-' + statusGroup(o) + '">' + portalStatusOptions(o.status) + "</select>" +
+        '<select class="status-select status-' + portalClass(o.status) + '">' + portalStatusOptions(o.status) + "</select>" +
       "</div>" +
       '<div class="order-row-actions">' +
         '<button type="button" class="icon-btn view-btn" title="Подробнее">&#128065;</button>' +
@@ -291,7 +304,7 @@
       AdminShared.api("PATCH", "/api/admin/wholesale-orders/" + o.id, { status: select.value })
         .then(function (updated) {
           o.status = updated.status;
-          select.className = "status-select status-" + statusGroup(o);
+          select.className = "status-select status-" + portalClass(o.status);
           showToast("Статус заказа обновлён");
           renderTabCounts();
           if (activeFilter !== "all") renderList();
@@ -501,11 +514,12 @@
       '<div class="adm-form">' +
         '<label class="field"><span class="field-label">Статус</span><select id="woStatus">' + portalStatusOptions(o.status) + "</select></label>" +
         '<label class="field field--full"><span class="field-label">Комментарий администратора</span>' +
-        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Связались с рестораном, доставим до 11:00.">' + esc(o.adminComment || "") + "</textarea></label>" +
+        '<textarea id="woComment" rows="3" maxlength="1000" placeholder="Например: Заказ принят, привезём до 11:00. (ресторан увидит этот комментарий)">' + esc(o.adminComment || "") + "</textarea></label>" +
       "</div>" +
       '<p class="form-error" id="woError" hidden></p>' +
       '<div class="adm-actions">' +
         '<button type="button" class="btn-primary" id="woConfirm">Подтвердить заказ</button>' +
+        '<button type="button" class="btn-outline btn-danger" id="woCancel">Отменить заказ</button>' +
         '<button type="button" class="btn-outline" id="woSave">Сохранить</button>' +
       "</div>" +
       '<div class="adm-actions">' +
@@ -534,6 +548,13 @@
         status: document.getElementById("woStatus").value,
         adminComment: document.getElementById("woComment").value,
       }, "Заказ сохранён");
+    });
+    document.getElementById("woCancel").addEventListener("click", function () {
+      if (!window.confirm("Отменить заказ " + o.number + "? Ресторан увидит, что заказ отменён.")) return;
+      save({
+        status: "cancelled",
+        adminComment: document.getElementById("woComment").value,
+      }, "Заказ отменён");
     });
     document.getElementById("woConfirm").addEventListener("click", function () {
       save({

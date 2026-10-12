@@ -10,6 +10,7 @@
     completed: "Выполнен",
     cancelled: "Отменён",
   };
+
   var ACCOUNT_STATUS = {
     pending: "Ожидает одобрения",
     approved: "Одобрен",
@@ -620,6 +621,7 @@
   }
 
   function showOrderSuccess(order) {
+    markSeen(order);
     el("cartTitle").textContent = "Заказ оформлен";
     cartBody.innerHTML =
       '<div class="p-note">Заказ <b>' + esc(order.number) + "</b> принят. Статус: <b>" + ORDER_STATUS[order.status] +
@@ -667,7 +669,73 @@
     });
   }
 
+  /* ---------------- уведомления о статусе заказа ---------------- */
+  var SEEN_KEY = "rf_seen_orders";
+  function readSeen() {
+    try {
+      var raw = window.localStorage.getItem(SEEN_KEY);
+      return raw === null ? null : (JSON.parse(raw) || {});
+    } catch (e) { return undefined; }
+  }
+  function writeSeen(map) { try { window.localStorage.setItem(SEEN_KEY, JSON.stringify(map)); } catch (e) {} }
+  function markSeen(o) {
+    var m = readSeen();
+    if (!m) m = {};
+    m[o.id] = o.status;
+    writeSeen(m);
+  }
+  function statusNoticeText(o) {
+    if (o.status === "confirmed") return "Заказ " + o.number + " подтверждён. Royal Fish увидел ваш заказ и отправляет его.";
+    return "Заказ " + o.number + " отменён." + (o.adminComment ? " Комментарий: " + o.adminComment : "");
+  }
+  function renderNotices() {
+    var box = el("orderNotices");
+    var tab = document.querySelector('.portal-tab[data-tab="orders"]');
+    var seen = readSeen();
+    var fresh = [];
+    if (impersonated || seen === undefined) {
+      box.hidden = true;
+    } else if (seen === null) {
+      // первый заход: уже существующие статусы считаем увиденными
+      seen = {};
+      orders.forEach(function (o) { seen[o.id] = o.status; });
+      writeSeen(seen);
+      box.hidden = true;
+    } else {
+      fresh = orders.filter(function (o) {
+        return (o.status === "confirmed" || o.status === "cancelled") && seen[o.id] !== o.status;
+      });
+      box.innerHTML = fresh.map(function (o) {
+        var ok = o.status === "confirmed";
+        return '<div class="p-notice ' + (ok ? "p-notice--ok" : "p-notice--bad") + '" role="status">' +
+          '<span class="p-notice-icon" aria-hidden="true">' + (ok ? "&#10003;" : "&#10005;") + "</span>" +
+          '<span class="p-notice-text">' + esc(statusNoticeText(o)) + "</span>" +
+          '<button type="button" class="p-notice-x" data-id="' + o.id + '" aria-label="Скрыть">&times;</button>' +
+        "</div>";
+      }).join("");
+      box.hidden = !fresh.length;
+      box.querySelectorAll(".p-notice-x").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var o = orders.filter(function (x) { return x.id === Number(b.getAttribute("data-id")); })[0];
+          if (o) markSeen(o);
+          renderNotices();
+        });
+      });
+    }
+    if (tab) {
+      tab.textContent = "Мои заказы";
+      if (fresh.length) {
+        var badge = document.createElement("span");
+        badge.className = "p-tab-count";
+        badge.textContent = fresh.length;
+        tab.appendChild(document.createTextNode(" "));
+        tab.appendChild(badge);
+      }
+    }
+  }
+
   function renderOrders() {
+    renderNotices();
     var box = el("orderList");
     if (!orders.length) {
       box.innerHTML = '<p class="p-empty">Заказов пока нет. Оформите первый заказ в каталоге.</p>';
@@ -690,9 +758,21 @@
   }
 
   var orderOverlay = el("orderOverlay");
+  function orderStatusNotice(o) {
+    if (o.status === "confirmed") {
+      return '<div class="p-notice p-notice--ok"><span class="p-notice-icon" aria-hidden="true">&#10003;</span><span class="p-notice-text">Заказ подтверждён. Royal Fish увидел ваш заказ и отправляет его.</span></div>';
+    }
+    if (o.status === "cancelled") {
+      return '<div class="p-notice p-notice--bad"><span class="p-notice-icon" aria-hidden="true">&#10005;</span><span class="p-notice-text">Заказ отменён.</span></div>';
+    }
+    return "";
+  }
   function openOrder(o) {
+    markSeen(o);
+    renderNotices();
     el("orderTitle").textContent = "Заказ " + o.number;
     el("orderBody").innerHTML =
+      orderStatusNotice(o) +
       '<div class="p-info"><span><span class="p-badge st-' + o.status + '">' + ORDER_STATUS[o.status] + "</span></span>" +
       "<span><b>Дата:</b> " + fmtDate(o.createdAt) + "</span>" +
       "<span><b>Адрес:</b> " + esc(o.restaurantAddress) + "</span></div>" +
@@ -801,6 +881,7 @@
           api("GET", "/api/partners/catalog"),
           fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
         ]).then(applyCatalog).catch(function () {});
+        loadOrders().catch(function () {});
       });
 
       return Promise.all([
