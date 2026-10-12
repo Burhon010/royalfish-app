@@ -621,9 +621,7 @@
       "</b>. Сотрудник Royal Fish проверит наличие и свяжется с вами.</div>" +
       orderTableHtml(order) +
       '<div class="p-actions">' +
-        '<a class="p-btn" target="_blank" rel="noopener" href="print-order.html?id=' + order.id + '&src=partner&mode=pdf">Скачать PDF</a>' +
-        '<a class="p-btn p-btn--ghost" target="_blank" rel="noopener" href="print-order.html?id=' + order.id + '&src=partner&mode=print">Распечатать</a>' +
-        '<button type="button" class="p-btn p-btn--ghost" id="successClose">Закрыть</button>' +
+        '<button type="button" class="p-btn" id="successClose">Закрыть</button>' +
       "</div>";
     el("successClose").addEventListener("click", closeCart);
   }
@@ -694,11 +692,7 @@
       "<span><b>Адрес:</b> " + esc(o.restaurantAddress) + "</span></div>" +
       (o.customerComment ? '<div class="p-note"><b>Ваш комментарий:</b> ' + esc(o.customerComment) + "</div>" : "") +
       orderTableHtml(o) +
-      (o.adminComment ? '<div class="p-note"><b>Комментарий Royal Fish:</b> ' + esc(o.adminComment) + "</div>" : "") +
-      '<div class="p-actions">' +
-        '<a class="p-btn" target="_blank" rel="noopener" href="print-order.html?id=' + o.id + '&src=partner&mode=pdf">Скачать PDF</a>' +
-        '<a class="p-btn p-btn--ghost" target="_blank" rel="noopener" href="print-order.html?id=' + o.id + '&src=partner&mode=print">Распечатать</a>' +
-      "</div>";
+      (o.adminComment ? '<div class="p-note"><b>Комментарий Royal Fish:</b> ' + esc(o.adminComment) + "</div>" : "");
     orderOverlay.hidden = false;
   }
   el("orderClose").addEventListener("click", function () { orderOverlay.hidden = true; });

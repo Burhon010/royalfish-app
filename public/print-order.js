@@ -131,6 +131,13 @@
   });
   if (mode !== "pdf") document.getElementById("pdfHint").hidden = true;
 
+  if (src !== "admin") {
+    document.getElementById("pdfBtn").hidden = true;
+    document.getElementById("printBtn").hidden = true;
+    sheet.innerHTML = '<p class="p-empty">Печать и PDF заказов доступны только сотрудникам Royal Fish.</p>';
+    return;
+  }
+
   fetch(endpoint(), { credentials: "same-origin" })
     .then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
