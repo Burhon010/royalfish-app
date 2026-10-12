@@ -624,7 +624,7 @@
     markSeen(order);
     el("cartTitle").textContent = "Заказ оформлен";
     cartBody.innerHTML =
-      '<div class="p-note">Заказ <b>' + esc(order.number) + "</b> принят. Статус: <b>" + ORDER_STATUS[order.status] +
+      '<div class="p-note">Заказ №<b>' + esc(order.number) + "</b> принят. Статус: <b>" + ORDER_STATUS[order.status] +
       "</b>. Сотрудник Royal Fish проверит наличие и свяжется с вами.</div>" +
       orderTableHtml(order) +
       '<div class="p-actions">' +
@@ -685,8 +685,8 @@
     writeSeen(m);
   }
   function statusNoticeText(o) {
-    if (o.status === "confirmed") return "Заказ " + o.number + " подтверждён. Royal Fish увидел ваш заказ и отправляет его.";
-    return "Заказ " + o.number + " отменён." + (o.adminComment ? " Комментарий: " + o.adminComment : "");
+    if (o.status === "confirmed") return "Заказ №" + o.number + " подтверждён. Royal Fish увидел ваш заказ и отправляет его.";
+    return "Заказ №" + o.number + " отменён." + (o.adminComment ? " Комментарий: " + o.adminComment : "");
   }
   function renderNotices() {
     var box = el("orderNotices");
@@ -743,7 +743,7 @@
     }
     box.innerHTML = orders.map(function (o) {
       return '<button type="button" class="p-order" data-id="' + o.id + '">' +
-        '<span class="p-order-num">' + esc(o.number) + "</span>" +
+        '<span class="p-order-num">№' + esc(o.number) + "</span>" +
         '<span class="p-order-sum">' + money(o.totals.orderedTotal) + " сомони</span>" +
         '<span class="p-order-meta">' + fmtDate(o.createdAt) + " · " + o.totals.orderedBlocks + " " + blocksWord(o.totals.orderedBlocks) + " · " + o.totals.orderedUnits + " шт.</span>" +
         '<span class="p-badge st-' + o.status + '">' + ORDER_STATUS[o.status] + "</span>" +
@@ -770,7 +770,7 @@
   function openOrder(o) {
     markSeen(o);
     renderNotices();
-    el("orderTitle").textContent = "Заказ " + o.number;
+    el("orderTitle").textContent = "Заказ №" + o.number;
     el("orderBody").innerHTML =
       orderStatusNotice(o) +
       '<div class="p-info"><span><span class="p-badge st-' + o.status + '">' + ORDER_STATUS[o.status] + "</span></span>" +

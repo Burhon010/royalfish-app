@@ -120,7 +120,7 @@ async function sendOrderNotification(order) {
 
 function buildWholesaleOrderMessage(order) {
   const lines = [];
-  lines.push(`🧾 <b>Новый оптовый заказ ${escapeHtml(order.number)}</b>`);
+  lines.push(`🧾 <b>Новый оптовый заказ №${escapeHtml(order.number)}</b>`);
   lines.push(formatDate(order.createdAt || new Date()));
   lines.push("");
   lines.push(`<b>Ресторан:</b> ${escapeHtml(order.restaurantName)}`);

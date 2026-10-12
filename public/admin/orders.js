@@ -287,7 +287,7 @@
     row.setAttribute("data-id", "p" + o.id);
     row.innerHTML =
       '<div class="order-row-main">' +
-        '<p class="order-row-id">Заказ ' + escapeHtml(o.number) + ' <span class="order-type-badge">Опт · ресторан</span></p>' +
+        '<p class="order-row-id">Заказ №' + escapeHtml(o.number) + ' <span class="order-type-badge">Опт · ресторан</span></p>' +
         '<p class="order-row-customer">' + escapeHtml(o.restaurantName) + " · " + escapeHtml(o.restaurantPhone) + "</p>" +
         '<p class="order-row-meta">' + t.orderedBlocks + " бл. · " + t.orderedUnits + " шт. · " + formatDate(o.createdAt) + "</p>" +
       "</div>" +
@@ -487,7 +487,7 @@
   }
 
   function renderPortalOrder(o) {
-    document.getElementById("woModalTitle").textContent = "Заказ " + o.number;
+    document.getElementById("woModalTitle").textContent = "Заказ №" + o.number;
     var t = o.totals;
     var esc = S.esc, money = S.money;
 
@@ -547,7 +547,7 @@
       }, "Заказ сохранён");
     });
     document.getElementById("woCancel").addEventListener("click", function () {
-      if (!window.confirm("Отменить заказ " + o.number + "? Ресторан увидит, что заказ отменён.")) return;
+      if (!window.confirm("Отменить заказ №" + o.number + "? Ресторан увидит, что заказ отменён.")) return;
       save({
         status: "cancelled",
       }, "Заказ отменён");

@@ -40,7 +40,7 @@ function round2(n) {
 }
 
 function orderNumber(id) {
-  return "RF-" + String(id).padStart(6, "0");
+  return String(id);
 }
 
 /* ----------------------------------------------------------
@@ -614,7 +614,7 @@ async function listWholesaleOrders({ restaurantId, status } = {}) {
 // Администратор: смена статуса, комментарий и подтверждённые количества.
 // ordered_blocks никогда не перезаписывается — история "заказано" сохраняется.
 // Очистка истории оптовых заказов ресторанов (кнопки «Очистить историю» в разделе
-// заказов). reset — следующий заказ получит номер RF-000001.
+// заказов). reset — следующий заказ получит номер 1.
 async function clearWholesaleOrders(mode) {
   const { rows } = await pool.query("SELECT COUNT(*)::int AS n FROM wholesale_orders");
   await pool.query("DELETE FROM wholesale_orders");
