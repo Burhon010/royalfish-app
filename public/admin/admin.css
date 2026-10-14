@@ -1038,3 +1038,34 @@ button, input, select{ font-family: inherit; }
   text-decoration: none; vertical-align: 1px;
 }
 .nav-badge[hidden]{ display: none; }
+
+/* Заказ ресторана в админке на телефоне: строки-карточки вместо широкой таблицы */
+@media (max-width: 640px){
+  .adm-table--order, .adm-table--order tbody, .adm-table--order tfoot{ display: block; width: 100%; }
+  .adm-table--order thead{ display: none; }
+  .adm-table--order tbody tr, .adm-table--order tfoot tr{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name name" "blocks units" "price sum";
+    gap: 6px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+  }
+  .adm-table--order tfoot tr{ border-bottom: none; grid-template-areas: "name name" "blocks units" "sum sum"; }
+  .adm-table--order td{ padding: 0; border: 0; text-align: left; min-width: 0; font-size: 14px; }
+  .adm-table--order td[data-label]::before{
+    content: attr(data-label) ": ";
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .adm-table--order .c-name{ grid-area: name; font-weight: 700; font-size: 15px; }
+  .adm-table--order .c-blocks{ grid-area: blocks; }
+  .adm-table--order .c-units{ grid-area: units; text-align: right; }
+  .adm-table--order .c-price{ grid-area: price; }
+  .adm-table--order .c-sum{ grid-area: sum; text-align: right; font-weight: 800; color: var(--ocean); }
+  .adm-table--order .c-sum::after{ content: " сомони"; font-weight: 600; font-size: 12.5px; }
+  .adm-table--order .f-empty{ display: none; }
+}

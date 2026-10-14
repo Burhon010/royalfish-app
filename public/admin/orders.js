@@ -493,11 +493,11 @@
 
     var rows = o.items.map(function (it) {
       return "<tr>" +
-        "<td>" + esc(it.productName) + "<br><small>блок = " + it.unitsPerBlock + " шт.</small></td>" +
-        '<td class="num">' + it.orderedBlocks + "</td>" +
-        '<td class="num">' + it.orderedUnits + "</td>" +
-        '<td class="num">' + money(it.pricePerBlock) + "</td>" +
-        '<td class="num">' + money(it.orderedSubtotal) + "</td>" +
+        '<td class="c-name">' + esc(it.productName) + "<br><small>блок = " + it.unitsPerBlock + " шт.</small></td>" +
+        '<td class="num c-blocks" data-label="Блоков">' + it.orderedBlocks + "</td>" +
+        '<td class="num c-units" data-label="Штук">' + it.orderedUnits + "</td>" +
+        '<td class="num c-price" data-label="Цена/блок">' + money(it.pricePerBlock) + "</td>" +
+        '<td class="num c-sum" data-label="Сумма">' + money(it.orderedSubtotal) + "</td>" +
       "</tr>";
     }).join("");
 
@@ -506,11 +506,11 @@
       '<div class="adm-note"><b>' + esc(o.restaurantName) + "</b><br>Телефон: " + esc(o.restaurantPhone) +
         "<br>Адрес: " + esc(o.restaurantAddress) + "<br>Дата: " + S.fmtDate(o.createdAt) +
         (o.customerComment ? "<br>Комментарий ресторана: " + esc(o.customerComment) : "") + "</div>" +
-      '<div class="adm-table-wrap"><table class="adm-table"><thead><tr>' +
+      '<div class="adm-table-wrap"><table class="adm-table adm-table--order"><thead><tr>' +
         "<th>Товар</th><th>Заказано блоков</th><th>Штук</th><th>Цена/блок</th><th>Сумма</th>" +
-      "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td>Всего</td>" +
-        '<td class="num">' + t.orderedBlocks + '</td><td class="num">' + t.orderedUnits + "</td><td></td>" +
-        '<td class="num">' + money(t.orderedTotal) + "</td></tr></tfoot></table></div>" +
+      "</tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td class=\"c-name\">Всего</td>" +
+        '<td class="num c-blocks" data-label="Блоков">' + t.orderedBlocks + '</td><td class="num c-units" data-label="Штук">' + t.orderedUnits + "</td><td class=\"c-price f-empty\"></td>" +
+        '<td class="num c-sum" data-label="Сумма">' + money(t.orderedTotal) + "</td></tr></tfoot></table></div>" +
       '<div class="adm-form">' +
         '<label class="field"><span class="field-label">Статус</span><select id="woStatus">' + portalStatusOptions(o.status) + "</select></label>" +
       "</div>" +
