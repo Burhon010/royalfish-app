@@ -521,8 +521,7 @@
         '<button type="button" class="btn-outline" id="woSave">Сохранить</button>' +
       "</div>" +
       '<div class="adm-actions">' +
-        printLink(o, "pdf", "Скачать PDF") +
-        printLink(o, "print", "Распечатать") +
+        printLink(o, "print", "Печать / PDF") +
         printLink(o, "warehouse", "Печать для склада") +
       "</div>";
 

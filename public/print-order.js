@@ -14,7 +14,7 @@
   var params = new URLSearchParams(window.location.search);
   var id = Number(params.get("id"));
   var src = params.get("src") === "admin" ? "admin" : "partner";
-  var mode = params.get("mode"); // "pdf" | "print" | "warehouse"
+  var mode = params.get("mode"); // "print" (печать и PDF) | "warehouse"
   var sheet = document.getElementById("sheet");
 
   function esc(str) {
@@ -124,15 +124,13 @@
   }
 
   document.getElementById("printBtn").addEventListener("click", function () { window.print(); });
-  document.getElementById("pdfBtn").addEventListener("click", function () { window.print(); });
   document.getElementById("closeBtn").addEventListener("click", function () {
     window.close();
     if (!window.closed) window.history.back();
   });
-  if (mode !== "pdf") document.getElementById("pdfHint").hidden = true;
+  if (mode === "warehouse") document.getElementById("pdfHint").hidden = true;
 
   if (src !== "admin") {
-    document.getElementById("pdfBtn").hidden = true;
     document.getElementById("printBtn").hidden = true;
     sheet.innerHTML = '<p class="p-empty">Печать и PDF заказов доступны только сотрудникам Royal Fish.</p>';
     return;
@@ -150,7 +148,7 @@
       document.title = (warehouse ? "Сборка " : "Заказ ") + order.number + " — Royal Fish";
       if (warehouse) renderWarehouse(order);
       else renderOrder(order);
-      // сразу открываем окно печати (для "Скачать PDF" — "Сохранить как PDF")
+      // сразу открываем окно печати (для PDF — выбрать принтер "Сохранить как PDF")
       if (mode) setTimeout(function () { window.print(); }, 400);
     })
     .catch(function (err) {
