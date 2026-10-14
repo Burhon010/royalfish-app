@@ -37,7 +37,12 @@ cloudinary.config({
 function uploadImageBuffer(buffer, folder) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: folder || "royalfish/misc" },
+      {
+        folder: folder || "royalfish/misc",
+        // экономим место: в хранилище кладём не оригинал, а уменьшенную (до 1600 px) копию
+        // с автоподбором качества; одно фото товара используется и в рознице, и в опте
+        transformation: [{ width: 1600, height: 1600, crop: "limit", quality: "auto:good" }],
+      },
       (err, result) => {
         if (err) return reject(err);
         resolve(result);

@@ -507,7 +507,7 @@
       productForm.reset();
       fieldDiscount.value = 0;
       fieldInStock.value = "true";
-      fieldWholesaleMinQty.value = 1;
+      fieldWholesaleMinQty.value = 20;
       fieldAvailableRetail.checked = true;
       fieldAvailableWholesale.checked = true;
       setPhotoPreview(null);
