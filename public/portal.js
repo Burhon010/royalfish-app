@@ -816,6 +816,14 @@
   /* ---------------- старт ---------------- */
   api("GET", "/api/partners/me")
     .then(function (me) {
+      // Забытая сессия «зайти как ресторан» не должна открывать управление магазином:
+      // админский режим работает только при переходе из админки (?admin=<id>).
+      if (me.impersonated && new URLSearchParams(window.location.search).get("admin") !== String(me.id)) {
+        return fetch("/api/partners/logout", { method: "POST", credentials: "same-origin" }).then(function () {
+          window.location.replace("partner-login.html");
+          return new Promise(function () {});
+        });
+      }
       profile = me;
       el("welcomeTitle").textContent = "Добро пожаловать, " + me.name;
       el("portalHelloName").textContent = me.name;

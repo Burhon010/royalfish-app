@@ -5,10 +5,18 @@
   var errorBox = document.getElementById("loginError");
   var submitBtn = document.getElementById("loginSubmit");
 
-  // уже вошли — сразу в кабинет
-  fetch("/api/partners/me", { credentials: "same-origin" }).then(function (res) {
-    if (res.ok) window.location.href = "portal.html";
-  });
+  // уже вошли — сразу в кабинет (кроме забытой сессии «зайти как ресторан» из админки)
+  fetch("/api/partners/me", { credentials: "same-origin" })
+    .then(function (res) { return res.ok ? res.json() : null; })
+    .then(function (me) {
+      if (!me) return;
+      if (me.impersonated) {
+        fetch("/api/partners/logout", { method: "POST", credentials: "same-origin" });
+        return;
+      }
+      window.location.href = "portal.html";
+    })
+    .catch(function () {});
 
   function showError(msg) {
     errorBox.textContent = msg;
