@@ -452,8 +452,9 @@
     var defUnit = round2(defaultBlock(m) / du);
     el("pfPriceInfo").textContent = "Стандартный блок = " + du + " шт. Цена по умолчанию: " + money(defUnit) + " смн/ед. (блок " + money(defaultBlock(m)) + ")" +
       " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони за блок " + p.unitsPerBlock + " шт.";
-    el("pfMinQty").value = p.unitsPerBlock;
-    el("pfMinQty").placeholder = String(du);
+    // своя партия показывается только если она отличается от стандартной; иначе поле пустое (0 = по умолчанию)
+    el("pfMinQty").value = p.unitsPerBlock === du ? "" : p.unitsPerBlock;
+    el("pfMinQty").placeholder = "0";
     el("pfOwnUnit").placeholder = money(defUnit) + " (по умолчанию)";
     el("pfOwnPrice").placeholder = money(defaultBlock(m)) + " (по умолчанию)";
     el("pfOwnUnit").value = m.ownPrice === null ? "" : round2(m.ownPrice / p.unitsPerBlock);
@@ -475,7 +476,7 @@
     var errBox = el("pfError");
     errBox.hidden = true;
     function fail(msg) { errBox.textContent = msg; errBox.hidden = false; }
-    var qty = qtyRaw === "" ? defaultUnits(p) : Number(qtyRaw);
+    var qty = qtyRaw === "" || Number(qtyRaw) === 0 ? defaultUnits(p) : Number(qtyRaw);
     if (!Number.isInteger(qty) || qty < 1 || qty > 100000) return fail("Минимальная партия — целое число от 1.");
     if (own !== "" && !(Number(own) > 0)) return fail("Укажите цену больше нуля или оставьте поле пустым.");
     if (!isFinite(discNum) || discNum < 0 || discNum > 90) return fail("Скидка должна быть от 0 до 90 %.");
