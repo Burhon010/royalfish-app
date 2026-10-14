@@ -137,6 +137,7 @@
     article.innerHTML =
       '<div class="card-media">' +
         mediaInner +
+        (p.isNew ? '<div class="tag-stack"><span class="tag tag--new">Новинка</span></div>' : "") +
         '<span class="status-chip ' + (p.inStock ? "status-in" : "status-out") + '">' +
           (p.inStock ? "В наличии" : "Нет в наличии") +
         "</span>" +

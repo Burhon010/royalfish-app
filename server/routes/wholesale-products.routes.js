@@ -25,6 +25,7 @@ function serialize(p) {
     description: p.description,
     wholesalePrice: p.wholesale_price,
     wholesaleMinQty: p.wholesale_min_qty,
+    isNew: !!p.is_new,
     inStock: !!p.in_stock,
     image: p.image_path,
   };

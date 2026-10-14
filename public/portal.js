@@ -905,8 +905,15 @@
       });
 
       // раз в полминуты обновляем заказы: статусы и очистка истории подхватываются без перезагрузки
+      // и каталог: новинки, наличие и новые категории, которые владелец публикует для всех
       setInterval(function () {
-        if (document.visibilityState === "visible") loadOrders().catch(function () {});
+        if (document.visibilityState !== "visible") return;
+        loadOrders().catch(function () {});
+        if (!cartOverlay.hidden) return;
+        Promise.all([
+          api("GET", "/api/partners/catalog"),
+          fetch("/api/categories").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+        ]).then(applyCatalog).catch(function () {});
       }, 30000);
 
       return Promise.all([
