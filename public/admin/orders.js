@@ -518,7 +518,6 @@
       '<div class="adm-actions">' +
         '<button type="button" class="btn-primary" id="woConfirm">Подтвердить заказ</button>' +
         '<button type="button" class="btn-outline btn-danger" id="woCancel">Отменить заказ</button>' +
-        '<button type="button" class="btn-outline" id="woSave">Сохранить</button>' +
       "</div>" +
       '<div class="adm-actions">' +
         printLink(o, "print", "Печать / PDF") +
@@ -540,10 +539,8 @@
         });
     }
 
-    document.getElementById("woSave").addEventListener("click", function () {
-      save({
-        status: document.getElementById("woStatus").value,
-      }, "Заказ сохранён");
+    document.getElementById("woStatus").addEventListener("change", function () {
+      save({ status: this.value }, "Статус заказа обновлён");
     });
     document.getElementById("woCancel").addEventListener("click", function () {
       if (!window.confirm("Отменить заказ №" + o.number + "? Ресторан увидит, что заказ отменён.")) return;
