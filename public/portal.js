@@ -171,11 +171,18 @@
     return blocks + " " + blocksWord(blocks) + " × " + p.unitsPerBlock + " = " + (blocks * p.unitsPerBlock) + " шт.";
   }
 
+  // фото из Cloudinary отдаём уменьшенными под размер превью: меньше трафика и памяти
+  function optimizeCloudinaryUrl(url, width) {
+    if (!url || typeof url !== "string") return url;
+    if (url.indexOf("res.cloudinary.com") === -1 || url.indexOf("/upload/") === -1) return url;
+    return url.replace("/upload/", "/upload/f_auto,q_auto,w_" + width + "/");
+  }
+
   function buildCard(p) {
     var art = document.createElement("article");
     art.className = "portal-card";
     var media = p.image
-      ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
+      ? '<img src="' + esc(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
       : "";
     art.innerHTML =
       '<div class="portal-card-media">' + media + "</div>" +
@@ -346,7 +353,7 @@
     row.className = "mrow" + (m.hidden ? " is-hidden" : "");
     row.setAttribute("data-id", p.id);
     var thumb = p.image
-      ? '<div class="mrow-thumb"><img src="' + esc(p.image) + '" alt="" loading="lazy"></div>'
+      ? '<div class="mrow-thumb"><img src="' + esc(optimizeCloudinaryUrl(p.image, 150)) + '" alt="" loading="lazy"></div>'
       : '<div class="mrow-thumb is-empty">Нет фото</div>';
     row.innerHTML =
       thumb +
@@ -448,7 +455,7 @@
     el("pfError").hidden = true;
     el("pfName").textContent = p.name + " · " + p.weight;
     var thumb = el("pfThumb");
-    if (p.image) { thumb.src = p.image; thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
+    if (p.image) { thumb.src = optimizeCloudinaryUrl(p.image, 200); thumb.hidden = false; } else { thumb.hidden = true; thumb.removeAttribute("src"); }
     var defUnit = round2(defaultBlock(m) / du);
     el("pfPriceInfo").textContent = "Стандартный блок = " + du + " шт. Цена по умолчанию: " + money(defUnit) + " смн/ед. (блок " + money(defaultBlock(m)) + ")" +
       " · Сейчас для ресторана: " + money(m.finalPrice) + " сомони за блок " + p.unitsPerBlock + " шт.";
