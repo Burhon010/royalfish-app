@@ -642,6 +642,7 @@ button, input, select{ font-family: inherit; }
 .status-completed{ background: var(--success-bg); color: var(--success); border-color: transparent; }
 
 .order-row-actions{ display: flex; justify-content: flex-end; }
+.order-row .view-btn{ padding: 8px 18px; font-size: 14px; white-space: nowrap; }
 
 /* Оптовые заказы (см. раздел "Для ресторанов") выделены золотой полоской
    слева и бейджем "Опт" рядом с номером — чтобы их было видно в общем

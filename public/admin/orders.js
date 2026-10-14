@@ -296,7 +296,7 @@
         '<select class="status-select status-' + portalClass(o.status) + '">' + portalStatusOptions(o.status) + "</select>" +
       "</div>" +
       '<div class="order-row-actions">' +
-        '<button type="button" class="icon-btn view-btn" title="Подробнее">&#128065;</button>' +
+        '<button type="button" class="btn-outline view-btn">Открыть</button>' +
       "</div>";
     var select = row.querySelector(".status-select");
     select.addEventListener("change", function () {
@@ -342,7 +342,7 @@
         '<select class="status-select status-' + o.status + '">' + statusOptionsHtml(o.status) + "</select>" +
       "</div>" +
       '<div class="order-row-actions">' +
-        '<button type="button" class="icon-btn view-btn" title="Подробнее">&#128065;</button>' +
+        '<button type="button" class="btn-outline view-btn">Открыть</button>' +
       "</div>";
 
     var select = row.querySelector(".status-select");
