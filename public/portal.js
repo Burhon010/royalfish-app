@@ -679,10 +679,13 @@
     } catch (e) { return undefined; }
   }
   function writeSeen(map) { try { window.localStorage.setItem(SEEN_KEY, JSON.stringify(map)); } catch (e) {} }
+  // ключ включает дату создания: после «очистить и начать с №1» номера повторяются,
+  // а новый заказ с тем же id не должен считаться уже увиденным
+  function seenKey(o) { return o.id + "@" + o.createdAt; }
   function markSeen(o) {
     var m = readSeen();
     if (!m) m = {};
-    m[o.id] = o.status;
+    m[seenKey(o)] = o.status;
     writeSeen(m);
   }
   function statusNoticeText(o) {
@@ -699,12 +702,18 @@
     } else if (seen === null) {
       // первый заход: уже существующие статусы считаем увиденными
       seen = {};
-      orders.forEach(function (o) { seen[o.id] = o.status; });
+      orders.forEach(function (o) { seen[seenKey(o)] = o.status; });
       writeSeen(seen);
       box.hidden = true;
     } else {
+      // забываем заказы, которых больше нет (владелец очистил историю)
+      var alive = {};
+      orders.forEach(function (o) { alive[seenKey(o)] = true; });
+      var pruned = false;
+      Object.keys(seen).forEach(function (k) { if (!alive[k]) { delete seen[k]; pruned = true; } });
+      if (pruned) writeSeen(seen);
       fresh = orders.filter(function (o) {
-        return (o.status === "confirmed" || o.status === "cancelled") && seen[o.id] !== o.status;
+        return (o.status === "confirmed" || o.status === "cancelled") && seen[seenKey(o)] !== o.status;
       });
       box.innerHTML = fresh.map(function (o) {
         var ok = o.status === "confirmed";
@@ -794,6 +803,8 @@
       el("tabCatalog").hidden = name !== "catalog";
       el("tabOrders").hidden = name !== "orders";
       el("tabAccount").hidden = name !== "account";
+      // список заказов всегда свежий: подтверждения и очистка истории владельцем
+      if (name === "orders" && !impersonated) loadOrders().catch(function () {});
     });
   });
 
@@ -892,6 +903,11 @@
         ]).then(applyCatalog).catch(function () {});
         loadOrders().catch(function () {});
       });
+
+      // раз в полминуты обновляем заказы: статусы и очистка истории подхватываются без перезагрузки
+      setInterval(function () {
+        if (document.visibilityState === "visible") loadOrders().catch(function () {});
+      }, 30000);
 
       return Promise.all([
         api("GET", "/api/partners/catalog"),
