@@ -201,6 +201,26 @@
   height: 40px;
   border-radius: 50%;
 }
+.portal-home {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  white-space: nowrap;
+}
+.portal-home:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+@media (max-width: 560px) {
+  .portal-header-inner { gap: 8px; padding: 10px 14px; }
+  .portal-brand span { display: none; }
+  .portal-home { padding: 7px 10px; font-size: 13px; }
+  .portal-logout { padding: 8px 12px; font-size: 13px; }
+  .portal-hello { font-size: 12px; }
+}
 .portal-hello {
   margin-left: auto;
   font-size: 14px;
