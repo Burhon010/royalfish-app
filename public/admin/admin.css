@@ -1031,3 +1031,11 @@ button, input, select{ font-family: inherit; }
   font-size: 12px; font-weight: 800; line-height: 18px; text-align: center;
 }
 .tab-pill.is-active .tab-count { background: #fff; color: var(--ocean); }
+
+/* Красный знак «есть новые заявки» в шапке */
+.nav-badge{
+  display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 2px; border-radius: 999px;
+  background: #d0523f; color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center;
+  text-decoration: none; vertical-align: 1px;
+}
+.nav-badge[hidden]{ display: none; }
