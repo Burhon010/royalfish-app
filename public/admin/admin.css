@@ -876,7 +876,7 @@ button, input, select{ font-family: inherit; }
 .rest-list{ display: flex; flex-direction: column; gap: 10px; }
 .rest-row{
   display: grid;
-  grid-template-columns: 36px 1.8fr 1fr 1fr auto auto;
+  grid-template-columns: 36px 1.8fr 1fr auto auto;
   align-items: center;
   gap: 16px;
   background: #fff;
@@ -892,7 +892,6 @@ button, input, select{ font-family: inherit; }
 .rest-row:hover{ border-color: var(--ocean); }
 .rest-row-name{ font-weight: 800; margin: 0 0 3px; }
 .rest-row-meta{ margin: 0; color: var(--ink-soft); font-size: 13px; }
-.rest-row-right{ font-family: var(--font-mono); font-weight: 700; text-align: right; }
 .adm-badge{
   display: inline-block;
   padding: 4px 12px;
@@ -936,7 +935,6 @@ button, input, select{ font-family: inherit; }
 @media (max-width: 760px){
   .rest-row{ grid-template-columns: 36px 1fr; gap: 6px 10px; }
   .rest-row > div:nth-child(n+3){ grid-column: 2; }
-  .rest-row-right{ text-align: left; }
   .adm-form{ grid-template-columns: 1fr; }
   .adm-pad{ padding: 4px 12px 6px; }
 }
