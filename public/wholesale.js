@@ -138,13 +138,14 @@
       '<div class="card-media">' +
         mediaInner +
         (p.isNew ? '<div class="tag-stack"><span class="tag tag--new">Новинка</span></div>' : "") +
-        '<span class="status-chip ' + (p.inStock ? "status-in" : "status-out") + '">' +
-          (p.inStock ? "В наличии" : "Нет в наличии") +
-        "</span>" +
       "</div>" +
       '<div class="card-body">' +
         '<h3 class="card-name">' + escapeHtml(p.name) + "</h3>" +
-        '<p class="card-weight">' + escapeHtml(p.weight) + "</p>" +
+        '<p class="card-weight">' + escapeHtml(p.weight) +
+          '<span class="card-stock ' + (p.inStock ? "is-in" : "is-out") + '">' +
+            (p.inStock ? "В наличии" : "Нет в наличии") +
+          "</span>" +
+        "</p>" +
         descHtml +
         '<span class="moq-note">1 блок = ' + minQty + " шт.</span>" +
         '<div class="card-price-row"><span class="price">' + formatPrice(p.wholesalePrice) + " сомони / ед.</span></div>" +

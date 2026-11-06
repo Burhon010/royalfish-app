@@ -154,13 +154,15 @@
       '<div class="card-media' + (cutImage ? " card-media--cut" : "") + '">' +
         mediaInner +
         (badges ? '<div class="tag-stack">' + badges + "</div>" : "") +
-        '<span class="status-chip ' + (p.inStock ? "status-in" : "status-out") + '">' +
-          (p.inStock ? "В наличии" : priceOnRequest && p.description ? escapeHtml(p.description) : "Нет в наличии") +
-        "</span>" +
       "</div>" +
       '<div class="card-body">' +
         '<h3 class="card-name">' + escapeHtml(p.name) + "</h3>" +
-        '<p class="card-weight">' + escapeHtml(p.weight) + "</p>" +
+        '<p class="card-weight">' + escapeHtml(p.weight) +
+          (priceOnRequest ? "" :
+            '<span class="card-stock ' + (p.inStock ? "is-in" : "is-out") + '">' +
+              (p.inStock ? "В наличии" : "Нет в наличии") +
+            "</span>") +
+        "</p>" +
         '<div class="card-price-row">' + priceRow + "</div>" +
         '<div class="card-cart-row">' +
           '<div class="qty-stepper" data-role="qty"' + (p.inStock ? "" : " hidden") + '>' +

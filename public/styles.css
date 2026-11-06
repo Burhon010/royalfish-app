@@ -2224,3 +2224,36 @@ body.cart-open {
   padding: 7.3% 13.7%;
   box-sizing: border-box;
 }
+
+.card-weight {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+}
+.card-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.card-stock::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.card-stock.is-in {
+  color: var(--success);
+}
+.card-stock.is-out {
+  color: var(--danger);
+}
+@media (max-width: 620px) {
+  .card-stock {
+    font-size: 11px;
+  }
+}
