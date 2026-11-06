@@ -160,7 +160,7 @@
         '<p class="card-weight">' + escapeHtml(p.weight) + "</p>" +
         '<div class="card-price-row">' + priceRow + "</div>" +
         '<div class="card-cart-row">' +
-          '<div class="qty-stepper" data-role="qty">' +
+          '<div class="qty-stepper" data-role="qty"' + (p.inStock ? "" : " hidden") + '>' +
             '<button type="button" class="qty-btn" data-action="dec" aria-label="Уменьшить количество">&minus;</button>' +
             '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
@@ -317,7 +317,39 @@
     pill.setAttribute("aria-selected", "true");
     activeFilter = pill.getAttribute("data-filter");
     applyFilter();
+    centerPill(pill);
+    if (filterBar && filterBar.classList.contains("is-stuck")) {
+      var grid = document.getElementById("productGrid");
+      var y = grid.getBoundingClientRect().top + window.pageYOffset - stickyTop() - filterBar.offsetHeight - 8;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
   });
+
+  var filterBar = document.getElementById("filterBar");
+  var siteHeader = document.querySelector(".site-header");
+
+  function stickyTop() {
+    return siteHeader ? siteHeader.offsetHeight : 0;
+  }
+
+  function centerPill(pill) {
+    if (filterRow.scrollWidth <= filterRow.clientWidth) return;
+    var left = pill.offsetLeft - (filterRow.clientWidth - pill.offsetWidth) / 2;
+    filterRow.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }
+
+  function syncFilterBar() {
+    if (!filterBar) return;
+    var top = stickyTop();
+    document.documentElement.style.setProperty("--sticky-top", top + "px");
+    var stuck = getComputedStyle(filterBar).position === "sticky" &&
+      Math.round(filterBar.getBoundingClientRect().top) <= top + 1;
+    filterBar.classList.toggle("is-stuck", stuck);
+  }
+
+  window.addEventListener("scroll", syncFilterBar, { passive: true });
+  window.addEventListener("resize", syncFilterBar);
+  syncFilterBar();
 
   fetch("/api/categories")
     .then(function (res) { return res.ok ? res.json() : []; })

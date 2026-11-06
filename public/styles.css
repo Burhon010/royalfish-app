@@ -982,15 +982,6 @@ body.nav-open {
   .search-input {
     font-size: 16px;
   } /* 16px не даёт iOS зумить страницу при фокусе */
-  .filter-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .filter-pill {
-    flex-shrink: 0;
-  }
 }
 
 .filter-row {
@@ -1067,12 +1058,12 @@ body.nav-open {
     padding: 12px 12px 14px;
   }
   .card-name {
-    font-size: 15.5px;
+    font-size: 14.5px;
     line-height: 1.25;
     margin: 0 0 4px;
-    min-height: calc(2 * 1.25em);
+    min-height: calc(3 * 1.25em);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: anywhere;
@@ -2029,4 +2020,62 @@ body.cart-open {
   font-size: 15px;
   white-space: normal;
   color: var(--muted, #6b7a8c);
+}
+
+.filter-bar {
+  margin: -26px 0 36px;
+}
+
+@media (max-width: 760px) {
+  .catalog-controls {
+    margin-bottom: 14px;
+  }
+  .filter-bar {
+    position: sticky;
+    top: var(--sticky-top, 72px);
+    z-index: 50;
+    margin: 0 -24px 22px;
+    padding: 10px 0;
+    background: rgba(246, 249, 250, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: box-shadow 0.25s ease;
+  }
+  .filter-bar.is-stuck {
+    box-shadow: 0 8px 18px -12px rgba(0, 51, 71, 0.35);
+  }
+  .filter-row {
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding: 2px 24px;
+    scroll-padding: 0 24px;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 28px), transparent 100%);
+  }
+  .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+  .filter-pill {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    font-size: 13.5px;
+    padding: 9px 16px;
+    white-space: nowrap;
+  }
+  .filter-pill.is-active {
+    box-shadow: 0 6px 14px rgba(0, 95, 128, 0.22);
+  }
+}
+
+.qty-stepper[hidden] {
+  display: none;
+}
+.qty-stepper[hidden] + .btn-add-cart {
+  flex: 1 1 auto;
+  width: 100%;
 }
