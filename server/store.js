@@ -411,6 +411,9 @@ async function deleteProduct(id) {
 }
 
 async function seedProductsIfEmpty(items) {
+  const { rows: flag } = await pool.query("SELECT 1 FROM settings WHERE key = 'products_seeded'");
+  if (flag.length > 0) return;
+  await pool.query("INSERT INTO settings (key, value) VALUES ('products_seeded','1') ON CONFLICT DO NOTHING");
   const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM products");
   if (rows[0].count > 0) return;
 
