@@ -118,8 +118,14 @@ async function initSchema() {
       created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  await pool.query(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);`);
   const { rows: catCount } = await pool.query("SELECT COUNT(*)::int AS n FROM categories");
-  if (catCount[0].n === 0) {
+  const { rows: seededFlag } = await pool.query("SELECT 1 FROM settings WHERE key = 'categories_seeded'");
+  if (catCount[0].n > 0 && seededFlag.length === 0) {
+    await pool.query("INSERT INTO settings (key, value) VALUES ('categories_seeded','1') ON CONFLICT DO NOTHING");
+  }
+  if (catCount[0].n === 0 && seededFlag.length === 0) {
+    await pool.query("INSERT INTO settings (key, value) VALUES ('categories_seeded','1') ON CONFLICT DO NOTHING");
     const defaults = [
       ["fish", "Рыба"],
       ["shrimp", "Креветки"],
