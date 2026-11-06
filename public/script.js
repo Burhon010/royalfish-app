@@ -132,8 +132,11 @@
     if (p.isNew) badges += '<span class="tag tag--new">Новинка</span>';
     if (p.discountPercent > 0) badges += '<span class="tag tag--sale">\u2212' + p.discountPercent + "%</span>";
 
+    var cutImage = typeof p.image === "string" && p.image.indexOf("/products/katalog/") === 0
+      ? p.image.replace("/products/katalog/", "/products/katalog-cut/").replace(/\.jpg$/, ".webp")
+      : null;
     var mediaInner = p.image
-      ? '<img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
+      ? '<img src="' + escapeHtml(cutImage || optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
       : '<div class="no-image">Фото скоро появится</div>';
 
     var priceOnRequest = Number(p.finalPrice) <= 0;
@@ -148,7 +151,7 @@
     }
 
     article.innerHTML =
-      '<div class="card-media">' +
+      '<div class="card-media' + (cutImage ? " card-media--cut" : "") + '">' +
         mediaInner +
         (badges ? '<div class="tag-stack">' + badges + "</div>" : "") +
         '<span class="status-chip ' + (p.inStock ? "status-in" : "status-out") + '">' +

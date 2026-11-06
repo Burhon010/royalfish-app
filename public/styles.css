@@ -2218,3 +2218,21 @@ body.cart-open {
 .card-media img {
   mix-blend-mode: multiply;
 }
+
+.card-media--cut {
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 52%, rgba(120, 170, 210, 0.22) 0%, rgba(120, 170, 210, 0) 70%),
+    url("/products/card-bg.jpg") center / cover no-repeat,
+    #152c48;
+}
+.card-media--cut img {
+  mix-blend-mode: normal;
+  object-fit: contain;
+  padding: 9% 11%;
+  box-sizing: border-box;
+  filter: drop-shadow(0 14px 16px rgba(0, 10, 25, 0.55));
+}
+.card.is-out .card-media--cut img {
+  filter: drop-shadow(0 14px 16px rgba(0, 10, 25, 0.55)) grayscale(35%);
+  opacity: 0.8;
+}
