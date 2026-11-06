@@ -202,14 +202,27 @@
     return article;
   }
 
+  function normalizeSearch(s) {
+    return String(s || "").toLowerCase().replace(/ё/g, "е");
+  }
+
+  function setActivePill(slug) {
+    activeFilter = slug;
+    Array.prototype.forEach.call(filterRow.querySelectorAll(".filter-pill"), function (p) {
+      var on = p.getAttribute("data-filter") === slug;
+      p.classList.toggle("is-active", on);
+      p.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+
   function applyFilter() {
     var cards = Array.prototype.slice.call(productGrid.querySelectorAll(".card"));
     var visibleCount = 0;
-    var query = searchQuery.trim().toLowerCase();
+    var query = normalizeSearch(searchQuery.trim());
 
     cards.forEach(function (card) {
-      var matchesCategory = activeFilter === "all" || card.getAttribute("data-cat") === activeFilter;
-      var matchesSearch = !query || card.getAttribute("data-name").indexOf(query) !== -1;
+      var matchesCategory = !!query || activeFilter === "all" || card.getAttribute("data-cat") === activeFilter;
+      var matchesSearch = !query || normalizeSearch(card.getAttribute("data-name")).indexOf(query) !== -1;
       var match = matchesCategory && matchesSearch;
       card.classList.toggle("is-filtered-out", !match);
       if (match) visibleCount++;
@@ -318,6 +331,12 @@
     pill.classList.add("is-active");
     pill.setAttribute("aria-selected", "true");
     activeFilter = pill.getAttribute("data-filter");
+    if (searchQuery && activeFilter !== "all" && searchInput) {
+      searchInput.value = "";
+      searchQuery = "";
+      var clearBtn = document.getElementById("searchClear");
+      if (clearBtn) clearBtn.hidden = true;
+    }
     applyFilter();
     centerPill(pill);
     if (filterBar && filterBar.classList.contains("is-stuck")) {
@@ -383,6 +402,10 @@
     var runSearch = debounce(function () {
       searchQuery = searchInput.value;
       if (searchClearBtn) searchClearBtn.hidden = !searchQuery;
+      if (searchQuery.trim() && activeFilter !== "all") {
+        setActivePill("all");
+        filterRow.scrollTo({ left: 0, behavior: "smooth" });
+      }
       applyFilter();
     }, 150);
 
