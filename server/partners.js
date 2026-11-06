@@ -437,7 +437,7 @@ async function getCatalogForRestaurant(restaurant) {
      LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $1
      WHERE p.available_wholesale = true AND p.wholesale_price IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM restaurant_hidden_products h WHERE h.restaurant_id = $1 AND h.product_id = p.id)
-     ORDER BY p.created_at DESC`,
+     ORDER BY p.in_stock DESC, p.created_at DESC`,
     [restaurant.id, restaurant.price_group_id]
   );
   return rows.map((p) => {
