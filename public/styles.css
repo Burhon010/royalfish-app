@@ -2153,3 +2153,58 @@ body.cart-open {
     font-size: 16px;
   }
 }
+
+.filter-more {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .filter-bar {
+    --more-size: 34px;
+  }
+  .filter-more:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: var(--more-size);
+    height: var(--more-size);
+    margin-top: calc(var(--more-size) / -2);
+    padding: 0;
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ocean);
+    box-shadow: 0 6px 16px rgba(0, 51, 71, 0.18);
+    cursor: pointer;
+    z-index: 2;
+    animation: filter-more-nudge 1.6s ease-in-out infinite;
+    transition: opacity 0.25s ease;
+  }
+  .filter-more svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .filter-bar.has-more .filter-row {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 70px), transparent calc(100% - 30px));
+    mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 70px), transparent calc(100% - 30px));
+  }
+}
+
+@keyframes filter-more-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-more:not([hidden]) {
+    animation: none;
+  }
+}

@@ -349,6 +349,24 @@
     filterBar.classList.toggle("is-stuck", stuck);
   }
 
+  var filterMore = document.getElementById("filterMore");
+
+  function syncFilterMore() {
+    if (!filterMore || !filterBar) return;
+    var more = filterRow.scrollWidth - filterRow.clientWidth - filterRow.scrollLeft > 24;
+    filterMore.hidden = !more;
+    filterBar.classList.toggle("has-more", more);
+  }
+
+  if (filterMore) {
+    filterMore.addEventListener("click", function () {
+      filterRow.scrollBy({ left: Math.round(filterRow.clientWidth * 0.7), behavior: "smooth" });
+    });
+    filterRow.addEventListener("scroll", syncFilterMore, { passive: true });
+    window.addEventListener("resize", syncFilterMore);
+    new MutationObserver(syncFilterMore).observe(filterRow, { childList: true });
+  }
+
   window.addEventListener("scroll", syncFilterBar, { passive: true });
   window.addEventListener("resize", syncFilterBar);
   syncFilterBar();
