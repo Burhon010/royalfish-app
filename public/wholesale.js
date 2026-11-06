@@ -124,8 +124,11 @@
     article.setAttribute("data-cat", p.category);
     article.setAttribute("data-name", String(p.name || "").toLowerCase());
 
+    var cutImage = typeof p.image === "string" && p.image.indexOf("/products/katalog/") === 0
+      ? p.image.replace("/products/katalog/", "/products/katalog-cut/").replace(/\.jpg$/, ".webp")
+      : null;
     var mediaInner = p.image
-      ? '<img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
+      ? '<img src="' + escapeHtml(cutImage || optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
       : '<div class="no-image">Фото скоро появится</div>';
 
     var descHtml = p.description
@@ -135,7 +138,7 @@
     var minQty = Math.max(1, Number(p.wholesaleMinQty) || 1);
 
     article.innerHTML =
-      '<div class="card-media">' +
+      '<div class="card-media' + (cutImage ? " card-media--cut" : "") + '">' +
         mediaInner +
         (p.isNew ? '<div class="tag-stack"><span class="tag tag--new">Новинка</span></div>' : "") +
       "</div>" +
@@ -155,8 +158,10 @@
             '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           "</div>" +
-          '<button type="button" class="btn-add-cart"' + (p.inStock ? "" : " disabled") + '>' +
-            (p.inStock ? "В заявку" : "Нет в наличии") +
+          '<button type="button" class="btn-add-cart"' + (p.inStock ? ' aria-label="В заявку"' : " disabled") + '>' +
+            (p.inStock
+              ? '<svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6.1"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="btn-label">В заявку</span>'
+              : "Нет в наличии") +
           "</button>" +
         "</div>" +
       "</div>";
@@ -347,11 +352,11 @@
   }
 
   function flashAddedToCart(btn) {
-    var original = btn.textContent;
-    btn.textContent = "Добавлено ✓";
+    var original = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-label">Добавлено </span>✓';
     btn.classList.add("is-added");
     setTimeout(function () {
-      btn.textContent = original;
+      btn.innerHTML = original;
       btn.classList.remove("is-added");
     }, 1100);
   }

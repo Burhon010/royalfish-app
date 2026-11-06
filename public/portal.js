@@ -181,11 +181,14 @@
   function buildCard(p) {
     var art = document.createElement("article");
     art.className = "portal-card";
+    var cutImage = typeof p.image === "string" && p.image.indexOf("/products/katalog/") === 0
+      ? p.image.replace("/products/katalog/", "/products/katalog-cut/").replace(/\.jpg$/, ".webp")
+      : null;
     var media = p.image
-      ? '<img src="' + esc(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
+      ? '<img src="' + esc(cutImage || optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + esc(p.name) + '" loading="lazy" width="900" height="700">'
       : "";
     art.innerHTML =
-      '<div class="portal-card-media">' + media + "</div>" +
+      '<div class="portal-card-media' + (cutImage ? " portal-card-media--cut" : "") + '">' + media + "</div>" +
       '<div class="portal-card-body">' +
         '<h3 class="portal-card-name">' + esc(p.name) +
           (p.isNew ? ' <span class="portal-tag portal-tag--new">Новинка</span>' : "") + "</h3>" +
