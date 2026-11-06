@@ -2257,3 +2257,49 @@ body.cart-open {
     font-size: 11px;
   }
 }
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+}
+.footer-bottom p {
+  margin: 0;
+}
+.dev-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.dev-credit:hover,
+.dev-credit:focus-visible {
+  color: var(--gold-light);
+}
+.dev-credit svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.dev-credit svg .dot {
+  fill: currentColor;
+  stroke: none;
+}
+@media (max-width: 760px) {
+  .footer-bottom {
+    padding-bottom: 96px;
+  }
+}
+@media (min-width: 761px) {
+  .footer-bottom {
+    padding-right: 96px;
+  }
+}
