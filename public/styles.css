@@ -2024,3 +2024,9 @@ body.cart-open {
   cursor: not-allowed;
   filter: grayscale(0.3);
 }
+
+.price.price--ask {
+  font-size: 15px;
+  white-space: normal;
+  color: var(--muted, #6b7a8c);
+}

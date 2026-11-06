@@ -136,18 +136,23 @@
       ? '<img src="' + escapeHtml(optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
       : '<div class="no-image">Фото скоро появится</div>';
 
+    var priceOnRequest = Number(p.finalPrice) <= 0;
     var priceRow = "";
-    if (p.discountPercent > 0) {
-      priceRow += '<span class="price-old">' + formatPrice(p.price) + " сомони</span>";
+    if (priceOnRequest) {
+      priceRow = '<span class="price price--ask">' + escapeHtml(p.description || "Цена по запросу") + "</span>";
+    } else {
+      if (p.discountPercent > 0) {
+        priceRow += '<span class="price-old">' + formatPrice(p.price) + " сомони</span>";
+      }
+      priceRow += '<span class="price">' + formatPrice(p.finalPrice) + " сомони</span>";
     }
-    priceRow += '<span class="price">' + formatPrice(p.finalPrice) + " сомони</span>";
 
     article.innerHTML =
       '<div class="card-media">' +
         mediaInner +
         (badges ? '<div class="tag-stack">' + badges + "</div>" : "") +
         '<span class="status-chip ' + (p.inStock ? "status-in" : "status-out") + '">' +
-          (p.inStock ? "В наличии" : "Нет в наличии") +
+          (p.inStock ? "В наличии" : priceOnRequest && p.description ? escapeHtml(p.description) : "Нет в наличии") +
         "</span>" +
       "</div>" +
       '<div class="card-body">' +
@@ -161,7 +166,7 @@
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           '</div>' +
           '<button type="button" class="btn-add-cart"' + (p.inStock ? "" : " disabled") + '>' +
-            (p.inStock ? "В корзину" : "Нет в наличии") +
+            (p.inStock ? "В корзину" : priceOnRequest ? "Цена по запросу" : "Нет в наличии") +
           "</button>" +
         "</div>" +
       "</div>";

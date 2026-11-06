@@ -21,6 +21,7 @@ function serialize(p) {
     name: p.name,
     category: p.category,
     weight: p.weight,
+    description: p.description,
     price: p.price,
     discountPercent: p.discount_percent,
     finalPrice: p.final_price,
