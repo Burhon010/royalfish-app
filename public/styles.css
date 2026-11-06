@@ -2221,9 +2221,9 @@ body.cart-open {
 
 .card-media--cut {
   background:
-    radial-gradient(ellipse 55% 50% at 50% 52%, rgba(120, 170, 210, 0.22) 0%, rgba(120, 170, 210, 0) 70%),
-    url("/products/card-bg.jpg") center / cover no-repeat,
-    #152c48;
+    radial-gradient(ellipse 58% 54% at 50% 52%, rgba(16, 42, 82, 0.92) 0%, rgba(16, 42, 82, 0.55) 55%, rgba(16, 42, 82, 0) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Ccircle cx='20' cy='0' r='20' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='0' r='15' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='0' r='10' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='0' r='5' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='0' cy='10' r='20' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='0' cy='10' r='15' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='0' cy='10' r='10' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='0' cy='10' r='5' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='40' cy='10' r='20' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='40' cy='10' r='15' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='40' cy='10' r='10' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='40' cy='10' r='5' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='20' r='20' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='20' r='15' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='20' r='10' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23102a52' stroke='%237d9fd0' stroke-opacity='.55' stroke-width='.9'/%3E%3C/svg%3E") center / 40px 20px repeat,
+    #102a52;
 }
 .card-media--cut img {
   mix-blend-mode: normal;
