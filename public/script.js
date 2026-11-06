@@ -165,8 +165,10 @@
             '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           '</div>' +
-          '<button type="button" class="btn-add-cart"' + (p.inStock ? "" : " disabled") + '>' +
-            (p.inStock ? "В корзину" : priceOnRequest ? "Цена по запросу" : "Нет в наличии") +
+          '<button type="button" class="btn-add-cart"' + (p.inStock ? ' aria-label="В корзину"' : " disabled") + '>' +
+            (p.inStock
+              ? '<svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6.1"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="btn-label">В корзину</span>'
+              : priceOnRequest ? "Цена по запросу" : "Нет в наличии") +
           "</button>" +
         "</div>" +
       "</div>";
@@ -457,11 +459,11 @@
     renderCartItems();
   }
   function flashAddedToCart(btn) {
-    var original = btn.textContent;
-    btn.textContent = "Добавлено ✓";
+    var original = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-label">Добавлено </span>✓';
     btn.classList.add("is-added");
     setTimeout(function () {
-      btn.textContent = original;
+      btn.innerHTML = original;
       btn.classList.remove("is-added");
     }, 1100);
   }
