@@ -2208,3 +2208,14 @@ body.cart-open {
     animation: none;
   }
 }
+
+.card-media {
+  background:
+    radial-gradient(ellipse 62% 58% at 50% 50%, #fff 0%, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 40%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Ccircle cx='20' cy='0' r='20' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.18' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='15' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.15' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='10' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.12' stroke-width='1'/%3E%3Ccircle cx='20' cy='0' r='5' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.1' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='20' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.18' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='15' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.15' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='10' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.12' stroke-width='1'/%3E%3Ccircle cx='0' cy='10' r='5' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.1' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='20' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.18' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='15' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.15' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='10' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.12' stroke-width='1'/%3E%3Ccircle cx='40' cy='10' r='5' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.1' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='20' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.18' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='15' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.15' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='10' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.12' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23edf4f6' stroke='%23005f80' stroke-opacity='0.1' stroke-width='1'/%3E%3C/svg%3E") center / 40px 20px repeat,
+    #edf4f6;
+}
+.card-media img {
+  mix-blend-mode: multiply;
+}
