@@ -435,14 +435,16 @@ async function getCatalogForRestaurant(restaurant) {
      FROM products p
      LEFT JOIN price_group_prices gp ON gp.product_id = p.id AND gp.group_id = $2
      LEFT JOIN restaurant_prices rp ON rp.product_id = p.id AND rp.restaurant_id = $1
-     WHERE p.available_wholesale = true AND p.wholesale_price IS NOT NULL
+     WHERE p.available_retail = true
        AND NOT EXISTS (SELECT 1 FROM restaurant_hidden_products h WHERE h.restaurant_id = $1 AND h.product_id = p.id)
      ORDER BY p.in_stock DESC, p.created_at DESC`,
     [restaurant.id, restaurant.price_group_id]
   );
   return rows.map((p) => {
     const r = resolveBlockPrice(p);
+    const priceOnRequest = !(r.final > 0);
     return {
+      priceOnRequest,
       id: p.id,
       name: p.name,
       category: p.category,
@@ -450,9 +452,9 @@ async function getCatalogForRestaurant(restaurant) {
       description: p.description,
       image: p.image_path,
       unitsPerBlock: r.units,
-      pricePerBlock: r.final,
-      discountPercent: r.discount,
-      oldPricePerBlock: r.discount > 0 ? r.before : null,
+      pricePerBlock: priceOnRequest ? null : r.final,
+      discountPercent: priceOnRequest ? 0 : r.discount,
+      oldPricePerBlock: !priceOnRequest && r.discount > 0 ? r.before : null,
       isNew: !!p.is_new,
       inStock: !!p.in_stock,
     };
@@ -469,7 +471,7 @@ async function createWholesaleOrder(restaurant, items, comment) {
 
     const ids = items.map((i) => i.productId);
     const { rows } = await client.query(
-      `SELECT p.id, p.name, p.wholesale_price, p.wholesale_min_qty, p.available_wholesale,
+      `SELECT p.id, p.name, p.wholesale_price, p.wholesale_min_qty, p.available_wholesale, p.available_retail,
               gp.price AS group_price, rp.price AS own_price, rp.discount_percent AS own_discount, rp.min_qty AS own_min_qty,
               (hp.product_id IS NOT NULL) AS hidden
        FROM products p
@@ -484,12 +486,12 @@ async function createWholesaleOrder(restaurant, items, comment) {
     const resolved = [];
     for (const it of items) {
       const p = byId.get(it.productId);
-      if (!p || !p.available_wholesale || p.wholesale_price === null || p.hidden) {
+      const rb = p ? resolveBlockPrice(p) : null;
+      if (!p || (!p.available_retail && !p.available_wholesale) || p.hidden || !(rb.final > 0)) {
         const err = new Error("Один из товаров недоступен для оптового заказа. Обновите страницу.");
         err.statusCode = 400;
         throw err;
       }
-      const rb = resolveBlockPrice(p);
       const price = rb.final;
       resolved.push({
         product_id: p.id,

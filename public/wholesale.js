@@ -131,7 +131,9 @@
       ? '<img src="' + escapeHtml(cutImage || optimizeCloudinaryUrl(p.image, 700)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" width="900" height="700">'
       : '<div class="no-image">Фото скоро появится</div>';
 
-    var descHtml = p.description
+    var onRequest = !!p.priceOnRequest || !(Number(p.wholesalePrice) > 0);
+    var canOrder = p.inStock && !onRequest;
+    var descHtml = p.description && !onRequest
       ? '<p class="card-desc">' + escapeHtml(p.description) + "</p>"
       : "";
 
@@ -145,28 +147,33 @@
       '<div class="card-body">' +
         '<h3 class="card-name">' + escapeHtml(p.name) + "</h3>" +
         '<p class="card-weight">' + escapeHtml(p.weight) +
-          '<span class="card-stock ' + (p.inStock ? "is-in" : "is-out") + '">' +
-            (p.inStock ? "В наличии" : "Нет в наличии") +
-          "</span>" +
+          (onRequest ? "" :
+            '<span class="card-stock ' + (p.inStock ? "is-in" : "is-out") + '">' +
+              (p.inStock ? "В наличии" : "Нет в наличии") +
+            "</span>") +
         "</p>" +
         descHtml +
-        '<span class="moq-note">1 блок = ' + minQty + " шт.</span>" +
-        '<div class="card-price-row"><span class="price">' + formatPrice(p.wholesalePrice) + " сомони / ед.</span></div>" +
+        (onRequest ? "" : '<span class="moq-note">1 блок = ' + minQty + " шт.</span>") +
+        '<div class="card-price-row">' +
+          (onRequest
+            ? '<span class="price price--ask">' + escapeHtml(p.description || "Цена по запросу") + "</span>"
+            : '<span class="price">' + formatPrice(p.wholesalePrice) + " сомони / ед.</span>") +
+        "</div>" +
         '<div class="card-cart-row">' +
-          '<div class="qty-stepper" data-role="qty">' +
+          '<div class="qty-stepper" data-role="qty"' + (canOrder ? "" : " hidden") + '>' +
             '<button type="button" class="qty-btn" data-action="dec" aria-label="Уменьшить количество">&minus;</button>' +
             '<span class="qty-value">0</span>' +
             '<button type="button" class="qty-btn" data-action="inc" aria-label="Увеличить количество">+</button>' +
           "</div>" +
-          '<button type="button" class="btn-add-cart"' + (p.inStock ? ' aria-label="В заявку"' : " disabled") + '>' +
-            (p.inStock
+          '<button type="button" class="btn-add-cart"' + (canOrder ? ' aria-label="В заявку"' : " disabled") + '>' +
+            (canOrder
               ? '<svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.1 10.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L20.6 8H6.1"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="btn-label">В заявку</span>'
-              : "Нет в наличии") +
+              : onRequest ? "Цена по запросу" : "Нет в наличии") +
           "</button>" +
         "</div>" +
       "</div>";
 
-    if (p.inStock) {
+    if (canOrder) {
       var qtyValueEl = article.querySelector(".qty-value");
       var decBtn = article.querySelector('[data-action="dec"]');
       var incBtn = article.querySelector('[data-action="inc"]');
@@ -218,7 +225,7 @@
   function renderProducts(products) {
     productGrid.innerHTML = "";
     productsById = {};
-    products.forEach(function (p) { productsById[p.id] = p; });
+    products.forEach(function (p) { if (!p.priceOnRequest && Number(p.wholesalePrice) > 0) productsById[p.id] = p; });
 
     // Корзина живёт в localStorage дольше, чем каталог, — товар из неё мог
     // уже пропасть из опта (сняли с продажи, убрали доступность). Раньше

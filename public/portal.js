@@ -101,7 +101,7 @@
   function cartLines() {
     return cart.map(function (it) {
       var p = productById(it.productId);
-      return p ? { item: it, product: p } : null;
+      return p && !p.priceOnRequest ? { item: it, product: p } : null;
     }).filter(Boolean);
   }
   function cartTotals() {
@@ -193,7 +193,12 @@
         '<h3 class="portal-card-name">' + esc(p.name) +
           (p.isNew ? ' <span class="portal-tag portal-tag--new">Новинка</span>' : "") + "</h3>" +
         '<p class="portal-card-weight">' + esc(p.weight) +
-          (p.inStock === false ? ' · <span class="portal-tag portal-tag--out">Нет в наличии</span>' : "") + "</p>" +
+          (p.inStock === false && !p.priceOnRequest ? ' · <span class="portal-tag portal-tag--out">Нет в наличии</span>' : "") + "</p>" +
+        (p.priceOnRequest
+          ? '<div class="portal-price portal-price--ask">' + esc(p.description || "Цена по запросу") + "</div>" +
+            '<div class="portal-card-actions"><button type="button" class="btn-add-cart" disabled>Цена по запросу</button></div>' +
+            "</div>"
+          :
         '<span class="portal-block-note">1 блок = ' + p.unitsPerBlock + " шт.</span>" +
         '<div class="portal-price">' +
           (p.discountPercent > 0 ? '<s class="portal-price-old">' + money(p.oldPricePerBlock) + "</s> " : "") +
@@ -210,8 +215,9 @@
           "</div>" +
           '<button type="button" class="btn-add-cart">В корзину</button>' +
         "</div>" +
-      "</div>";
+      "</div>");
 
+    if (p.priceOnRequest) return art;
     var valueEl = art.querySelector(".qty-value");
     var calcEl = art.querySelector(".portal-card-calc");
     function setVal(v) {

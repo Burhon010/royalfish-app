@@ -320,7 +320,7 @@ async function getRetailProducts() {
 // защита от пустой/некорректной карточки, если цену забыли заполнить.
 async function getWholesaleProducts() {
   const { rows } = await pool.query(
-    "SELECT * FROM products WHERE available_wholesale = true AND wholesale_price IS NOT NULL ORDER BY in_stock DESC, created_at DESC"
+    "SELECT * FROM products WHERE available_retail = true ORDER BY in_stock DESC, created_at DESC"
   );
   return rows;
 }

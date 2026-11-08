@@ -1297,3 +1297,9 @@
   padding: 7.3% 13.7%;
   box-sizing: border-box;
 }
+.portal-price.portal-price--ask {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-top: auto;
+}
