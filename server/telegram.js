@@ -82,36 +82,47 @@ function buildOrderMessage(order) {
   return lines.join("\n");
 }
 
+// Если группу в Telegram превратили в "супергруппу", у неё меняется id, а
+// старый id отвечает ошибкой 400 с полем migrate_to_chat_id. Запоминаем новый
+// id и сразу пересылаем туда — без правки TELEGRAM_CHAT_ID.
+const migratedChats = new Map();
+
+async function postMessage(chatId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { status: res.status, body };
+}
+
+async function sendToChat(chatId, text) {
+  let target = migratedChats.get(String(chatId)) || chatId;
+  try {
+    let r = await postMessage(target, text);
+    const newId = r.body && r.body.parameters && r.body.parameters.migrate_to_chat_id;
+    if (!r.body.ok && newId) {
+      migratedChats.set(String(chatId), String(newId));
+      console.warn(`[telegram] Чат ${chatId} стал супергруппой, новый id ${newId}. Обновите TELEGRAM_CHAT_ID.`);
+      target = newId;
+      r = await postMessage(target, text);
+    }
+    if (!r.body.ok) {
+      console.error(`[telegram] Не удалось отправить уведомление в ${target} (HTTP ${r.status}): ${r.body.description || ""}`);
+    }
+    return { chatId: String(target), ok: !!r.body.ok, error: r.body.ok ? null : `${r.status} ${r.body.description || ""}` };
+  } catch (err) {
+    console.error(`[telegram] Ошибка отправки уведомления в ${target}:`, err.message);
+    return { chatId: String(target), ok: false, error: err.message };
+  }
+}
+
 async function sendText(text) {
-  if (!BOT_TOKEN || !CHAT_IDS.length) return;
-
-  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-
+  if (!BOT_TOKEN || !CHAT_IDS.length) return [];
   // Каждому получателю — отдельный запрос; ошибка у одного (например,
   // человек ещё не нажал /start у бота) не мешает остальным.
-  await Promise.all(
-    CHAT_IDS.map(async (chatId) => {
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text,
-            parse_mode: "HTML",
-            disable_web_page_preview: true,
-          }),
-        });
-
-        if (!res.ok) {
-          const body = await res.text().catch(() => "");
-          console.error(`[telegram] Не удалось отправить уведомление в ${chatId} (HTTP ${res.status}): ${body}`);
-        }
-      } catch (err) {
-        console.error(`[telegram] Ошибка отправки уведомления в ${chatId}:`, err.message);
-      }
-    })
-  );
+  return Promise.all(CHAT_IDS.map((chatId) => sendToChat(chatId, text)));
 }
 
 async function sendOrderNotification(order) {

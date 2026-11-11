@@ -103,18 +103,13 @@ function createApp() {
         for (const id of ids) {
           const r = await (await fetch(`https://api.telegram.org/bot${token}/getChat?chat_id=${encodeURIComponent(id)}`)).json();
           const item = { id: mask(id), ok: r.ok, info: r.ok ? r.result.type + " " + (r.result.title || r.result.first_name || "") : r.description };
-          const key = String(req.query.key || "");
-          if (key && require("crypto").createHash("sha256").update(key).digest("hex") === "909372f3e35e4bddbaef613ac68e93b337e43c787ebc400323d688941b7c5e73") {
-            const sr = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ chat_id: id, text: "✅ Проверка уведомлений Royal Fish — это тестовое сообщение, отвечать не нужно." }),
-            });
-            const sj = await sr.json();
-            item.send = sj.ok ? "sent" : "ERROR " + sr.status + " " + sj.description;
-          }
           out.chats.push(item);
         }
+      }
+      const key = String(req.query.key || "");
+      if (key && require("crypto").createHash("sha256").update(key).digest("hex") === "909372f3e35e4bddbaef613ac68e93b337e43c787ebc400323d688941b7c5e73") {
+        const results = await require("./telegram").sendText("✅ Проверка уведомлений Royal Fish — это тестовое сообщение, отвечать не нужно.");
+        out.send = results.map((r) => ({ id: mask(r.chatId), ok: r.ok, error: r.error }));
       }
     } catch (e) {
       out.error = e.message;
