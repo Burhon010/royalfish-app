@@ -90,6 +90,26 @@ function createApp() {
   app.use(express.static(path.join(__dirname, "..", "public")));
 
   // API
+  app.get("/api/telegram-status", async (req, res) => {
+    const token = process.env.TELEGRAM_BOT_TOKEN || "";
+    const ids = String(process.env.TELEGRAM_CHAT_ID || "").split(/[,\s;]+/).filter(Boolean);
+    const mask = (s) => String(s).replace(/\d(?=\d{3})/g, "*");
+    const out = { tokenSet: !!token, chatCount: ids.length, rawChatValueLength: String(process.env.TELEGRAM_CHAT_ID || "").length };
+    try {
+      if (token) {
+        const me = await (await fetch(`https://api.telegram.org/bot${token}/getMe`)).json();
+        out.bot = me.ok ? "@" + me.result.username : "ERROR " + me.description;
+        out.chats = [];
+        for (const id of ids) {
+          const r = await (await fetch(`https://api.telegram.org/bot${token}/getChat?chat_id=${encodeURIComponent(id)}`)).json();
+          out.chats.push({ id: mask(id), ok: r.ok, info: r.ok ? r.result.type + " " + (r.result.title || r.result.first_name || "") : r.description });
+        }
+      }
+    } catch (e) {
+      out.error = e.message;
+    }
+    res.set("Cache-Control", "no-store").json(out);
+  });
   app.use("/api/auth", authRoutes);
   app.use("/api/products", productsRoutes);
   app.use("/api/wholesale/products", wholesaleProductsRoutes);
